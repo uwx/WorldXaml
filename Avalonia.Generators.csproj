@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DefineConstants>$(DefineConstants);XAMLX_INTERNAL</DefineConstants>
+    <DebugType>embedded</DebugType>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>false</IncludeSymbols>
+    <Nullable>enable</Nullable>
+    <XamlXSourcePath>../XamlX/src/XamlX</XamlXSourcePath>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(XamlXSourcePath)/**/*.cs"
+             Exclude="$(XamlXSourcePath)/obj/**/*.cs;$(XamlXSourcePath)/IL/SreTypeSystem.cs"
+             LinkBase="Compiler/XamlX" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup Label="InternalsVisibleTo">
+    <InternalsVisibleTo Include="Avalonia.Generators.Tests, PublicKey=$(AvaloniaPublicKey)" />
+  </ItemGroup>
+
+<!--  <Import Project="../../../build/TrimmingEnable.props" />-->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible Condition="'$(IsAotCompatible)' == ''">true</IsAotCompatible>
+    <ILLinkTreatWarningsAsErrors>$(TreatWarningsAsErrors)</ILLinkTreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) AND '$(EnableRuntimeMarshalling)' != 'true'">
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute" />
+  </ItemGroup>
+
+<!--  <Import Project="../../../build/AnalyzerProject.targets" />-->
+  <PropertyGroup>
+    <EnforceExtendedAnalyzerRules Condition="'$(EnforceExtendedAnalyzerRules)' == ''">true</EnforceExtendedAnalyzerRules>
+    <IsRoslynComponent Condition="'$(IsRoslynComponent)' == ''">true</IsRoslynComponent>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);RS2008</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all"/>
+  </ItemGroup>
+
+</Project>
