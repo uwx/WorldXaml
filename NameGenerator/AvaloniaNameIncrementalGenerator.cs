@@ -21,17 +21,29 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
     private const string SourceItemGroupMetadata = "build_metadata.AdditionalFiles.SourceItemGroup";
     private static readonly MiniCompiler s_noopCompiler = MiniCompiler.CreateNoop();
 
+#if AVA_DEBUG
     public static List<string> Logs { get; } = [];
+#endif
 
-    public static void Print(string msg) => Logs.Add("//\t" + msg);
+    [Conditional("AVA_DEBUG")]
+    public static void Print(string msg)
+#if AVA_DEBUG
+        => Logs.Add("//\t" + msg);
+#else
+    {
+    }
+#endif
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         Print("hi from AvaloniaNameIncrementalGenerator");
+        
+#if AVA_DEBUG
         if (!Debugger.IsAttached) 
         { 
             Debugger.Launch(); 
         }
+#endif
         
         // Map MSBuild properties onto readonly GeneratorOptions.
         var options = context.AnalyzerConfigOptionsProvider
@@ -254,9 +266,11 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             }
         });
         
+#if AVA_DEBUG
         context.RegisterPostInitializationOutput(
             static context => context.AddSource($"logs.g.cs", SourceText.From(string.Join("\n", Logs), Encoding.UTF8))
         );
+#endif
     }
 
     private static DiagnosticFactory GetInternalErrorDiagnostic(FileLinePositionSpan location, Exception ex) =>
