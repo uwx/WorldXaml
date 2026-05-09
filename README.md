@@ -482,3 +482,12 @@ https://github.com/needforrewrite/NFM-World/blob/master/nfm-world/mad/ui/yoga/xa
 ## Missing stuff
 
 Bindings are possible but I haven't tried implementing them yet.
+
+## Examples
+
+We use this a ton in [NFM World](https://github.com/needforrewrite/NFM-World) for most of the non-debug UI. We use NanoVG for rendering and Yoga for layouting.
+
+https://github.com/needforrewrite/NFM-World/tree/master/nfm-world/mad/ui/avalonia
+https://github.com/needforrewrite/NFM-World/tree/master/nfm-world/mad/ui/hud
+https://github.com/needforrewrite/NFM-World/tree/master/nfm-world/mad/ui/menu
+https://github.com/needforrewrite/NFM-World/tree/master/nfm-world/mad/ui/yoga
