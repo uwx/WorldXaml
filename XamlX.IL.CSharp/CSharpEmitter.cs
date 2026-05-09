@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Avalonia.Generators.Common;
+using WorldXaml.Generator.Common;
 using XamlX.IL;
 using XamlX.TypeSystem;
 using SreOpCode = System.Reflection.Emit.OpCode;

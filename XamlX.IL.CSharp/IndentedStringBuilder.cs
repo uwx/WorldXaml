@@ -34,7 +34,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Avalonia.Generators.Common;
+namespace WorldXaml.Generator.Common;
 
 /// <summary>
 ///     <para>

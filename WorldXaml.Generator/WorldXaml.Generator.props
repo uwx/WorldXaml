@@ -1,0 +1,28 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <WorldXamlGeneratorIsEnabled Condition="'$(WorldXamlGeneratorIsEnabled)' == ''">true</WorldXamlGeneratorIsEnabled>
+    <WorldXamlGeneratorBehavior Condition="'$(WorldXamlGeneratorBehavior)' == ''">WithXamlXCompilation</WorldXamlGeneratorBehavior>
+    <WorldXamlGeneratorDefaultFieldModifier Condition="'$(WorldXamlGeneratorDefaultFieldModifier)' == ''">internal</WorldXamlGeneratorDefaultFieldModifier>
+    <WorldXamlGeneratorFilterByPath Condition="'$(WorldXamlGeneratorFilterByPath)' == ''">*</WorldXamlGeneratorFilterByPath>
+    <WorldXamlGeneratorFilterByNamespace Condition="'$(WorldXamlGeneratorFilterByNamespace)' == ''">*</WorldXamlGeneratorFilterByNamespace>
+    <WorldXamlGeneratorViewFileNamingStrategy Condition="'$(WorldXamlGeneratorViewFileNamingStrategy)' == ''">NamespaceAndClassName</WorldXamlGeneratorViewFileNamingStrategy>
+    <WorldXamlGeneratorAttachDevTools Condition="'$(WorldXamlGeneratorAttachDevTools)' == ''">true</WorldXamlGeneratorAttachDevTools>
+    <WorldXamlGeneratorIsHotReloadingEnabled Condition="'$(WorldXamlGeneratorIsHotReloadingEnabled)' == ''">true</WorldXamlGeneratorIsHotReloadingEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup"/>
+    <CompilerVisibleProperty Include="WorldXamlGeneratorIsEnabled" />
+    <CompilerVisibleProperty Include="WorldXamlGeneratorBehavior" />
+    <CompilerVisibleProperty Include="WorldXamlGeneratorDefaultFieldModifier" />
+    <CompilerVisibleProperty Include="WorldXamlGeneratorFilterByPath" />
+    <CompilerVisibleProperty Include="WorldXamlGeneratorFilterByNamespace" />
+    <CompilerVisibleProperty Include="WorldXamlGeneratorViewFileNamingStrategy" />
+    <CompilerVisibleProperty Include="WorldXamlGeneratorAttachDevTools"/>
+    <CompilerVisibleProperty Include="WorldXamlGeneratorIsHotReloadingEnabled"/>
+  </ItemGroup>
+  <Target Name="_InjectAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+    <ItemGroup>
+      <AdditionalFiles Include="@(AvaloniaXaml)" SourceItemGroup="AvaloniaXaml" />
+    </ItemGroup>
+  </Target>
+</Project>

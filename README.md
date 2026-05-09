@@ -441,17 +441,17 @@ And update your csproj:
 
   <!-- This is the part you actually need -->
   <PropertyGroup>
-    <AvaloniaNameGeneratorBehavior>WithXamlXCompilation</AvaloniaNameGeneratorBehavior>
-    <NfmWorldAvaloniaNameGeneratorIsHotReloadingEnabled>true</NfmWorldAvaloniaNameGeneratorIsHotReloadingEnabled>
+    <WorldXamlGeneratorBehavior>WithXamlXCompilation</WorldXamlGeneratorBehavior>
+    <WorldXamlGeneratorIsHotReloadingEnabled>true</WorldXamlGeneratorIsHotReloadingEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Avalonia.Generators\Avalonia.Generators.csproj"
+    <ProjectReference Include="..\WorldXaml.Generator\WorldXaml.Generator.csproj"
                       PrivateAssets="all"
                       ReferenceOutputAssembly="false"
                       OutputItemType="Analyzer"
     />
   </ItemGroup>
-  <Import Project="../Avalonia.Generators/Avalonia.Generators.props" />
+  <Import Project="../WorldXaml.Generator/WorldXaml.Generator.props" />
   
   <!-- XAML files to compile -->
   <ItemGroup>
