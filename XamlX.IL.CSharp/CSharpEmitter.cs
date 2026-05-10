@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using WorldXaml.Generator.Common;
@@ -387,7 +388,7 @@ class CSharpEmitter : IXamlILEmitter
     public IXamlILEmitter Emit(SreOpCode code, float arg)
     {
         if (code == SreOpCodes.Ldc_R4)
-            Push($"{arg}f");
+            Push($"{arg.ToString(CultureInfo.InvariantCulture)}f");
         else
             Emit($"// TODO: Unhandled float opcode: {code.Name} {arg}");
         return this;
@@ -396,7 +397,7 @@ class CSharpEmitter : IXamlILEmitter
     public IXamlILEmitter Emit(SreOpCode code, double arg)
     {
         if (code == SreOpCodes.Ldc_R8)
-            Push($"{arg}d");
+            Push($"{arg.ToString(CultureInfo.InvariantCulture)}d");
         else
             Emit($"// TODO: Unhandled double opcode: {code.Name} {arg}");
         return this;
