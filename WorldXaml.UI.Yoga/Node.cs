@@ -1953,7 +1953,7 @@ public class Node : IDisposable, INamed, ILogical
     /// <summary>
     /// DO NOT OVERRIDE. Override GameTick() instead.
     /// </summary>
-    protected internal virtual void Update()
+    public virtual void Update()
     {
         GameTick();
     }

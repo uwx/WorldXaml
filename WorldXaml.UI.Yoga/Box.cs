@@ -48,7 +48,7 @@ public class Box : Node
         }
     }
 
-    protected internal override void Update()
+    public sealed override void Update()
     {
         base.Update();
         foreach (var child in Children)
