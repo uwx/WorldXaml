@@ -167,18 +167,15 @@ That's basically all you need. Everything else works the same as Avalonia. Now y
 You can set or remove AVA_DEBUG in the generator csproj to enable or disable debug logging, which is useful when the
 generator isn't doing what it's supposed to.
 
-## Debugging
+### Debugging
 
 If you compile WorldXaml.UI.Yoga in debug mode you get access to a NodeDebugger which lets you pull out information
 you can use to build an inspector for your nodes. To use this you must make sure to call NodeDebugger.NewFrame on every
 new frame.
 
-## Hot Reloading
+### Hot Reloading
 
-This is not bundled into the library because it requires compiling the XAML with XamlX yourself. But the source
-generator will put the code to initialize the hot reloader in the right place for you if you want. Copy the code from:
-
-https://github.com/needforrewrite/NFM-World/blob/master/nfm-world/mad/ui/yoga/xaml/debug/XamlHotReload.cs
+Either use WorldXaml.UI.Base (includes hot reloading by default) or implement your own XamlHotReload.Register method.
 
 ## Missing stuff
 
