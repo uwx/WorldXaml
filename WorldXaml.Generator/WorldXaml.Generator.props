@@ -8,6 +8,9 @@
     <WorldXamlGeneratorViewFileNamingStrategy Condition="'$(WorldXamlGeneratorViewFileNamingStrategy)' == ''">NamespaceAndClassName</WorldXamlGeneratorViewFileNamingStrategy>
     <WorldXamlGeneratorAttachDevTools Condition="'$(WorldXamlGeneratorAttachDevTools)' == ''">true</WorldXamlGeneratorAttachDevTools>
     <WorldXamlGeneratorIsHotReloadingEnabled Condition="'$(WorldXamlGeneratorIsHotReloadingEnabled)' == ''">true</WorldXamlGeneratorIsHotReloadingEnabled>
+    <WorldXamlGeneratorHotReloadTypeName Condition="'$(WorldXamlGeneratorHotReloadTypeName)' == ''">WorldXaml.UI.Base.Xaml.XamlHotReload</WorldXamlGeneratorHotReloadTypeName>
+    <WorldXamlGeneratorStyledElementTypeName Condition="'$(WorldXamlGeneratorStyledElementTypeName)' == ''">WorldXaml.UI.Yoga.Node</WorldXamlGeneratorStyledElementTypeName>
+    <WorldXamlGeneratorWindowTypeName Condition="'$(WorldXamlGeneratorWindowTypeName)' == ''">WorldXaml.UI.Yoga.View</WorldXamlGeneratorWindowTypeName>
   </PropertyGroup>
   <ItemGroup>
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup"/>
@@ -19,6 +22,9 @@
     <CompilerVisibleProperty Include="WorldXamlGeneratorViewFileNamingStrategy" />
     <CompilerVisibleProperty Include="WorldXamlGeneratorAttachDevTools"/>
     <CompilerVisibleProperty Include="WorldXamlGeneratorIsHotReloadingEnabled"/>
+    <CompilerVisibleProperty Include="WorldXamlGeneratorHotReloadTypeName"/>
+    <CompilerVisibleProperty Include="WorldXamlGeneratorStyledElementTypeName"/>
+    <CompilerVisibleProperty Include="WorldXamlGeneratorWindowTypeName"/>
   </ItemGroup>
   <Target Name="_InjectAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <ItemGroup>

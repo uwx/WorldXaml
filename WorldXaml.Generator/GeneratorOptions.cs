@@ -17,6 +17,9 @@ internal enum BuildProperties
     WorldXamlGeneratorViewFileNamingStrategy = 5,
     WorldXamlGeneratorAttachDevTools = 6,
     WorldXamlGeneratorIsHotReloadingEnabled = 7,
+    WorldXamlGeneratorHotReloadTypeName = 8,
+    WorldXamlGeneratorStyledElementTypeName = 9,
+    WorldXamlGeneratorWindowTypeName = 10,
     // TODO add other generators properties here.
 }
 
@@ -56,6 +59,18 @@ internal record GeneratorOptions
             options,
             BuildProperties.WorldXamlGeneratorIsHotReloadingEnabled,
             true);
+        WorldXamlGeneratorHotReloadTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorHotReloadTypeName,
+            "WorldXaml.UI.Base.Xaml.XamlHotReload");
+        WorldXamlGeneratorStyledElementTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorStyledElementTypeName,
+            "WorldXaml.UI.Yoga.Node");
+        WorldXamlGeneratorWindowTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorWindowTypeName,
+            "WorldXaml.UI.Yoga.View");
     }
 
     public bool WorldXamlGeneratorIsEnabled { get; }
@@ -73,6 +88,12 @@ internal record GeneratorOptions
     public bool WorldXamlGeneratorAttachDevTools { get; }
 
     public bool WorldXamlGeneratorIsHotReloadingEnabled { get; }
+    
+    public string WorldXamlGeneratorHotReloadTypeName { get; }
+
+    public string WorldXamlGeneratorWindowTypeName { get; }
+
+    public string WorldXamlGeneratorStyledElementTypeName { get; }
 
     private static string[] GetStringArrayProperty(AnalyzerConfigOptions options, BuildProperties name, string defaultValue)
     {
@@ -93,5 +114,12 @@ internal record GeneratorOptions
         var key = name.ToString();
         var value = options.GetMsBuildProperty(key, defaultValue.ToString());
         return bool.TryParse(value, out var result) ? result : defaultValue;
+    }
+
+    private static string GetStringProperty(AnalyzerConfigOptions options, BuildProperties name, string defaultValue)
+    {
+        var key = name.ToString();
+        var value = options.GetMsBuildProperty(key, defaultValue);
+        return value;
     }
 }

@@ -5,10 +5,14 @@ namespace WorldXaml.Generator.Common;
 
 internal static class ResolverExtensions
 {
-    public static bool IsAvaloniaStyledElement(this IXamlType clrType) =>
-        Inherits(clrType, "WorldXaml.UI.Yoga.Node");
-    public static bool IsAvaloniaWindow(this IXamlType clrType) =>
-        Inherits(clrType, "WorldXaml.UI.Yoga.View");
+    extension(IXamlType clrType)
+    {
+        public bool IsAvaloniaStyledElement(string styledElementTypeName) =>
+            Inherits(clrType, styledElementTypeName);
+
+        public bool IsAvaloniaWindow(string windowTypeName) =>
+            Inherits(clrType, windowTypeName);
+    }
 
     private static bool Inherits(IXamlType clrType, string metadataName)
     {

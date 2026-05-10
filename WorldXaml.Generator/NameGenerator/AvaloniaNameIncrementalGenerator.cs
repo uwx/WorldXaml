@@ -171,7 +171,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                 
                 try
                 {
-                    return new XamlCSharpCompiler(roslynTypeSystem, options.WorldXamlGeneratorIsHotReloadingEnabled);
+                    return new XamlCSharpCompiler(roslynTypeSystem, options.WorldXamlGeneratorIsHotReloadingEnabled, options.WorldXamlGeneratorHotReloadTypeName);
                 }
                 catch (Exception ex)
                 {
@@ -197,9 +197,10 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
         var resolvedNames = parsedXamlClasses
             .Combine(compiler)
             .Combine(csharpCompiler)
+            .Combine(options)
             .Select(static (pair, ct) =>
             {
-                var ((classInfo, compiler), csharpCompiler) = pair;
+                var (((classInfo, compiler), csharpCompiler), options) = pair;
                 var hasDevToolsReference = compiler.TypeSystem.FindAssembly("Avalonia.Diagnostics") is not null;
                 var nameResolver = new XamlXNameResolver();
 
@@ -219,7 +220,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                     {
                         diagnostics.Add(new(NameGeneratorDiagnostics.InvalidType, new(classInfo.FilePath, default), new([xmlView.FullName])));
                     }
-                    else if (type.IsAvaloniaStyledElement())
+                    else if (type.IsAvaloniaStyledElement(options.WorldXamlGeneratorStyledElementTypeName))
                     {
                         var resolvedNames = new List<ResolvedName>();
                         foreach (var xmlName in xmlView.XmlNames)
@@ -229,7 +230,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                             try
                             {
                                 var clrType = compiler.ResolveXamlType(xmlName.XmlType);
-                                if (!clrType.IsAvaloniaStyledElement())
+                                if (!clrType.IsAvaloniaStyledElement(options.WorldXamlGeneratorStyledElementTypeName))
                                 {
                                     Print($"Skipping name resolution for non-StyledElement type: {clrType.GetFqn()}");
                                     continue;
@@ -251,7 +252,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                             }
                         }
 
-                        view = new ResolvedView(xmlView, type.IsAvaloniaWindow(), new(resolvedNames));
+                        view = new ResolvedView(xmlView, type.IsAvaloniaWindow(options.WorldXamlGeneratorWindowTypeName), new(resolvedNames));
 
                         // Compile XAML to C# for WithXamlXCompilation behavior
                         if (csharpCompiler != null && classInfo.XamlSource != null)
