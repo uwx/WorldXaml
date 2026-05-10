@@ -75,6 +75,13 @@ And update your csproj:
   <PropertyGroup>
     <WorldXamlGeneratorBehavior>WithXamlXCompilation</WorldXamlGeneratorBehavior>
     <WorldXamlGeneratorIsHotReloadingEnabled>true</WorldXamlGeneratorIsHotReloadingEnabled>
+
+    <!-- If you are not using WorldXaml.UI.Base, set this to your hot reload implementation -->
+    <WorldXamlGeneratorHotReloadTypeName>WorldXaml.UI.Base.Xaml.XamlHotReload</WorldXamlGeneratorHotReloadTypeName>
+
+    <!-- If you are not using WorldXaml.UI.Yoga, set these to your own types -->
+    <WorldXamlGeneratorStyledElementTypeName>WorldXaml.UI.Yoga.Node</WorldXamlGeneratorStyledElementTypeName>
+    <WorldXamlGeneratorWindowTypeName>WorldXaml.UI.Yoga.View</WorldXamlGeneratorWindowTypeName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\WorldXaml\WorldXaml.Generator\WorldXaml.Generator.csproj"
@@ -153,6 +160,9 @@ IXamlGraphicsBackend.Backend = new MyGraphicsBackend();
 ```
 
 That's basically all you need. Everything else works the same as Avalonia. Now you can do `new CentralTextView()`.
+
+You can set or remove AVA_DEBUG in the generator csproj to enable or disable debug logging, which is useful when the
+generator isn't doing what it's supposed to.
 
 ## Debugging
 
