@@ -24,7 +24,15 @@ public interface IXamlGraphicsBackend
     /// </summary>
     public static IXamlGraphicsBackend Backend
     {
-        internal get => field ?? throw new InvalidOperationException($"{nameof(IXamlGraphicsBackend)}.${nameof(Backend)} needs to be set before it can be used.");
+        internal get
+        {
+            return field ?? ThrowNotInitialized();
+
+            IXamlGraphicsBackend ThrowNotInitialized()
+            {
+                throw new InvalidOperationException($"{nameof(IXamlGraphicsBackend)}.{nameof(Backend)} needs to be set before it can be used.");
+            }
+        }
         set;
     }
 
