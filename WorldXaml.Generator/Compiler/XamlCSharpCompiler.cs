@@ -108,6 +108,10 @@ internal sealed class XamlCSharpCompiler
         // Transform AST (resolves types, properties, etc.)
         _compiler.Transform(doc);
 
+        // Check if root became a skip node due to transform failure
+        if (doc.Root is ISkipXamlAstNode)
+            throw new Exception($"XAML transform failed for {xClassName}: root type could not be resolved.");
+
         // Get root type info from the transformed AST
         var rootGrp = (XamlValueWithManipulationNode)doc.Root;
         var rootType = rootGrp.Type.GetClrType();
