@@ -6,9 +6,9 @@ namespace WorldXaml.Generator.Common;
 internal static class ResolverExtensions
 {
     public static bool IsAvaloniaStyledElement(this IXamlType clrType) =>
-        Inherits(clrType, "NFMWorld.UI.Yoga.Node");
+        Inherits(clrType, "WorldXaml.UI.Yoga.Node");
     public static bool IsAvaloniaWindow(this IXamlType clrType) =>
-        Inherits(clrType, "NFMWorld.UI.Yoga.Window");
+        Inherits(clrType, "WorldXaml.UI.Yoga.View");
 
     private static bool Inherits(IXamlType clrType, string metadataName)
     {
