@@ -29,6 +29,7 @@ internal sealed class XamlCSharpCompiler
     private readonly IXamlType _contextType;
     private readonly bool _didNotFindRegisterMethod;
 
+
     public XamlCSharpCompiler(IXamlTypeSystem typeSystem, bool supportHotReloading = false, string? hotReloadTypeName = null)
     {
         _typeSystem = typeSystem;
@@ -45,10 +46,11 @@ internal sealed class XamlCSharpCompiler
         if (supportHotReloading)
         {
             // Find the XamlHotReload.Register method for runtime support
-            var registerMethod = assembly
-                .FindType(hotReloadTypeName ?? "NFMWorld.UI.Yoga.Xaml.XamlHotReload")
+            var registerMethod = typeSystem.Assemblies
+                .Select(ass => ass.FindType(hotReloadTypeName ?? "WorldXaml.UI.Base.Xaml.XamlHotReload"))
+                .FirstOrDefault(type => type != null)
                 ?.FindMethod(method => method.Name == "Register");
-            
+
             if (registerMethod == null)
             {
                 _didNotFindRegisterMethod = true;
