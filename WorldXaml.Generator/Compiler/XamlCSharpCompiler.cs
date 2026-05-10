@@ -130,15 +130,23 @@ internal sealed class XamlCSharpCompiler
         );
 
         // Compile - this defines Populate, Build, and XamlNamespaceInfo on the typeBuilder
-        _compiler.Compile(
-            doc,
-            typeBuilder,
-            _contextType,
-            populateMethodName: "Populate",
-            createMethodName: "Build",
-            namespaceInfoClassName: "XamlNamespaceInfo",
-            baseUri: filePath,
-            fileSource: new SourceGenFileSource(filePath, xamlSource));
+        try
+        {
+            _compiler.Compile(
+                doc,
+                typeBuilder,
+                _contextType,
+                populateMethodName: "Populate",
+                createMethodName: "Build",
+                namespaceInfoClassName: "XamlNamespaceInfo",
+                baseUri: filePath,
+                fileSource: new SourceGenFileSource(filePath, xamlSource));
+        }
+        catch (Exception ex)
+        {
+            // Dump the transformed AST for debugging
+            throw new Exception($"Compile failed for {xClassName}. Root type: {rootType?.FullName ?? "null"}. Root node: {doc.Root?.GetType().Name ?? "null"}. Error: {ex.Message}", ex);
+        }
 
         // Extract just the member declarations
         var sb = new IndentedStringBuilder(indent: indentCount);
