@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WorldXaml\XamlX\src\XamlX\XamlX.csproj" />
+      <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Polyfill" Version="10.6.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="System.Memory" Version="4.6.3" />
+    </ItemGroup>
+
+</Project>

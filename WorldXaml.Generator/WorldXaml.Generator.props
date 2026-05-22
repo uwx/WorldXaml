@@ -1,34 +1,44 @@
 ﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <WorldXamlGeneratorIsEnabled Condition="'$(WorldXamlGeneratorIsEnabled)' == ''">true</WorldXamlGeneratorIsEnabled>
-    <WorldXamlGeneratorBehavior Condition="'$(WorldXamlGeneratorBehavior)' == ''">WithXamlXCompilation</WorldXamlGeneratorBehavior>
-    <WorldXamlGeneratorDefaultFieldModifier Condition="'$(WorldXamlGeneratorDefaultFieldModifier)' == ''">internal</WorldXamlGeneratorDefaultFieldModifier>
-    <WorldXamlGeneratorFilterByPath Condition="'$(WorldXamlGeneratorFilterByPath)' == ''">*</WorldXamlGeneratorFilterByPath>
-    <WorldXamlGeneratorFilterByNamespace Condition="'$(WorldXamlGeneratorFilterByNamespace)' == ''">*</WorldXamlGeneratorFilterByNamespace>
-    <WorldXamlGeneratorViewFileNamingStrategy Condition="'$(WorldXamlGeneratorViewFileNamingStrategy)' == ''">NamespaceAndClassName</WorldXamlGeneratorViewFileNamingStrategy>
-    <WorldXamlGeneratorAttachDevTools Condition="'$(WorldXamlGeneratorAttachDevTools)' == ''">true</WorldXamlGeneratorAttachDevTools>
-    <WorldXamlGeneratorIsHotReloadingEnabled Condition="'$(WorldXamlGeneratorIsHotReloadingEnabled)' == ''">true</WorldXamlGeneratorIsHotReloadingEnabled>
-    <WorldXamlGeneratorHotReloadTypeName Condition="'$(WorldXamlGeneratorHotReloadTypeName)' == ''">WorldXaml.UI.Base.Xaml.XamlHotReload</WorldXamlGeneratorHotReloadTypeName>
-    <WorldXamlGeneratorStyledElementTypeName Condition="'$(WorldXamlGeneratorStyledElementTypeName)' == ''">WorldXaml.UI.Yoga.Node</WorldXamlGeneratorStyledElementTypeName>
-    <WorldXamlGeneratorWindowTypeName Condition="'$(WorldXamlGeneratorWindowTypeName)' == ''">WorldXaml.UI.Yoga.View</WorldXamlGeneratorWindowTypeName>
-  </PropertyGroup>
-  <ItemGroup>
-    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup"/>
-    <CompilerVisibleProperty Include="WorldXamlGeneratorIsEnabled" />
-    <CompilerVisibleProperty Include="WorldXamlGeneratorBehavior" />
-    <CompilerVisibleProperty Include="WorldXamlGeneratorDefaultFieldModifier" />
-    <CompilerVisibleProperty Include="WorldXamlGeneratorFilterByPath" />
-    <CompilerVisibleProperty Include="WorldXamlGeneratorFilterByNamespace" />
-    <CompilerVisibleProperty Include="WorldXamlGeneratorViewFileNamingStrategy" />
-    <CompilerVisibleProperty Include="WorldXamlGeneratorAttachDevTools"/>
-    <CompilerVisibleProperty Include="WorldXamlGeneratorIsHotReloadingEnabled"/>
-    <CompilerVisibleProperty Include="WorldXamlGeneratorHotReloadTypeName"/>
-    <CompilerVisibleProperty Include="WorldXamlGeneratorStyledElementTypeName"/>
-    <CompilerVisibleProperty Include="WorldXamlGeneratorWindowTypeName"/>
-  </ItemGroup>
-  <Target Name="_InjectAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+    <PropertyGroup>
+        <WorldXamlGeneratorIsEnabled Condition="'$(WorldXamlGeneratorIsEnabled)' == ''">true</WorldXamlGeneratorIsEnabled>
+        <WorldXamlGeneratorBehavior Condition="'$(WorldXamlGeneratorBehavior)' == ''">WithXamlXCompilation</WorldXamlGeneratorBehavior>
+        <WorldXamlGeneratorDefaultFieldModifier Condition="'$(WorldXamlGeneratorDefaultFieldModifier)' == ''">internal</WorldXamlGeneratorDefaultFieldModifier>
+        <WorldXamlGeneratorFilterByPath Condition="'$(WorldXamlGeneratorFilterByPath)' == ''">*</WorldXamlGeneratorFilterByPath>
+        <WorldXamlGeneratorFilterByNamespace Condition="'$(WorldXamlGeneratorFilterByNamespace)' == ''">*</WorldXamlGeneratorFilterByNamespace>
+        <WorldXamlGeneratorViewFileNamingStrategy Condition="'$(WorldXamlGeneratorViewFileNamingStrategy)' == ''">NamespaceAndClassName</WorldXamlGeneratorViewFileNamingStrategy>
+        <WorldXamlGeneratorAttachDevTools Condition="'$(WorldXamlGeneratorAttachDevTools)' == ''">true</WorldXamlGeneratorAttachDevTools>
+        <WorldXamlGeneratorIsHotReloadingEnabled Condition="'$(WorldXamlGeneratorIsHotReloadingEnabled)' == ''">true</WorldXamlGeneratorIsHotReloadingEnabled>
+        <WorldXamlGeneratorHotReloadTypeName Condition="'$(WorldXamlGeneratorHotReloadTypeName)' == ''">WorldXaml.UI.Base.Xaml.XamlHotReload</WorldXamlGeneratorHotReloadTypeName>
+        <WorldXamlGeneratorStyledElementTypeName Condition="'$(WorldXamlGeneratorStyledElementTypeName)' == ''">WorldXaml.UI.Yoga.Node</WorldXamlGeneratorStyledElementTypeName>
+        <WorldXamlGeneratorWindowTypeName Condition="'$(WorldXamlGeneratorWindowTypeName)' == ''">WorldXaml.UI.Yoga.View</WorldXamlGeneratorWindowTypeName>
+        <WorldXamlGeneratorCompiledBindTypeName Condition="'$(WorldXamlGeneratorCompiledBindTypeName)' == ''">Avalonia.Data.CompiledBinding</WorldXamlGeneratorCompiledBindTypeName>
+        <WorldXamlGeneratorPropertyObjectTypeName Condition="'$(WorldXamlGeneratorPropertyObjectTypeName)' == ''">WorldXaml.UI.Base.PropertyObject</WorldXamlGeneratorPropertyObjectTypeName>
+        <WorldXamlGeneratorBindableObjectTypeName Condition="'$(WorldXamlGeneratorBindableObjectTypeName)' == ''">WorldXaml.UI.Base.BindableObject</WorldXamlGeneratorBindableObjectTypeName>
+        <WorldXamlGeneratorPropertyGenericTypeName Condition="'$(WorldXamlGeneratorPropertyGenericTypeName)' == ''">WorldXaml.UI.Base.Property`1</WorldXamlGeneratorPropertyGenericTypeName>
+        <WorldXamlGeneratorIXamlBindingTypeName Condition="'$(WorldXamlGeneratorIXamlBindingTypeName)' == ''">WorldXaml.UI.Base.IXamlBinding</WorldXamlGeneratorIXamlBindingTypeName>
+    </PropertyGroup>
     <ItemGroup>
-      <AdditionalFiles Include="@(AvaloniaXaml)" SourceItemGroup="AvaloniaXaml" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIsEnabled"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorBehavior"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorDefaultFieldModifier"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorFilterByPath"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorFilterByNamespace"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorViewFileNamingStrategy"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorAttachDevTools"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIsHotReloadingEnabled"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorHotReloadTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorStyledElementTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorWindowTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorCompiledBindTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorPropertyObjectTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorBindableObjectTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorPropertyGenericTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIXamlBindingTypeName"/>
     </ItemGroup>
-  </Target>
+    <Target Name="_InjectAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+        <ItemGroup>
+            <AdditionalFiles Include="@(AvaloniaXaml)" SourceItemGroup="AvaloniaXaml"/>
+        </ItemGroup>
+    </Target>
 </Project>

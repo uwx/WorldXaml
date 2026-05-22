@@ -26,12 +26,17 @@ public class NodeChildCollection(Node parent) : IList<Node>, IReadOnlyList<ILogi
 
     public void Add(Node item)
     {
+        item.LogicalParent = parent;
         parent.NodeInternal.InsertChild(item.NodeInternal, parent.NodeInternal.GetChildCount());
         _internalList.Add(item);
     }
 
     public void Clear()
     {
+        foreach (var node in _internalList)
+        {
+            node.LogicalParent = null;
+        }
         parent.NodeInternal.RemoveAllChildren();
         _internalList.Clear();
     }
@@ -50,6 +55,7 @@ public class NodeChildCollection(Node parent) : IList<Node>, IReadOnlyList<ILogi
     {
         if (_internalList.Remove(item))
         {
+            item.LogicalParent = null;
             parent.NodeInternal.RemoveChild(item.NodeInternal);
             return true;
         }
@@ -59,6 +65,7 @@ public class NodeChildCollection(Node parent) : IList<Node>, IReadOnlyList<ILogi
 
     public int Count => _internalList.Count;
     public bool IsReadOnly => false;
+
     public int IndexOf(Node item)
     {
         return _internalList.IndexOf(item);
@@ -67,6 +74,7 @@ public class NodeChildCollection(Node parent) : IList<Node>, IReadOnlyList<ILogi
     public void Insert(int index, Node item)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
+        item.LogicalParent = parent;
         parent.NodeInternal.InsertChild(item.NodeInternal, (uint)index);
         _internalList.Insert(index, item);
     }
@@ -75,6 +83,7 @@ public class NodeChildCollection(Node parent) : IList<Node>, IReadOnlyList<ILogi
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
         var item = _internalList[index];
+        item.LogicalParent = null;
         parent.NodeInternal.RemoveChild(item.NodeInternal);
         _internalList.RemoveAt(index);
     }
@@ -85,6 +94,9 @@ public class NodeChildCollection(Node parent) : IList<Node>, IReadOnlyList<ILogi
         set
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
+            var oldItem = _internalList[index];
+            oldItem.LogicalParent = null;
+            value.LogicalParent = parent;
             _internalList[index] = value;
             parent.NodeInternal.SwapChild(value.NodeInternal, (uint)index);
         }

@@ -9,17 +9,22 @@ namespace WorldXaml.Generator;
 // When update these enum values, don't forget to update WorldXaml.Generator.props.
 internal enum BuildProperties
 {
-    WorldXamlGeneratorIsEnabled = 0,
-    WorldXamlGeneratorBehavior = 1,
-    WorldXamlGeneratorDefaultFieldModifier = 2,
-    WorldXamlGeneratorFilterByPath = 3,
-    WorldXamlGeneratorFilterByNamespace = 4,
-    WorldXamlGeneratorViewFileNamingStrategy = 5,
-    WorldXamlGeneratorAttachDevTools = 6,
-    WorldXamlGeneratorIsHotReloadingEnabled = 7,
-    WorldXamlGeneratorHotReloadTypeName = 8,
-    WorldXamlGeneratorStyledElementTypeName = 9,
-    WorldXamlGeneratorWindowTypeName = 10,
+    WorldXamlGeneratorIsEnabled,
+    WorldXamlGeneratorBehavior,
+    WorldXamlGeneratorDefaultFieldModifier,
+    WorldXamlGeneratorFilterByPath,
+    WorldXamlGeneratorFilterByNamespace,
+    WorldXamlGeneratorViewFileNamingStrategy,
+    WorldXamlGeneratorAttachDevTools,
+    WorldXamlGeneratorIsHotReloadingEnabled,
+    WorldXamlGeneratorHotReloadTypeName,
+    WorldXamlGeneratorStyledElementTypeName,
+    WorldXamlGeneratorWindowTypeName,
+    WorldXamlGeneratorCompiledBindTypeName,
+    WorldXamlGeneratorPropertyObjectTypeName,
+    WorldXamlGeneratorBindableObjectTypeName,
+    WorldXamlGeneratorPropertyGenericTypeName,
+    WorldXamlGeneratorIXamlBindingTypeName,
     // TODO add other generators properties here.
 }
 
@@ -71,29 +76,44 @@ internal record GeneratorOptions
             options,
             BuildProperties.WorldXamlGeneratorWindowTypeName,
             "WorldXaml.UI.Yoga.View");
+        WorldXamlGeneratorCompiledBindTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorCompiledBindTypeName,
+            "Avalonia.Data.CompiledBinding");
+        WorldXamlGeneratorPropertyObjectTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorPropertyObjectTypeName,
+            "WorldXaml.UI.Base.PropertyObject");
+        WorldXamlGeneratorBindableObjectTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorBindableObjectTypeName,
+            "WorldXaml.UI.Base.BindableObject");
+        WorldXamlGeneratorPropertyGenericTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorPropertyGenericTypeName,
+            "WorldXaml.UI.Base.Property`1");
+        WorldXamlGeneratorIXamlBindingTypeName = GetStringProperty(
+            options,
+            BuildProperties.WorldXamlGeneratorIXamlBindingTypeName,
+            "WorldXaml.UI.Base.IXamlBinding");
     }
 
     public bool WorldXamlGeneratorIsEnabled { get; }
-    
     public Behavior WorldXamlGeneratorBehavior { get; }
-
     public NamedFieldModifier WorldXamlGeneratorClassFieldModifier { get; }
-
     public ViewFileNamingStrategy WorldXamlGeneratorViewFileNamingStrategy { get; }
-
     public IGlobPattern WorldXamlGeneratorFilterByPath { get; }
-
     public IGlobPattern WorldXamlGeneratorFilterByNamespace { get; }
-
     public bool WorldXamlGeneratorAttachDevTools { get; }
-
     public bool WorldXamlGeneratorIsHotReloadingEnabled { get; }
-    
     public string WorldXamlGeneratorHotReloadTypeName { get; }
-
     public string WorldXamlGeneratorWindowTypeName { get; }
-
     public string WorldXamlGeneratorStyledElementTypeName { get; }
+    public string WorldXamlGeneratorCompiledBindTypeName { get; }
+    public string WorldXamlGeneratorPropertyObjectTypeName { get; }
+    public string WorldXamlGeneratorBindableObjectTypeName { get; }
+    public string WorldXamlGeneratorPropertyGenericTypeName { get; }
+    public string WorldXamlGeneratorIXamlBindingTypeName { get; }
 
     private static string[] GetStringArrayProperty(AnalyzerConfigOptions options, BuildProperties name, string defaultValue)
     {

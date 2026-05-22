@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.LogicalTree;
+using WorldXaml.UI.Base;
 using Yoga;
 
 namespace WorldXaml.UI.Yoga;
@@ -15,7 +16,7 @@ namespace WorldXaml.UI.Yoga;
 /// Represents a single node in the Yoga layout system.
 /// </summary>
 [DebuggerDisplay("{DebugToString()}")]
-public class Node : IDisposable, INamed, ILogical
+public partial class Node : BindableObject, IDisposable, INamed, ILogical
 {
     internal static readonly YGConfigPtr Config;
 
@@ -27,7 +28,7 @@ public class Node : IDisposable, INamed, ILogical
 
     internal static readonly List<Node> __INTERNAL_YogaRootsThisFrame = new();
 
-    public virtual IReadOnlyList<ILogical> LogicalChildren => [];
+    public override IReadOnlyList<ILogical> LogicalChildren => [];
 
 #if DEBUG
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -133,14 +134,22 @@ public class Node : IDisposable, INamed, ILogical
     public float Opacity { get; set; } = 1.0f;
 
     // https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+    
+    /// <summary>
+    /// Property field for <see cref="Direction"/>.
+    /// </summary>
+    public static DirectProperty<Node, YgDirection> DirectionProperty { get; } =
+        DirectProperty<Node, YgDirection>.Register(
+            name:         nameof(Direction),
+            getter:       node => node.NodeInternal.Direction.ToNfmDirection(),
+            setter:       (node, value) => node.NodeInternal.Direction = value.ToYogaDirection(),
+            defaultValue: YgDirection.Inherit);
+
     /// <summary>
     /// CSS: direction - Establishes the main-axis (ltr/rtl/inherit)
     /// </summary>
-    public YgDirection Direction
-    {
-        get => NodeInternal.Direction.ToNfmDirection();
-        set => NodeInternal.Direction = value.ToYogaDirection();
-    }
+    [Property]
+    public partial YgDirection Direction { get; set; }
 
     /// <summary>
     /// CSS: flex-direction - Establishes the main-axis (row/column/row-reverse/column-reverse)
@@ -496,19 +505,21 @@ public class Node : IDisposable, INamed, ILogical
             return this;
         }
     }
-
+    
+    /// <summary>
+    /// Property field for <see cref="FlexBasis"/>.
+    /// </summary>
+    public static readonly Property<MeasurementFlexBasis> FlexBasisProperty =
+        Property.Register<Node, MeasurementFlexBasis>(
+            name:         nameof(FlexBasis),
+            defaultValue: MeasurementFlexBasis.Undefined,
+            onChanged:    (node, value) => node.NodeInternal.FlexBasis = value.Scale(XamlG.Scale));
+    
     /// <summary>
     /// CSS: flex-basis - Defines the default size of an element before remaining space is distributed
     /// </summary>
-    public MeasurementFlexBasis FlexBasis
-    {
-        get;
-        set
-        {
-            field = value;
-            NodeInternal.FlexBasis = value.Scale(XamlG.Scale);
-        }
-    } = MeasurementFlexBasis.Undefined;
+    [Property]
+    public partial MeasurementFlexBasis FlexBasis { get; set; }
 
     [TypeConverter(typeof(MeasurementMarginPositionTypeConverter))]
     public struct MeasurementMarginPosition

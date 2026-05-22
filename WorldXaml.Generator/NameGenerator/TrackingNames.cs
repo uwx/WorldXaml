@@ -9,4 +9,5 @@ internal static class TrackingNames
     public const string XamlTypeSystem = nameof(XamlTypeSystem);
     public const string XamlCSharpCompiler = nameof(XamlCSharpCompiler);
     public const string RoslynTypeSystem = nameof(RoslynTypeSystem);
+    public const string PropertyAttributesProvider = nameof(PropertyAttributesProvider);
 }

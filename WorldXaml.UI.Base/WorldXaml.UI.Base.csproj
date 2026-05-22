@@ -12,4 +12,8 @@
       <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="System.Reactive" Version="7.0.0-preview.15" />
+    </ItemGroup>
+
 </Project>

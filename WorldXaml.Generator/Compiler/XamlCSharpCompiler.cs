@@ -5,6 +5,7 @@ using System.Text;
 using WorldXaml.Generator.Common;
 using WorldXaml.Generator.NameGenerator;
 using Microsoft.CodeAnalysis;
+using WorldXaml.XamlX;
 using XamlX;
 using XamlX.Ast;
 using XamlX.CSharp;
@@ -29,8 +30,15 @@ internal sealed class XamlCSharpCompiler
     private readonly IXamlType _contextType;
     private readonly bool _didNotFindRegisterMethod;
 
-
-    public XamlCSharpCompiler(IXamlTypeSystem typeSystem, bool supportHotReloading = false, string? hotReloadTypeName = null)
+    public XamlCSharpCompiler(
+        IXamlTypeSystem typeSystem,
+        string compiledBindTypeName,
+        string propertyObjectTypeName,
+        string bindableObjectTypeName,
+        string propertyGenericTypeName,
+        string iXamlBindingTypeName,
+        bool supportHotReloading = false,
+        string? hotReloadTypeName = null)
     {
         _typeSystem = typeSystem;
 
@@ -75,6 +83,13 @@ internal sealed class XamlCSharpCompiler
 
         // Add directive removal transformer
         _compiler.Transformers.Add(new RemoveXamlDirectivesTransformer());
+        
+        var insertIndex = _compiler.Transformers.FindIndex(t => t is PropertyReferenceResolver);
+
+        _compiler.Transformers.Insert(insertIndex, new DataContextTypeTransformer()); // 1
+        _compiler.Transformers.Insert(insertIndex + 1, new BindingPathParser(compiledBindTypeName));          // 2
+        _compiler.Transformers.Insert(insertIndex + 2, new BindingPathTransformer(compiledBindTypeName));     // 3
+        _compiler.Transformers.Insert(insertIndex + 3, new PropertyObjectTransformer(propertyObjectTypeName, bindableObjectTypeName, propertyGenericTypeName, iXamlBindingTypeName));  // 4 (already written)
 
         // Add emitter for SkipXamlAstNode (used when transforms fail but error is handled)
         // Must be first so it's checked before ValueWithManipulationsEmitter

@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\WorldXaml.UI.Base\WorldXaml.UI.Base.csproj" />
+      <ProjectReference Include="..\WorldXaml.Generator\WorldXaml.Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>
 
     <ItemGroup>

@@ -9,6 +9,8 @@ using WorldXaml.Generator.Common;
 using WorldXaml.Generator.Common.Domain;
 using WorldXaml.Generator.Compiler;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using XamlX;
 using XamlX.TypeSystem;
@@ -44,6 +46,108 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             //Debugger.Launch(); 
         }
 #endif
+
+        // Find all properties annotated with [Property] attribute
+        var bindableProperties = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "WorldXaml.UI.Base.PropertyAttribute",
+                static (node, _) => node is PropertyDeclarationSyntax,
+                static (context, _) =>
+                {
+                    var syntax = (PropertyDeclarationSyntax)context.TargetNode;
+                    var prop = context.SemanticModel.GetDeclaredSymbol(syntax)!;
+                    var attr = context.Attributes.FirstOrDefault();
+
+                    return (
+                        DeclaringNamespace: prop.ContainingNamespace.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).Remove(0, "global::".Length),
+                        Hierarchy: GetTypeHierarchy(prop.ContainingType).ToArray(),
+                        PropertyVisibility: prop.DeclaredAccessibility,
+                        PropertyName: prop.Name,
+                        PropertyType: prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        PropertyIsStatic: prop.IsStatic,
+                        DefaultValue: attr!.ConstructorArguments.FirstOrDefault(),
+                        DefaultMode: attr.ConstructorArguments.Skip(1).FirstOrDefault(),
+                        PropertyHasBackingProperty: prop.ContainingType.GetMembers(prop.Name + "Property").Any()
+                    );
+
+                    IEnumerable<(string Type, bool TypeIsRecord, bool TypeIsStruct)> GetTypeHierarchy(ITypeSymbol type)
+                    {
+                        while (true)
+                        {
+                            yield return (type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat), type.IsRecord, type.IsValueType);
+                            if (type.ContainingType is { } containingType)
+                            {
+                                type = containingType;
+                                continue;
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            )
+            .WithTrackingName(TrackingNames.PropertyAttributesProvider);
+        
+        // Generate implementation Register code from PropertyAttributes
+        context.RegisterSourceOutput(bindableProperties.Collect(), static (context, bindableProperties) =>
+        {
+            foreach (var props in bindableProperties.GroupBy(static prop => (string.Join(", ", prop.Hierarchy.Select(static t => t.Type)), prop.DeclaringNamespace)))
+            {
+                var (_, declaringTypeNamespace) = props.Key;
+
+                var sb = new IndentedStringBuilder();
+                
+                sb.AppendLine($"namespace {declaringTypeNamespace};");
+                sb.AppendLine();
+
+                var iter = props.First().Hierarchy.Reverse();
+                foreach (var type in iter)
+                {
+                    sb.AppendLine($"partial {(type.TypeIsRecord ? "record" : type.TypeIsStruct ? "struct" : "class")} {type.Type}");
+                    sb.AppendLine("{");
+                    sb.IncrementIndent();
+                }
+                
+                var containingTypes = $"global::{declaringTypeNamespace}.{string.Join(".", iter.Select(t => t.Type))}";
+                foreach (var prop in props)
+                {
+                    if (!prop.PropertyHasBackingProperty)
+                    {
+                        sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} static global::WorldXaml.UI.Base.Property<{prop.PropertyType}> {prop.PropertyName}Property {{ get; }} = global::WorldXaml.UI.Base.Property.Register<{containingTypes}, {prop.PropertyType}>(nameof({prop.PropertyName}), defaultValue: {ToCSharpString(prop.DefaultValue)}, defaultMode: {ToCSharpString(prop.DefaultMode)});");
+                    }
+
+                    sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} partial {prop.PropertyType} {prop.PropertyName} {{ get => GetValue({prop.PropertyName}Property); set => SetValue({prop.PropertyName}Property, value); }}");
+                }
+
+                foreach (var type in iter)
+                {
+                    sb.DecrementIndent();
+                    sb.AppendLine("}");
+                }
+                
+                context.AddSource($"{declaringTypeNamespace.Replace('.', '_')}_{string.Join("_", iter.Select(t => t.Type))}_GeneratedProperties.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+                
+                static string ToCSharp(Accessibility accessibility)
+                {
+                    return accessibility switch {
+                        Accessibility.NotApplicable => "",
+                        Accessibility.Private => "private",
+                        Accessibility.ProtectedAndInternal => "private protected",
+                        Accessibility.Protected => "protected",
+                        Accessibility.Internal => "internal",
+                        Accessibility.ProtectedOrInternal => "protected internal",
+                        Accessibility.Public => "public",
+                        _ => throw new ArgumentOutOfRangeException(nameof(accessibility), accessibility, null)
+                    };
+                }
+
+                static string ToCSharpString(TypedConstant constant)
+                {
+                    if (constant.IsNull) return "default";
+                    return constant.ToCSharpString();
+                }
+            }
+        });
         
         // Map MSBuild properties onto readonly GeneratorOptions.
         var options = context.AnalyzerConfigOptionsProvider
@@ -171,7 +275,16 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                 
                 try
                 {
-                    return new XamlCSharpCompiler(roslynTypeSystem, options.WorldXamlGeneratorIsHotReloadingEnabled, options.WorldXamlGeneratorHotReloadTypeName);
+                    return new XamlCSharpCompiler(
+                        roslynTypeSystem,
+                        compiledBindTypeName: options.WorldXamlGeneratorCompiledBindTypeName,
+                        propertyObjectTypeName: options.WorldXamlGeneratorPropertyObjectTypeName,
+                        bindableObjectTypeName: options.WorldXamlGeneratorBindableObjectTypeName,
+                        propertyGenericTypeName: options.WorldXamlGeneratorPropertyGenericTypeName,
+                        iXamlBindingTypeName: options.WorldXamlGeneratorIXamlBindingTypeName,
+                        supportHotReloading: options.WorldXamlGeneratorIsHotReloadingEnabled,
+                        hotReloadTypeName: options.WorldXamlGeneratorHotReloadTypeName
+                    );
                 }
                 catch (Exception ex)
                 {

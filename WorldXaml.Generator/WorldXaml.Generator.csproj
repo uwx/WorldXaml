@@ -16,6 +16,7 @@
 
     <XamlXSourcePath>../XamlX/src/XamlX</XamlXSourcePath>
     <XamlXCSharpSourcePath>../XamlX.IL.CSharp</XamlXCSharpSourcePath>
+    <WorldXamlXamlXSourcePath>../WorldXaml.XamlX</WorldXamlXamlXSourcePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,6 +32,12 @@
     <Compile Include="$(XamlXCSharpSourcePath)/**/*.cs"
              Exclude="$(XamlXCSharpSourcePath)/obj/**/*.cs;$(XamlXCSharpSourcePath)/CSharpCodeTypeSystem.cs"
              LinkBase="Compiler/XamlX.IL.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(WorldXamlXamlXSourcePath)/**/*.cs"
+             Exclude="$(WorldXamlXamlXSourcePath)/obj/**/*.cs"
+             LinkBase="WorldXaml.XamlX" />
   </ItemGroup>
 
   <ItemGroup>
