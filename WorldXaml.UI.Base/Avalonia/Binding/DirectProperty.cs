@@ -1,4 +1,6 @@
-﻿namespace WorldXaml.UI.Base;
+﻿using Avalonia.Data;
+
+namespace WorldXaml.UI.Base;
 
 public sealed class DirectProperty<TOwner, TValue> : Property<TValue>
     where TOwner : PropertyObject
@@ -10,8 +12,9 @@ public sealed class DirectProperty<TOwner, TValue> : Property<TValue>
         string name,
         Func<TOwner, TValue> getter,
         Action<TOwner, TValue>? setter,
-        TValue defaultValue)
-        : base(name, typeof(TOwner), defaultValue)
+        TValue defaultValue,
+        BindingMode? defaultMode = null)
+        : base(name, typeof(TOwner), defaultValue, defaultMode: defaultMode ?? (setter != null ? BindingMode.OneWay : BindingMode.OneWayToSource))
     {
         Getter = getter;
         Setter = setter;
@@ -21,9 +24,10 @@ public sealed class DirectProperty<TOwner, TValue> : Property<TValue>
         string name,
         Func<TOwner, TValue> getter,
         Action<TOwner, TValue>? setter = null,
-        TValue defaultValue = default!)
+        TValue defaultValue = default!,
+        BindingMode? defaultMode = null)
     {
-        var prop = new DirectProperty<TOwner, TValue>(name, getter, setter, defaultValue);
+        var prop = new DirectProperty<TOwner, TValue>(name, getter, setter, defaultValue, defaultMode);
         PropertyRegistry.Instance.Register(typeof(TOwner), prop);
         return prop;
     }

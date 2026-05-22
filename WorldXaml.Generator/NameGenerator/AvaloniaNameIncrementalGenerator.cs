@@ -91,16 +91,16 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
         // Generate implementation Register code from PropertyAttributes
         context.RegisterSourceOutput(bindableProperties.Collect(), static (context, bindableProperties) =>
         {
-            foreach (var props in bindableProperties.GroupBy(static prop => (string.Join(", ", prop.Hierarchy.Select(static t => t.Type)), prop.DeclaringNamespace)))
+            foreach (var props in bindableProperties.GroupBy(static prop => prop, PropHierarchyComparer.Instance))
             {
-                var (_, declaringTypeNamespace) = props.Key;
-
+                var declaringTypeNamespace = props.Key.DeclaringNamespace;
+                
                 var sb = new IndentedStringBuilder();
                 
                 sb.AppendLine($"namespace {declaringTypeNamespace};");
                 sb.AppendLine();
 
-                var iter = props.First().Hierarchy.Reverse();
+                var iter = props.Key.Hierarchy.Reverse();
                 foreach (var type in iter)
                 {
                     sb.AppendLine($"partial {(type.TypeIsRecord ? "record" : type.TypeIsStruct ? "struct" : "class")} {type.Type}");
@@ -113,6 +113,9 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                 {
                     if (!prop.PropertyHasBackingProperty)
                     {
+                        sb.AppendLine("/// <summary>");
+                        sb.AppendLine($"/// Property field for <see cref=\"{prop.PropertyName}\"/>.");
+                        sb.AppendLine("/// </summary>");
                         sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} static global::WorldXaml.UI.Base.Property<{prop.PropertyType}> {prop.PropertyName}Property {{ get; }} = global::WorldXaml.UI.Base.Property.Register<{containingTypes}, {prop.PropertyType}>(nameof({prop.PropertyName}), defaultValue: {ToCSharpString(prop.DefaultValue)}, defaultMode: {ToCSharpString(prop.DefaultMode)});");
                     }
 
@@ -498,5 +501,31 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
         public Diagnostic Create() => Diagnostic.Create(Descriptor, 
             Location.Create(LinePosition.Path, default, new(LinePosition.StartLinePosition, LinePosition.EndLinePosition)),
             messageArgs: [.. FormatArguments]);
+    }
+}
+
+public class PropHierarchyComparer : IEqualityComparer<(string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty)>
+{
+    public static PropHierarchyComparer Instance { get; } = new();
+    
+    public bool Equals((string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty) x, (string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty) y)
+    {
+        return x.DeclaringNamespace == y.DeclaringNamespace && x.Hierarchy.SequenceEqual(y.Hierarchy);
+    }
+
+    public int GetHashCode((string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty) obj)
+    {
+        unchecked
+        {
+            var hash = 17;
+            hash = hash * 23 + obj.DeclaringNamespace.GetHashCode();
+            foreach (var type in obj.Hierarchy)
+            {
+                hash = hash * 23 + type.Type.GetHashCode();
+                hash = hash * 23 + type.TypeIsRecord.GetHashCode();
+                hash = hash * 23 + type.TypeIsStruct.GetHashCode();
+            }
+            return hash;
+        }
     }
 }

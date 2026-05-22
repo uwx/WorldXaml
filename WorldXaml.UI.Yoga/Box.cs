@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 using Avalonia.LogicalTree;
@@ -22,6 +23,7 @@ public class Box : Node
         Children = new NodeChildCollection(this);
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public new string DebugToString()
     {
         var sb = new StringBuilder();
@@ -36,7 +38,7 @@ public class Box : Node
         return sb.ToString();
     }
 
-    protected internal override void RescaleRecursive()
+    internal override void RescaleRecursive()
     {
         if (Rescale())
         {
@@ -57,7 +59,7 @@ public class Box : Node
         }
     }
 
-    protected internal override void RenderRecursive(Vector2 root, float rootOpacity = 1)
+    internal override void RenderRecursive(Vector2 root, float rootOpacity = 1)
     {
         _root = root;
         if (Display != YgDisplay.None && Visibility == Visibility.Visible && Opacity > 0f)

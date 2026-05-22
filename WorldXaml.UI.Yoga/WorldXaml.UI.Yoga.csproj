@@ -5,7 +5,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
+    <ItemGroup>
+        <!-- Exclude emitted source-generator files from implicit *.cs glob to prevent double compilation -->
+        <Compile Remove="Generated/**" />
+    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\WorldXaml.UI.Base\WorldXaml.UI.Base.csproj" />
