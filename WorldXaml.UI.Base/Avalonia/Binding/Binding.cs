@@ -20,6 +20,15 @@ public sealed class Binding : IXamlBinding
     public string?      Path { get; set; }
     public BindingMode  Mode { get; set; } = BindingMode.OneWay;
 
+    public Binding()
+    {
+    }
+
+    public Binding(string? path)
+    {
+        Path = path;
+    }
+
     public IDisposable Apply<TValue>(IBindingTarget target, Property<TValue> property)
     {
         return Mode switch
@@ -45,7 +54,7 @@ public sealed class Binding : IXamlBinding
     private IDisposable ApplyOneWay<TValue>(IBindingTarget target, Property<TValue> property)
     {
         var obs = target
-            .GetObservable(PropertyObject.DataContextProperty)
+            .GetObservable(BindableObject.DataContextProperty)
             .Select(dc => ObservePath<TValue>(dc, Path))
             .Switch();
         return target.Bind(property, obs);
@@ -54,7 +63,7 @@ public sealed class Binding : IXamlBinding
     private IDisposable ApplyOneTime<TValue>(IBindingTarget target, Property<TValue> property)
     {
         var obs = target
-            .GetObservable(PropertyObject.DataContextProperty)
+            .GetObservable(BindableObject.DataContextProperty)
             .Where(dc => dc is not null)
             .Take(1)
             .Select(dc => ReadLeaf<TValue>(dc, Path));
@@ -93,7 +102,7 @@ public sealed class Binding : IXamlBinding
         target.PropertyChanged += onTargetChanged;
 
         var dcSub = target
-            .GetObservable(PropertyObject.DataContextProperty)
+            .GetObservable(BindableObject.DataContextProperty)
             .Subscribe(dc => { currentDc = dc; Push(); });
 
         return Disposable.Create(() =>

@@ -39,9 +39,6 @@ public abstract class PropertyObject : IGetSetValue
 
     public event EventHandler<PropertyChangedEventArgs>? PropertyChanged;
     
-    public static readonly Property<object?> DataContextProperty =
-        Property.Register<PropertyObject, object?>("DataContext", null);
-    
     [EditorBrowsable(EditorBrowsableState.Never)]
     public TValue GetValue<TValue>(Property<TValue> property)
     {

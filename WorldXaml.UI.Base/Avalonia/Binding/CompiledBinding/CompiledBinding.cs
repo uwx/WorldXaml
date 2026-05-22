@@ -41,7 +41,7 @@ public sealed class CompiledBinding : IXamlBinding
         IBindingTarget target, Property<TValue> property, ResolvedPath path)
     {
         var obs = target
-            .GetObservable(PropertyObject.DataContextProperty)
+            .GetObservable(BindableObject.DataContextProperty)
             .Select(dc => path.Observe(dc).Select(v => v is TValue tv ? tv : default!))
             .Switch();
         return target.Bind(property, obs);
@@ -51,7 +51,7 @@ public sealed class CompiledBinding : IXamlBinding
         IBindingTarget target, Property<TValue> property, ResolvedPath path)
     {
         var obs = target
-            .GetObservable(PropertyObject.DataContextProperty)
+            .GetObservable(BindableObject.DataContextProperty)
             .Where(dc => dc is not null)
             .Take(1)
             .Select(dc => { var (_, v) = path.TryRead(dc); return v is TValue tv ? tv : default!; });
@@ -90,7 +90,7 @@ public sealed class CompiledBinding : IXamlBinding
         target.PropertyChanged += onTargetChanged;
 
         var dcSub = target
-            .GetObservable(PropertyObject.DataContextProperty)
+            .GetObservable(BindableObject.DataContextProperty)
             .Subscribe(dc => { currentDc = dc; Push(); });
 
         return Disposable.Create(() =>

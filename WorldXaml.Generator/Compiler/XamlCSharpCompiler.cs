@@ -5,7 +5,7 @@ using System.Text;
 using WorldXaml.Generator.Common;
 using WorldXaml.Generator.NameGenerator;
 using Microsoft.CodeAnalysis;
-using WorldXaml.XamlX;
+using NFMWorld.XamlX.Core;
 using XamlX;
 using XamlX.Ast;
 using XamlX.CSharp;
@@ -15,6 +15,7 @@ using XamlX.Parsers;
 using XamlX.Transform;
 using XamlX.Transform.Transformers;
 using XamlX.TypeSystem;
+using WorldXaml.XamlX;
 
 namespace WorldXaml.Generator.Compiler;
 
@@ -29,6 +30,7 @@ internal sealed class XamlCSharpCompiler
     private readonly XamlILCompiler _compiler;
     private readonly IXamlType _contextType;
     private readonly bool _didNotFindRegisterMethod;
+
 
     public XamlCSharpCompiler(
         IXamlTypeSystem typeSystem,
@@ -81,16 +83,15 @@ internal sealed class XamlCSharpCompiler
             EnableIlVerification = false
         };
 
-        // Add directive removal transformer
-        _compiler.Transformers.Add(new RemoveXamlDirectivesTransformer());
+        XamlHelpers.SetUpCompiler(
+            _compiler,
+            compiledBindTypeName,
+            propertyObjectTypeName,
+            bindableObjectTypeName,
+            propertyGenericTypeName,
+            iXamlBindingTypeName
+        );
         
-        var insertIndex = _compiler.Transformers.FindIndex(t => t is PropertyReferenceResolver);
-
-        _compiler.Transformers.Insert(insertIndex, new DataContextTypeTransformer()); // 1
-        _compiler.Transformers.Insert(insertIndex + 1, new BindingPathParser(compiledBindTypeName));          // 2
-        _compiler.Transformers.Insert(insertIndex + 2, new BindingPathTransformer(compiledBindTypeName));     // 3
-        _compiler.Transformers.Insert(insertIndex + 3, new PropertyObjectTransformer(propertyObjectTypeName, bindableObjectTypeName, propertyGenericTypeName, iXamlBindingTypeName));  // 4 (already written)
-
         // Add emitter for SkipXamlAstNode (used when transforms fail but error is handled)
         // Must be first so it's checked before ValueWithManipulationsEmitter
         _compiler.Emitters.Insert(0, new SkipNodeEmitter());

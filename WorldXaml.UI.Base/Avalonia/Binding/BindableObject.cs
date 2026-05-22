@@ -16,10 +16,29 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget
     // Stores active bindings (IDisposable subscriptions)
     private protected readonly Dictionary<int, IDisposable> _bindings = new();
 
+    public static readonly Property<object?> DataContextProperty =
+        Property.Register<PropertyObject, object?>(nameof(DataContext), null);
+
+    /// <summary>
+    /// Sets the type of the associated data context for this object.
+    /// </summary>
     public object? DataContext
     {
         get => GetValue(DataContextProperty);
         set => SetValue(DataContextProperty, value);
+    }
+    
+    public static readonly Property<Type?> DataTypeProperty =
+        Property.Register<PropertyObject, Type?>(nameof(DataType), null);
+
+    /// <summary>
+    /// Sets the compile-time type of the <see cref="BindableObject.DataContext"/>.
+    /// </summary>
+    [Property]
+    public Type? DataType
+    {
+        get => GetValue(DataTypeProperty);
+        set => SetValue(DataTypeProperty, value);
     }
 
     #region Parent/child tree

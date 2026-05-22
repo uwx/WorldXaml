@@ -9,6 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Maxine.Extensions\Maxine.Extensions\Maxine.Extensions.csproj" />
       <ProjectReference Include="..\WorldXaml.Core\WorldXaml.Core.csproj" />
+      <ProjectReference Include="..\WorldXaml.XamlX\WorldXaml.XamlX.csproj" />
       <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />
     </ItemGroup>
 

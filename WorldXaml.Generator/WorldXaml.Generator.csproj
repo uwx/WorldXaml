@@ -16,7 +16,7 @@
 
     <XamlXSourcePath>../XamlX/src/XamlX</XamlXSourcePath>
     <XamlXCSharpSourcePath>../XamlX.IL.CSharp</XamlXCSharpSourcePath>
-    <WorldXamlXamlXSourcePath>../WorldXaml.XamlX</WorldXamlXamlXSourcePath>
+    <WorldXamlXamlXSourcePath>../WorldXaml.Core</WorldXamlXamlXSourcePath>
   </PropertyGroup>
 
   <ItemGroup>

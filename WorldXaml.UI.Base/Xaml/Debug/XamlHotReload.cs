@@ -15,7 +15,9 @@ using XamlX.Emit;
 using XamlX.IL;
 using XamlX.Parsers;
 using XamlX.Transform;
+using XamlX.Transform.Transformers;
 using XamlX.TypeSystem;
+using WorldXaml.XamlX;
 
 namespace WorldXaml.UI.Base.Xaml;
 
@@ -222,8 +224,14 @@ public class XamlHotReload
             EnableIlVerification = false // Disable for now, can enable for debugging
         };
 
-        // Add our custom transformer to remove x:Class and other directives before emit
-        compiler.Transformers.Add(new RemoveXamlDirectivesTransformer());
+        XamlHelpers.SetUpCompiler(
+            compiler,
+            "Avalonia.Data.CompiledBinding",
+            "WorldXaml.UI.Base.PropertyObject",
+            "WorldXaml.UI.Base.BindableObject",
+            "WorldXaml.UI.Base.Property`1",
+            "WorldXaml.UI.Base.IXamlBinding"
+        );
 
         var aName = new AssemblyName($"__XamlRuntimeHotReloadAssembly__{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}");
         var ab = AssemblyBuilder.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);

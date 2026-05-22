@@ -43,6 +43,20 @@ class DataContextTypeTransformer : IXamlAstTransformer
                     _ => null
                 };
             }
+            // Look for DataType property
+            else if (on.Children[i] is XamlAstXamlPropertyValueNode { Property: XamlAstNamePropertyReference { Name: "DataType" }, Values.Count: 1 } propertyValueNode)
+            {
+                on.Children.RemoveAt(i);
+                i--;
+
+                dataContextType = propertyValueNode.Values[0] switch
+                {
+                    XamlTypeExtensionNode typeNode => typeNode.Value.GetClrType(),
+                    XamlAstTextNode text => TypeReferenceResolver.ResolveType(
+                        context, text.Text, false, text, true).GetClrType(),
+                    _ => null
+                };
+            }
         }
 
         if (dataContextType is null)
