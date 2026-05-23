@@ -16,6 +16,19 @@
         <WorldXamlGeneratorBindableObjectTypeName Condition="'$(WorldXamlGeneratorBindableObjectTypeName)' == ''">WorldXaml.UI.Base.BindableObject</WorldXamlGeneratorBindableObjectTypeName>
         <WorldXamlGeneratorPropertyGenericTypeName Condition="'$(WorldXamlGeneratorPropertyGenericTypeName)' == ''">WorldXaml.UI.Base.Property`1</WorldXamlGeneratorPropertyGenericTypeName>
         <WorldXamlGeneratorIXamlBindingTypeName Condition="'$(WorldXamlGeneratorIXamlBindingTypeName)' == ''">WorldXaml.UI.Base.IXamlBinding</WorldXamlGeneratorIXamlBindingTypeName>
+        <WorldXamlGeneratorXmlnsDefinitionAttributeTypeName Condition="'$(WorldXamlGeneratorXmlnsDefinitionAttributeTypeName)' == ''">Avalonia.Metadata.XmlnsDefinitionAttribute</WorldXamlGeneratorXmlnsDefinitionAttributeTypeName>
+        <WorldXamlGeneratorContentAttributeTypeName Condition="'$(WorldXamlGeneratorContentAttributeTypeName)' == ''">Avalonia.Metadata.ContentAttribute</WorldXamlGeneratorContentAttributeTypeName>
+        <WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName Condition="'$(WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName)' == ''">Avalonia.Metadata.WhitespaceSignificantCollectionAttribute</WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName>
+        <WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName Condition="'$(WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName)' == ''">Avalonia.Metadata.TrimSurroundingWhitespaceAttribute</WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName>
+        <WorldXamlGeneratorUsableDuringInitializationAttributeTypeName Condition="'$(WorldXamlGeneratorUsableDuringInitializationAttributeTypeName)' == ''">Avalonia.Metadata.UsableDuringInitializationAttribute</WorldXamlGeneratorUsableDuringInitializationAttributeTypeName>
+        <WorldXamlGeneratorTemplateContentAttributeTypeName Condition="'$(WorldXamlGeneratorTemplateContentAttributeTypeName)' == ''">Avalonia.Metadata.TemplateContentAttribute</WorldXamlGeneratorTemplateContentAttributeTypeName>
+        <WorldXamlGeneratorIRootObjectProviderTypeName Condition="'$(WorldXamlGeneratorIRootObjectProviderTypeName)' == ''">Avalonia.Markup.Xaml.IRootObjectProvider</WorldXamlGeneratorIRootObjectProviderTypeName>
+        <WorldXamlGeneratorIUriContextTypeName Condition="'$(WorldXamlGeneratorIUriContextTypeName)' == ''">Avalonia.Markup.Xaml.IUriContext</WorldXamlGeneratorIUriContextTypeName>
+        <WorldXamlGeneratorIProvideValueTargetTypeName Condition="'$(WorldXamlGeneratorIProvideValueTargetTypeName)' == ''">Avalonia.Markup.Xaml.IProvideValueTarget</WorldXamlGeneratorIProvideValueTargetTypeName>
+        <WorldXamlGeneratorIAddChildTypeName Condition="'$(WorldXamlGeneratorIAddChildTypeName)' == ''">Avalonia.Metadata.IAddChild</WorldXamlGeneratorIAddChildTypeName>
+        <WorldXamlGeneratorIAddChildGenericTypeName Condition="'$(WorldXamlGeneratorIAddChildGenericTypeName)' == ''">Avalonia.Metadata.IAddChild`1</WorldXamlGeneratorIAddChildGenericTypeName>
+        <WorldXamlGeneratorIXamlParentStackProviderV1TypeName Condition="'$(WorldXamlGeneratorIXamlParentStackProviderV1TypeName)' == ''">XamlX.Runtime.IXamlParentStackProviderV1</WorldXamlGeneratorIXamlParentStackProviderV1TypeName>
+        <WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName Condition="'$(WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName)' == ''">XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1</WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName>
     </PropertyGroup>
     <ItemGroup>
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup"/>
@@ -35,6 +48,19 @@
         <CompilerVisibleProperty Include="WorldXamlGeneratorBindableObjectTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorPropertyGenericTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorIXamlBindingTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorXmlnsDefinitionAttributeTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorContentAttributeTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorUsableDuringInitializationAttributeTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorTemplateContentAttributeTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIRootObjectProviderTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIUriContextTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIProvideValueTargetTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIAddChildTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIAddChildGenericTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIXamlParentStackProviderV1TypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName"/>
     </ItemGroup>
     <Target Name="_InjectAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
         <ItemGroup>

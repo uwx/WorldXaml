@@ -1,6 +1,7 @@
 using XamlX.Ast;
 using XamlX.Transform;
 using XamlX.Transform.Transformers;
+using XamlX.TypeSystem;
 
 namespace WorldXaml.XamlX;
 

@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />
+        <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />
     </ItemGroup>
 
 </Project>

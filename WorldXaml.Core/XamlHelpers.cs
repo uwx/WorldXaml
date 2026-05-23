@@ -12,38 +12,38 @@ public
 #endif
 static class XamlHelpers
 {
-    public static void SetUpCompiler(XamlILCompiler _compiler, string CompiledBindFqn, string PropertyObjectFqn, string BindableObjectFqn, string PropertyGenericFqn, string IXamlBindingFqn)
+    public static void SetUpCompiler(XamlILCompiler compiler, IKnownTypes knownTypes)
     {
         // Replace TypeExtension markup with efficient XamlTypeExtensionNode (same as x:Type)
-        var meIndex = _compiler.Transformers.FindIndex(x => x is MarkupExtensionTransformer);
-        _compiler.Transformers.Insert(meIndex, new TypeExtensionTransformer());
+        var meIndex = compiler.Transformers.FindIndex(x => x is MarkupExtensionTransformer);
+        compiler.Transformers.Insert(meIndex, new TypeExtensionTransformer());
 
         // Add directive removal transformer
-        _compiler.Transformers.Add(new RemoveXamlDirectivesTransformer());
+        compiler.Transformers.Add(new RemoveXamlDirectivesTransformer());
 
         // These must run in this exact order - same as Avalonia's pipeline.
-        var insertIndex = _compiler.Transformers.FindIndex(t => t is PropertyReferenceResolver);
+        var insertIndex = compiler.Transformers.FindIndex(t => t is PropertyReferenceResolver);
 
-        _compiler.Transformers.Insert(insertIndex,           new DataContextTypeTransformer());
-        _compiler.Transformers.Insert(insertIndex + 1, new BindingPathParser(CompiledBindFqn));
-        _compiler.Transformers.Insert(insertIndex + 2, new BindingPathTransformer(CompiledBindFqn));
-        _compiler.Transformers.Insert(insertIndex + 3, new PropertyObjectTransformer(PropertyObjectFqn, BindableObjectFqn, PropertyGenericFqn, IXamlBindingFqn));
+        compiler.Transformers.Insert(insertIndex,           new DataContextTypeTransformer());
+        compiler.Transformers.Insert(insertIndex + 1, new BindingPathParser(knownTypes.CompiledBind));
+        compiler.Transformers.Insert(insertIndex + 2, new BindingPathTransformer(knownTypes.CompiledBind));
+        compiler.Transformers.Insert(insertIndex + 3, new PropertyObjectTransformer(knownTypes.PropertyObject, knownTypes.BindableObject, knownTypes.PropertyGeneric, knownTypes.IXamlBinding));
     }
     
-    public static XamlLanguageTypeMappings CreateTypeMappings(IXamlTypeSystem typeSystem)
+    public static XamlLanguageTypeMappings CreateTypeMappings(IXamlTypeSystem typeSystem, IKnownTypes knownTypes)
     {
         var mappings = new XamlLanguageTypeMappings(typeSystem);
 
         // Add our custom attributes if they exist
-        TryAddType(typeSystem, "Avalonia.Metadata.XmlnsDefinitionAttribute", mappings.XmlnsAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.ContentAttribute", mappings.ContentAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.WhitespaceSignificantCollectionAttribute", mappings.WhitespaceSignificantCollectionAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.TrimSurroundingWhitespaceAttribute", mappings.TrimSurroundingWhitespaceAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.UsableDuringInitializationAttribute", mappings.UsableDuringInitializationAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.TemplateContentAttribute", mappings.DeferredContentPropertyAttributes);
+        TryAddType(typeSystem, knownTypes.XmlnsDefinitionAttribute, mappings.XmlnsAttributes);
+        TryAddType(typeSystem, knownTypes.ContentAttribute, mappings.ContentAttributes);
+        TryAddType(typeSystem, knownTypes.WhitespaceSignificantCollectionAttribute, mappings.WhitespaceSignificantCollectionAttributes);
+        TryAddType(typeSystem, knownTypes.TrimSurroundingWhitespaceAttribute, mappings.TrimSurroundingWhitespaceAttributes);
+        TryAddType(typeSystem, knownTypes.UsableDuringInitializationAttribute, mappings.UsableDuringInitializationAttributes);
+        TryAddType(typeSystem, knownTypes.TemplateContentAttribute, mappings.DeferredContentPropertyAttributes);
 
         // Set up our runtime interfaces
-        var rootObjectProvider = typeSystem.FindType("Avalonia.Markup.Xaml.IRootObjectProvider");
+        var rootObjectProvider = typeSystem.FindType(knownTypes.IRootObjectProvider);
         if (rootObjectProvider != null)
         {
             mappings.RootObjectProvider = rootObjectProvider;
@@ -51,28 +51,28 @@ static class XamlHelpers
             mappings.RootObjectProviderIntermediateRootPropertyName = "IntermediateRootObject";
         }
 
-        var uriContext = typeSystem.FindType("Avalonia.Markup.Xaml.IUriContext");
+        var uriContext = typeSystem.FindType(knownTypes.IUriContext);
         if (uriContext != null)
             mappings.UriContextProvider = uriContext;
 
-        var provideValueTarget = typeSystem.FindType("Avalonia.Markup.Xaml.IProvideValueTarget");
+        var provideValueTarget = typeSystem.FindType(knownTypes.IProvideValueTarget);
         if (provideValueTarget != null)
             mappings.ProvideValueTarget = provideValueTarget;
 
-        var addChild = typeSystem.FindType("Avalonia.Metadata.IAddChild");
+        var addChild = typeSystem.FindType(knownTypes.IAddChild);
         if (addChild != null)
             mappings.IAddChild = addChild;
 
-        var addChildOfT = typeSystem.FindType("Avalonia.Metadata.IAddChild`1");
+        var addChildOfT = typeSystem.FindType(knownTypes.IAddChildGeneric);
         if (addChildOfT != null)
             mappings.IAddChildOfT = addChildOfT;
 
         // Use XamlX runtime types for parent stack and namespace info
-        var parentStackProvider = typeSystem.FindType("XamlX.Runtime.IXamlParentStackProviderV1");
+        var parentStackProvider = typeSystem.FindType(knownTypes.IXamlParentStackProviderV1);
         if (parentStackProvider != null)
             mappings.ParentStackProvider = parentStackProvider;
 
-        var xmlNamespaceInfoProvider = typeSystem.FindType("XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1");
+        var xmlNamespaceInfoProvider = typeSystem.FindType(knownTypes.IXamlXmlNamespaceInfoProviderV1);
         if (xmlNamespaceInfoProvider != null)
             mappings.XmlNamespaceInfoProvider = xmlNamespaceInfoProvider;
 

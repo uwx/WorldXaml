@@ -1,8 +1,11 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using WorldXaml.Generator.Common;
 using WorldXaml.Generator.Common.Domain;
 using WorldXaml.Generator.NameGenerator;
 using Microsoft.CodeAnalysis.Diagnostics;
+using NFMWorld.XamlX.Core;
 
 namespace WorldXaml.Generator;
 
@@ -25,6 +28,19 @@ internal enum BuildProperties
     WorldXamlGeneratorBindableObjectTypeName,
     WorldXamlGeneratorPropertyGenericTypeName,
     WorldXamlGeneratorIXamlBindingTypeName,
+    WorldXamlGeneratorXmlnsDefinitionAttributeTypeName,
+    WorldXamlGeneratorContentAttributeTypeName,
+    WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName,
+    WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName,
+    WorldXamlGeneratorUsableDuringInitializationAttributeTypeName,
+    WorldXamlGeneratorTemplateContentAttributeTypeName,
+    WorldXamlGeneratorIRootObjectProviderTypeName,
+    WorldXamlGeneratorIUriContextTypeName,
+    WorldXamlGeneratorIProvideValueTargetTypeName,
+    WorldXamlGeneratorIAddChildTypeName,
+    WorldXamlGeneratorIAddChildGenericTypeName,
+    WorldXamlGeneratorIXamlParentStackProviderV1TypeName,
+    WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName,
     // TODO add other generators properties here.
 }
 
@@ -64,38 +80,61 @@ internal record GeneratorOptions
             options,
             BuildProperties.WorldXamlGeneratorIsHotReloadingEnabled,
             true);
-        WorldXamlGeneratorHotReloadTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorHotReloadTypeName,
-            "WorldXaml.UI.Base.Xaml.XamlHotReload");
-        WorldXamlGeneratorStyledElementTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorStyledElementTypeName,
-            "WorldXaml.UI.Yoga.Node");
-        WorldXamlGeneratorWindowTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorWindowTypeName,
-            "WorldXaml.UI.Yoga.View");
-        WorldXamlGeneratorCompiledBindTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorCompiledBindTypeName,
-            "Avalonia.Data.CompiledBinding");
-        WorldXamlGeneratorPropertyObjectTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorPropertyObjectTypeName,
-            "WorldXaml.UI.Base.PropertyObject");
-        WorldXamlGeneratorBindableObjectTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorBindableObjectTypeName,
-            "WorldXaml.UI.Base.BindableObject");
-        WorldXamlGeneratorPropertyGenericTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorPropertyGenericTypeName,
-            "WorldXaml.UI.Base.Property`1");
-        WorldXamlGeneratorIXamlBindingTypeName = GetStringProperty(
-            options,
-            BuildProperties.WorldXamlGeneratorIXamlBindingTypeName,
-            "WorldXaml.UI.Base.IXamlBinding");
+        KnownTypes = new TheKnownTypes(options);
+    }
+
+    internal class TheKnownTypes(AnalyzerConfigOptions options) : IKnownTypes, IEnumerable<KeyValuePair<string, string?>>
+    {
+        public string StyledElement { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorStyledElementTypeName, "WorldXaml.UI.Yoga.Node");
+        public string Window { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorWindowTypeName, "WorldXaml.UI.Yoga.View");
+
+        public string XmlnsDefinitionAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorXmlnsDefinitionAttributeTypeName, "Avalonia.Metadata.XmlnsDefinitionAttribute");
+        public string ContentAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorContentAttributeTypeName, "Avalonia.Metadata.ContentAttribute");
+        public string WhitespaceSignificantCollectionAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName, "Avalonia.Metadata.WhitespaceSignificantCollectionAttribute");
+        public string TrimSurroundingWhitespaceAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName, "Avalonia.Metadata.TrimSurroundingWhitespaceAttribute");
+        public string UsableDuringInitializationAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorUsableDuringInitializationAttributeTypeName, "Avalonia.Metadata.UsableDuringInitializationAttribute");
+        public string TemplateContentAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorTemplateContentAttributeTypeName, "Avalonia.Metadata.TemplateContentAttribute");
+        public string IRootObjectProvider { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIRootObjectProviderTypeName, "Avalonia.Markup.Xaml.IRootObjectProvider");
+        public string IUriContext { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIUriContextTypeName, "Avalonia.Markup.Xaml.IUriContext");
+        public string IProvideValueTarget { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIProvideValueTargetTypeName, "Avalonia.Markup.Xaml.IProvideValueTarget");
+        public string IAddChild { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIAddChildTypeName, "Avalonia.Metadata.IAddChild");
+        public string IAddChildGeneric { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIAddChildGenericTypeName, "Avalonia.Metadata.IAddChild`1");
+        public string IXamlParentStackProviderV1 { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlParentStackProviderV1TypeName, "XamlX.Runtime.IXamlParentStackProviderV1");
+        public string IXamlXmlNamespaceInfoProviderV1 { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName, "XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1");
+    
+        public string CompiledBind { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorCompiledBindTypeName, "Avalonia.Data.CompiledBinding");
+        public string PropertyObject { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyObjectTypeName, "WorldXaml.UI.Base.PropertyObject");
+        public string BindableObject { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorBindableObjectTypeName, "WorldXaml.UI.Base.BindableObject");
+        public string PropertyGeneric { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyGenericTypeName, "WorldXaml.UI.Base.Property`1");
+        public string IXamlBinding { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlBindingTypeName, "WorldXaml.UI.Base.IXamlBinding");
+        public string? HotReload { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorHotReloadTypeName, "WorldXaml.UI.Base.Xaml.XamlHotReload");
+
+        public IEnumerator<KeyValuePair<string, string?>> GetEnumerator()
+        {
+            yield return KeyValuePair.Create<string, string?>(nameof(StyledElement), StyledElement);
+            yield return KeyValuePair.Create<string, string?>(nameof(Window), Window);
+            yield return KeyValuePair.Create<string, string?>(nameof(XmlnsDefinitionAttribute), XmlnsDefinitionAttribute);
+            yield return KeyValuePair.Create<string, string?>(nameof(ContentAttribute), ContentAttribute);
+            yield return KeyValuePair.Create<string, string?>(nameof(WhitespaceSignificantCollectionAttribute), WhitespaceSignificantCollectionAttribute);
+            yield return KeyValuePair.Create<string, string?>(nameof(TrimSurroundingWhitespaceAttribute), TrimSurroundingWhitespaceAttribute);
+            yield return KeyValuePair.Create<string, string?>(nameof(UsableDuringInitializationAttribute), UsableDuringInitializationAttribute);
+            yield return KeyValuePair.Create<string, string?>(nameof(TemplateContentAttribute), TemplateContentAttribute);
+            yield return KeyValuePair.Create<string, string?>(nameof(IRootObjectProvider), IRootObjectProvider);
+            yield return KeyValuePair.Create<string, string?>(nameof(IUriContext), IUriContext);
+            yield return KeyValuePair.Create<string, string?>(nameof(IProvideValueTarget), IProvideValueTarget);
+            yield return KeyValuePair.Create<string, string?>(nameof(IAddChild), IAddChild);
+            yield return KeyValuePair.Create<string, string?>(nameof(IAddChildGeneric), IAddChildGeneric);
+            yield return KeyValuePair.Create<string, string?>(nameof(IXamlParentStackProviderV1), IXamlParentStackProviderV1);
+            yield return KeyValuePair.Create<string, string?>(nameof(IXamlXmlNamespaceInfoProviderV1), IXamlXmlNamespaceInfoProviderV1);
+            yield return KeyValuePair.Create<string, string?>(nameof(CompiledBind), CompiledBind);
+            yield return KeyValuePair.Create<string, string?>(nameof(PropertyObject), PropertyObject);
+            yield return KeyValuePair.Create<string, string?>(nameof(BindableObject), BindableObject);
+            yield return KeyValuePair.Create<string, string?>(nameof(PropertyGeneric), PropertyGeneric);
+            yield return KeyValuePair.Create<string, string?>(nameof(IXamlBinding), IXamlBinding);
+            yield return KeyValuePair.Create<string, string?>(nameof(HotReload), HotReload);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     public bool WorldXamlGeneratorIsEnabled { get; }
@@ -106,14 +145,7 @@ internal record GeneratorOptions
     public IGlobPattern WorldXamlGeneratorFilterByNamespace { get; }
     public bool WorldXamlGeneratorAttachDevTools { get; }
     public bool WorldXamlGeneratorIsHotReloadingEnabled { get; }
-    public string WorldXamlGeneratorHotReloadTypeName { get; }
-    public string WorldXamlGeneratorWindowTypeName { get; }
-    public string WorldXamlGeneratorStyledElementTypeName { get; }
-    public string WorldXamlGeneratorCompiledBindTypeName { get; }
-    public string WorldXamlGeneratorPropertyObjectTypeName { get; }
-    public string WorldXamlGeneratorBindableObjectTypeName { get; }
-    public string WorldXamlGeneratorPropertyGenericTypeName { get; }
-    public string WorldXamlGeneratorIXamlBindingTypeName { get; }
+    public TheKnownTypes KnownTypes { get; }
 
     private static string[] GetStringArrayProperty(AnalyzerConfigOptions options, BuildProperties name, string defaultValue)
     {

@@ -128,6 +128,16 @@ public class XamlHotReload
     [RequiresDynamicCode("Uses Reflection.Emit which may not be compatible with AOT.")]
     private static async Task? ReloadXaml(string path)
     {
+        if (AppDomain.CurrentDomain
+                .GetAssemblies()
+                .Select(assembly => assembly.GetType("__XamlKnownTypes"))
+                .FirstOrDefault(type => type != null)
+                ?.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
+                ?.GetValue(null) is not IKnownTypes knownTypes)
+        {
+            throw new InvalidOperationException($"Could not find {nameof(IKnownTypes)} instance for hot reload. Ensure that source generation has run.");
+        }
+        
         var fullPath = Path.GetFullPath(path);
         var nodesToUpdate = _trackedNodes.Where(e => e.Value == fullPath).ToArray();
         if (nodesToUpdate.Length > 0)
@@ -138,7 +148,7 @@ public class XamlHotReload
             try
             {
                 var firstNode = nodesToUpdate[0].Key;
-                var (create, populate) = CompileXaml(firstNode, path, await File.ReadAllTextAsync(path));
+                var (create, populate) = CompileXaml(firstNode, path, await File.ReadAllTextAsync(path), knownTypes);
                 Logging.Debug($"[XamlHotReload] Successfully compiled XAML: {fullPath}");
                 
                 foreach (var (node, _) in nodesToUpdate)
@@ -195,14 +205,14 @@ public class XamlHotReload
 
     [RequiresUnreferencedCode("Uses XamlX Sre types which may not be compatible with trimming.")]
     [RequiresDynamicCode("Uses Reflection.Emit which may not be compatible with AOT.")]
-    private static (Func<IServiceProvider?, object>? create, Action<IServiceProvider?, object?> populate) CompileXaml(ILogical intoNode, string xamlPath, string text)
+    private static (Func<IServiceProvider?, object>? create, Action<IServiceProvider?, object?> populate) CompileXaml(ILogical intoNode, string xamlPath, string text, IKnownTypes knownTypes)
     {
         var typeSystem = new SreTypeSystem();
 
         var assembly = typeSystem.FindAssembly(Assembly.GetExecutingAssembly().GetName().Name ?? throw new InvalidOperationException("Could not get executing assembly name"));
 
         // Create XamlX configuration with our type mappings
-        var typeMappings = XamlHelpers.CreateTypeMappings(typeSystem);
+        var typeMappings = XamlHelpers.CreateTypeMappings(typeSystem, knownTypes);
         var diagnosticsHandler = new XamlDiagnosticsHandler
         {
             HandleDiagnostic = diagnostic =>
@@ -224,14 +234,7 @@ public class XamlHotReload
             EnableIlVerification = false // Disable for now, can enable for debugging
         };
 
-        XamlHelpers.SetUpCompiler(
-            compiler,
-            "Avalonia.Data.CompiledBinding",
-            "WorldXaml.UI.Base.PropertyObject",
-            "WorldXaml.UI.Base.BindableObject",
-            "WorldXaml.UI.Base.Property`1",
-            "WorldXaml.UI.Base.IXamlBinding"
-        );
+        XamlHelpers.SetUpCompiler(compiler, knownTypes);
 
         var aName = new AssemblyName($"__XamlRuntimeHotReloadAssembly__{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}");
         var ab = AssemblyBuilder.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);

@@ -157,6 +157,28 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             .Select(static (options, _) => new GeneratorOptions(options.GlobalOptions))
             .WithTrackingName(TrackingNames.XamlGeneratorOptionsProvider);
 
+        // Generate __XamlKnownTypes used for hot reload based on KnownTypes.
+        context.RegisterSourceOutput(options, static (context, options) =>
+        {
+            var sb = new IndentedStringBuilder();
+            sb.AppendLine("using System.ComponentModel;");
+            sb.AppendLine();
+            sb.AppendLine("namespace WorldXaml.Generator;");
+            sb.AppendLine();
+            sb.AppendLine("[EditorBrowsable(EditorBrowsableState.Never)]");
+            sb.AppendLine("internal static class __XamlKnownTypes");
+            sb.AppendLine("{");
+            sb.IncrementIndent();
+            foreach (var knownType in options.KnownTypes)
+            {
+                sb.AppendLine($"public const string {knownType.Key} = \"{knownType.Value}\";");
+            }
+            sb.DecrementIndent();
+            sb.AppendLine("}");
+            
+            context.AddSource("__XamlKnownTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+        });
+
         // Filter additional texts, we only need Avalonia XAML files.
         var xamlFiles = context.AdditionalTextsProvider
             .Combine(options.Combine(context.AnalyzerConfigOptionsProvider))
@@ -280,13 +302,8 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                 {
                     return new XamlCSharpCompiler(
                         roslynTypeSystem,
-                        compiledBindTypeName: options.WorldXamlGeneratorCompiledBindTypeName,
-                        propertyObjectTypeName: options.WorldXamlGeneratorPropertyObjectTypeName,
-                        bindableObjectTypeName: options.WorldXamlGeneratorBindableObjectTypeName,
-                        propertyGenericTypeName: options.WorldXamlGeneratorPropertyGenericTypeName,
-                        iXamlBindingTypeName: options.WorldXamlGeneratorIXamlBindingTypeName,
-                        supportHotReloading: options.WorldXamlGeneratorIsHotReloadingEnabled,
-                        hotReloadTypeName: options.WorldXamlGeneratorHotReloadTypeName
+                        knownTypes: options.KnownTypes,
+                        supportHotReloading: true
                     );
                 }
                 catch (Exception ex)
@@ -336,7 +353,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                     {
                         diagnostics.Add(new(NameGeneratorDiagnostics.InvalidType, new(classInfo.FilePath, default), new([xmlView.FullName])));
                     }
-                    else if (type.IsAvaloniaStyledElement(options.WorldXamlGeneratorStyledElementTypeName))
+                    else if (type.IsAvaloniaStyledElement(options.KnownTypes.StyledElement))
                     {
                         var resolvedNames = new List<ResolvedName>();
                         foreach (var xmlName in xmlView.XmlNames)
@@ -346,7 +363,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                             try
                             {
                                 var clrType = compiler.ResolveXamlType(xmlName.XmlType);
-                                if (!clrType.IsAvaloniaStyledElement(options.WorldXamlGeneratorStyledElementTypeName))
+                                if (!clrType.IsAvaloniaStyledElement(options.KnownTypes.StyledElement))
                                 {
                                     Print($"Skipping name resolution for non-StyledElement type: {clrType.GetFqn()}");
                                     continue;
@@ -368,7 +385,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                             }
                         }
 
-                        view = new ResolvedView(xmlView, type.IsAvaloniaWindow(options.WorldXamlGeneratorWindowTypeName), new(resolvedNames));
+                        view = new ResolvedView(xmlView, type.IsAvaloniaWindow(options.KnownTypes.Window), new(resolvedNames));
 
                         // Compile XAML to C# for WithXamlXCompilation behavior
                         if (csharpCompiler != null && classInfo.XamlSource != null)

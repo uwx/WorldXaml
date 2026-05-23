@@ -34,17 +34,12 @@ internal sealed class XamlCSharpCompiler
 
     public XamlCSharpCompiler(
         IXamlTypeSystem typeSystem,
-        string compiledBindTypeName,
-        string propertyObjectTypeName,
-        string bindableObjectTypeName,
-        string propertyGenericTypeName,
-        string iXamlBindingTypeName,
-        bool supportHotReloading = false,
-        string? hotReloadTypeName = null)
+        IKnownTypes knownTypes,
+        bool supportHotReloading = false)
     {
         _typeSystem = typeSystem;
 
-        var mappings = CreateTypeMappings(typeSystem);
+        var mappings = XamlHelpers.CreateTypeMappings(typeSystem, knownTypes);
         var diagnosticsHandler = new XamlDiagnosticsHandler();
         var assembly = typeSystem.Assemblies.First();
 
@@ -56,10 +51,12 @@ internal sealed class XamlCSharpCompiler
         if (supportHotReloading)
         {
             // Find the XamlHotReload.Register method for runtime support
-            var registerMethod = typeSystem.Assemblies
-                .Select(ass => ass.FindType(hotReloadTypeName ?? "WorldXaml.UI.Base.Xaml.XamlHotReload"))
-                .FirstOrDefault(type => type != null)
-                ?.FindMethod(method => method.Name == "Register");
+            var registerMethod = knownTypes.HotReload is {} hotReloadTypeName
+                ? typeSystem.Assemblies
+                    .Select(ass => ass.FindType(hotReloadTypeName))
+                    .FirstOrDefault(type => type != null)
+                    ?.FindMethod(method => method.Name == "Register")
+                : null;
 
             if (registerMethod == null)
             {
@@ -85,11 +82,7 @@ internal sealed class XamlCSharpCompiler
 
         XamlHelpers.SetUpCompiler(
             _compiler,
-            compiledBindTypeName,
-            propertyObjectTypeName,
-            bindableObjectTypeName,
-            propertyGenericTypeName,
-            iXamlBindingTypeName
+            knownTypes
         );
         
         // Add emitter for SkipXamlAstNode (used when transforms fail but error is handled)
@@ -186,51 +179,6 @@ internal sealed class XamlCSharpCompiler
         return sb.ToString();
     }
 
-    private static XamlLanguageTypeMappings CreateTypeMappings(IXamlTypeSystem typeSystem)
-    {
-        var mappings = new XamlLanguageTypeMappings(typeSystem);
-
-        TryAddType(typeSystem, "Avalonia.Metadata.XmlnsDefinitionAttribute", mappings.XmlnsAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.ContentAttribute", mappings.ContentAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.WhitespaceSignificantCollectionAttribute", mappings.WhitespaceSignificantCollectionAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.TrimSurroundingWhitespaceAttribute", mappings.TrimSurroundingWhitespaceAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.UsableDuringInitializationAttribute", mappings.UsableDuringInitializationAttributes);
-        TryAddType(typeSystem, "Avalonia.Metadata.TemplateContentAttribute", mappings.DeferredContentPropertyAttributes);
-
-        var rootObjectProvider = typeSystem.FindType("Avalonia.Markup.Xaml.IRootObjectProvider");
-        if (rootObjectProvider != null)
-        {
-            mappings.RootObjectProvider = rootObjectProvider;
-            mappings.RootObjectProviderIntermediateRootPropertyName = "IntermediateRootObject";
-        }
-
-        var uriContext = typeSystem.FindType("Avalonia.Markup.Xaml.IUriContext");
-        if (uriContext != null)
-            mappings.UriContextProvider = uriContext;
-
-        var provideValueTarget = typeSystem.FindType("Avalonia.Markup.Xaml.IProvideValueTarget");
-        if (provideValueTarget != null)
-            mappings.ProvideValueTarget = provideValueTarget;
-
-        var addChild = typeSystem.FindType("Avalonia.Metadata.IAddChild");
-        if (addChild != null)
-            mappings.IAddChild = addChild;
-
-        var addChildOfT = typeSystem.FindType("Avalonia.Metadata.IAddChild`1");
-        if (addChildOfT != null)
-            mappings.IAddChildOfT = addChildOfT;
-
-        var parentStackProvider = typeSystem.FindType("XamlX.Runtime.IXamlParentStackProviderV1");
-        if (parentStackProvider != null)
-            mappings.ParentStackProvider = parentStackProvider;
-
-        var xmlNamespaceInfoProvider = typeSystem.FindType("XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1");
-        if (xmlNamespaceInfoProvider != null)
-            mappings.XmlNamespaceInfoProvider = xmlNamespaceInfoProvider;
-
-        return mappings;
-    }
-
     private static void TryAddType(IXamlTypeSystem typeSystem, string typeName, List<IXamlType> list)
     {
         var type = typeSystem.FindType(typeName);
@@ -246,12 +194,23 @@ internal sealed class XamlCSharpCompiler
         public IXamlAstNode Transform(AstTransformationContext context, IXamlAstNode node)
         {
             if (node is XamlManipulationGroupNode group)
-                group.Children.RemoveAll(n => n is XamlAstXmlDirective { Name: "Class" or "Key" or "Name" });
+                group.Children.RemoveAll(ShouldRemoveDirective);
             if (node is XamlAstObjectNode objNode)
-                objNode.Children.RemoveAll(n => n is XamlAstXmlDirective { Name: "Class" or "Key" or "Name" });
+                objNode.Children.RemoveAll(ShouldRemoveDirective);
             if (node is XamlValueWithManipulationNode { Manipulation: XamlManipulationGroupNode manipGroup })
-                manipGroup.Children.RemoveAll(n => n is XamlAstXmlDirective { Name: "Class" or "Key" or "Name" });
+                manipGroup.Children.RemoveAll(ShouldRemoveDirective);
             return node;
+        }
+
+        private static bool ShouldRemoveDirective(IXamlAstNode n)
+        {
+            if (n is not XamlAstXmlDirective directive)
+                return false;
+            if (directive.Name is "Class" or "Key" or "Name")
+                return true;
+            if (directive.Namespace == XamlNamespaces.Blend2008)
+                return true;
+            return false;
         }
     }
 }
