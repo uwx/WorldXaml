@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Reactive;
+using Avalonia;
 using Avalonia.LogicalTree;
 
 namespace WorldXaml.UI.Base;
@@ -8,16 +9,16 @@ public interface IBindingTarget : IGetSetValue
 {
     object? DataContext { get; }
 
-    IDisposable Bind<TValue>(Property<TValue> property, IObservable<TValue> source);
+    IDisposable Bind<TValue>(StyledProperty<TValue> property, IObservable<TValue> source);
 }
 
-public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget
+public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget, IDataContextProvider
 {
     // Stores active bindings (IDisposable subscriptions)
     private protected readonly Dictionary<int, IDisposable> _bindings = new();
 
-    public static readonly Property<object?> DataContextProperty =
-        Property.Register<PropertyObject, object?>(nameof(DataContext), null);
+    public static readonly StyledProperty<object?> DataContextProperty =
+        AvaloniaProperty.RegisterDirect<PropertyObject, object?>(nameof(DataContext), null);
 
     /// <summary>
     /// Sets the type of the associated data context for this object.
@@ -28,8 +29,8 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget
         set => SetValue(DataContextProperty, value);
     }
     
-    public static readonly Property<Type?> DataTypeProperty =
-        Property.Register<PropertyObject, Type?>(nameof(DataType), null);
+    public static readonly StyledProperty<Type?> DataTypeProperty =
+        AvaloniaProperty.Register<PropertyObject, Type?>(nameof(DataType), null);
 
     /// <summary>
     /// Sets the compile-time type of the <see cref="BindableObject.DataContext"/>.
@@ -127,7 +128,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget
     #endregion
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public override void SetValue<TValue>(Property<TValue> property, TValue value)
+    public override void SetValue<TValue>(StyledProperty<TValue> property, TValue value)
     {
         ClearBinding(property); // local value wins, kill any binding
         base.SetValue(property, value);
@@ -144,7 +145,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget
         base.SetValue(property, value);
     }
 
-    public IDisposable Bind<TValue>(Property<TValue> property, IObservable<TValue> source)
+    public IDisposable Bind<TValue>(StyledProperty<TValue> property, IObservable<TValue> source)
     {
         ClearBinding(property);
         var sub = source.Subscribe(Observer.Create<TValue>(v => SetValueCore(property, v)));
@@ -156,7 +157,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget
     // Signature must be non-generic so XamlX can find it easily;
     // the cast is safe because the transformer verified types at compile time.
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public void BindFromXaml<TValue>(Property<TValue> property, IXamlBinding binding)
+    public void BindFromXaml<TValue>(StyledProperty<TValue> property, IXamlBinding binding)
     {
         ClearBinding(property);
         var sub = binding.Apply(this, property);
@@ -173,7 +174,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget
         _bindings[property.Id] = sub;
     }
 
-    private void ClearBinding(Property property)
+    private void ClearBinding(AvaloniaProperty property)
     {
         if (_bindings.Remove(property.Id, out var sub))
             sub.Dispose();

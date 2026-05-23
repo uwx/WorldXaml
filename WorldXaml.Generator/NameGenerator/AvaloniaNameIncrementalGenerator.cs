@@ -287,8 +287,12 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             .Select(static (compilation, _) => new RoslynTypeSystem(compilation))
             .WithTrackingName(TrackingNames.RoslynTypeSystem);
 
-        var compiler = roslynTypeSystem
-            .Select(static (roslynTypeSystem, _) => MiniCompiler.CreateRoslyn(roslynTypeSystem, MiniCompiler.AvaloniaXmlnsDefinitionAttribute))
+        var compiler = roslynTypeSystem.Combine(options)
+            .Select(static (pair, _) =>
+            {
+                var (roslynTypeSystem, options) = pair;
+                return MiniCompiler.CreateRoslyn(roslynTypeSystem, options.KnownTypes.XmlnsDefinitionAttribute);
+            })
             .WithTrackingName(TrackingNames.XamlTypeSystem);
 
         // Create C# XAML compiler for full XAML-to-C# compilation (WithXamlXCompilation behavior).

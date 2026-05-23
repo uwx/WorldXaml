@@ -88,7 +88,7 @@ internal record GeneratorOptions
         public string StyledElement { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorStyledElementTypeName, "WorldXaml.UI.Yoga.Node");
         public string Window { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorWindowTypeName, "WorldXaml.UI.Yoga.View");
 
-        public string XmlnsDefinitionAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorXmlnsDefinitionAttributeTypeName, "Avalonia.Metadata.XmlnsDefinitionAttribute");
+        public string XmlnsDefinitionAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorXmlnsDefinitionAttributeTypeName, "System.Windows.Markup.XmlnsDefinitionAttribute");
         public string ContentAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorContentAttributeTypeName, "Avalonia.Metadata.ContentAttribute");
         public string WhitespaceSignificantCollectionAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName, "Avalonia.Metadata.WhitespaceSignificantCollectionAttribute");
         public string TrimSurroundingWhitespaceAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName, "Avalonia.Metadata.TrimSurroundingWhitespaceAttribute");

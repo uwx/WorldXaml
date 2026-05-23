@@ -14,9 +14,10 @@
         <WorldXamlGeneratorCompiledBindTypeName Condition="'$(WorldXamlGeneratorCompiledBindTypeName)' == ''">Avalonia.Data.CompiledBinding</WorldXamlGeneratorCompiledBindTypeName>
         <WorldXamlGeneratorPropertyObjectTypeName Condition="'$(WorldXamlGeneratorPropertyObjectTypeName)' == ''">WorldXaml.UI.Base.PropertyObject</WorldXamlGeneratorPropertyObjectTypeName>
         <WorldXamlGeneratorBindableObjectTypeName Condition="'$(WorldXamlGeneratorBindableObjectTypeName)' == ''">WorldXaml.UI.Base.BindableObject</WorldXamlGeneratorBindableObjectTypeName>
-        <WorldXamlGeneratorPropertyGenericTypeName Condition="'$(WorldXamlGeneratorPropertyGenericTypeName)' == ''">WorldXaml.UI.Base.Property`1</WorldXamlGeneratorPropertyGenericTypeName>
+        <WorldXamlGeneratorPropertyGenericTypeName Condition="'$(WorldXamlGeneratorPropertyGenericTypeName)' == ''">Avalonia.StyledProperty`1</WorldXamlGeneratorPropertyGenericTypeName>
         <WorldXamlGeneratorIXamlBindingTypeName Condition="'$(WorldXamlGeneratorIXamlBindingTypeName)' == ''">WorldXaml.UI.Base.IXamlBinding</WorldXamlGeneratorIXamlBindingTypeName>
-        <WorldXamlGeneratorXmlnsDefinitionAttributeTypeName Condition="'$(WorldXamlGeneratorXmlnsDefinitionAttributeTypeName)' == ''">Avalonia.Metadata.XmlnsDefinitionAttribute</WorldXamlGeneratorXmlnsDefinitionAttributeTypeName>
+        <!-- NB: Rider will only parse XmlnsDefinition if it is from System.Windows.Markup -->
+        <WorldXamlGeneratorXmlnsDefinitionAttributeTypeName Condition="'$(WorldXamlGeneratorXmlnsDefinitionAttributeTypeName)' == ''">System.Windows.Markup.XmlnsDefinitionAttribute</WorldXamlGeneratorXmlnsDefinitionAttributeTypeName>
         <WorldXamlGeneratorContentAttributeTypeName Condition="'$(WorldXamlGeneratorContentAttributeTypeName)' == ''">Avalonia.Metadata.ContentAttribute</WorldXamlGeneratorContentAttributeTypeName>
         <WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName Condition="'$(WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName)' == ''">Avalonia.Metadata.WhitespaceSignificantCollectionAttribute</WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName>
         <WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName Condition="'$(WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName)' == ''">Avalonia.Metadata.TrimSurroundingWhitespaceAttribute</WorldXamlGeneratorTrimSurroundingWhitespaceAttributeTypeName>

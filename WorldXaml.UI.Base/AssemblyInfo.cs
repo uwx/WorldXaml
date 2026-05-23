@@ -1,3 +1,6 @@
-﻿using Avalonia.Metadata;
+﻿using System.Windows.Markup;
+using Avalonia.Metadata;
 
-[assembly: XmlnsDefinition("clr-namespace:WorldXaml.UI.Base;assembly=WorldXaml.UI.Yoga", "WorldXaml.UI.Base")]
+[assembly: XmlnsPrefix("https://github.com/uwx/worldxaml", "w")]
+[assembly: XmlnsDefinition("https://github.com/uwx/worldxaml", "WorldXaml.UI.Base")]
+[assembly: XmlnsDefinition("https://github.com/uwx/worldxaml", "Avalonia.Data")]

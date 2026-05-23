@@ -29,7 +29,7 @@ public sealed class Binding : IXamlBinding
         Path = path;
     }
 
-    public IDisposable Apply<TValue>(IBindingTarget target, Property<TValue> property)
+    public IDisposable Apply<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         return Mode switch
         {
@@ -51,7 +51,7 @@ public sealed class Binding : IXamlBinding
 
     // ── Modes ──────────────────────────────────────────────────────────────
 
-    private IDisposable ApplyOneWay<TValue>(IBindingTarget target, Property<TValue> property)
+    private IDisposable ApplyOneWay<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         var obs = target
             .GetObservable(BindableObject.DataContextProperty)
@@ -60,7 +60,7 @@ public sealed class Binding : IXamlBinding
         return target.Bind(property, obs);
     }
 
-    private IDisposable ApplyOneTime<TValue>(IBindingTarget target, Property<TValue> property)
+    private IDisposable ApplyOneTime<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         var obs = target
             .GetObservable(BindableObject.DataContextProperty)
@@ -70,7 +70,7 @@ public sealed class Binding : IXamlBinding
         return target.Bind(property, obs);
     }
 
-    private IDisposable ApplyTwoWay<TValue>(IBindingTarget target, Property<TValue> property)
+    private IDisposable ApplyTwoWay<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         var forward = ApplyOneWay(target, property);
 
@@ -90,7 +90,7 @@ public sealed class Binding : IXamlBinding
         });
     }
 
-    private IDisposable ApplyOneWayToSource<TValue>(IBindingTarget target, Property<TValue> property)
+    private IDisposable ApplyOneWayToSource<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         object? currentDc = null;
         void Push() => WriteLeaf(currentDc, Path, target.GetValue(property));

@@ -15,7 +15,7 @@ public sealed class CompiledBinding : IXamlBinding
     public ResolvedPath? Path { get; set; }
     public BindingMode Mode { get; set; } = BindingMode.OneWay;
 
-    public IDisposable Apply<TValue>(IBindingTarget target, Property<TValue> property)
+    public IDisposable Apply<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         var path = Path ?? throw new InvalidOperationException("CompiledBinding path was not resolved.");
 
@@ -38,7 +38,7 @@ public sealed class CompiledBinding : IXamlBinding
     }
 
     private static IDisposable ApplyOneWay<TValue>(
-        IBindingTarget target, Property<TValue> property, ResolvedPath path)
+        IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         var obs = target
             .GetObservable(BindableObject.DataContextProperty)
@@ -48,7 +48,7 @@ public sealed class CompiledBinding : IXamlBinding
     }
 
     private static IDisposable ApplyOneTime<TValue>(
-        IBindingTarget target, Property<TValue> property, ResolvedPath path)
+        IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         var obs = target
             .GetObservable(BindableObject.DataContextProperty)
@@ -59,7 +59,7 @@ public sealed class CompiledBinding : IXamlBinding
     }
 
     private static IDisposable ApplyTwoWay<TValue>(
-        IBindingTarget target, Property<TValue> property, ResolvedPath path)
+        IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         var forward = ApplyOneWay(target, property, path);
         var skipFirst = true;
@@ -78,7 +78,7 @@ public sealed class CompiledBinding : IXamlBinding
     }
 
     private static IDisposable ApplyOneWayToSource<TValue>(
-        IBindingTarget target, Property<TValue> property, ResolvedPath path)
+        IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         object? currentDc = null;
         void Push() => path.TryWrite(currentDc, target.GetValue(property));

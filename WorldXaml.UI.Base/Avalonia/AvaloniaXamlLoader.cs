@@ -1,7 +1,15 @@
-﻿using WorldXaml.UI.Base.Xaml;
+﻿using System.Windows.Markup;
+using Avalonia.Metadata;
+using WorldXaml.UI.Base.Xaml;
 
 // ReSharper disable once CheckNamespace
 namespace Avalonia.Markup.Xaml;
+
+// Stub so Rider resolves x:DataType as a known directive
+public static class XamlDirectives
+{
+    public static readonly AvaloniaProperty DataType = null!;
+}
 
 /// <summary>
 /// Provides access to the root object during XAML instantiation.

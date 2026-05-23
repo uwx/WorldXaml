@@ -1,14 +1,15 @@
-﻿using Avalonia.Data;
+﻿using Avalonia;
+using Avalonia.Data;
 
 namespace WorldXaml.UI.Base;
 
-public sealed class DirectProperty<TOwner, TValue> : Property<TValue>
+public sealed class DirectProperty<TOwner, TValue> : StyledProperty<TValue>
     where TOwner : PropertyObject
 {
     public Func<TOwner, TValue> Getter { get; }
     public Action<TOwner, TValue>? Setter { get; }
 
-    private DirectProperty(
+    internal DirectProperty(
         string name,
         Func<TOwner, TValue> getter,
         Action<TOwner, TValue>? setter,
@@ -18,17 +19,5 @@ public sealed class DirectProperty<TOwner, TValue> : Property<TValue>
     {
         Getter = getter;
         Setter = setter;
-    }
-
-    public static DirectProperty<TOwner, TValue> Register(
-        string name,
-        Func<TOwner, TValue> getter,
-        Action<TOwner, TValue>? setter = null,
-        TValue defaultValue = default!,
-        BindingMode? defaultMode = null)
-    {
-        var prop = new DirectProperty<TOwner, TValue>(name, getter, setter, defaultValue, defaultMode);
-        PropertyRegistry.Instance.Register(typeof(TOwner), prop);
-        return prop;
     }
 }

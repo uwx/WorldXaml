@@ -47,7 +47,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
 #endif
     }
 
-    public string? Name { get; set; }
+    [Property]
+    public partial string? Name { get; set; }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public string DebugToString()
@@ -64,7 +65,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutMarginPosition"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutMarginPositionProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutMarginPosition),
             getter: node => node.LayoutMarginPosition);
     
@@ -72,7 +73,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutMarginSize"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutMarginSizeProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutMarginSize),
             getter: node => node.LayoutMarginSize);
     
@@ -80,7 +81,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutBorderPosition"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutBorderPositionProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutBorderPosition),
             getter: node => node.LayoutBorderPosition);
     
@@ -88,7 +89,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutBorderSize"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutBorderSizeProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutBorderSize),
             getter: node => node.LayoutBorderSize);
     
@@ -96,7 +97,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutPaddingPosition"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutPaddingPositionProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutPaddingPosition),
             getter: node => node.LayoutPaddingPosition);
     
@@ -104,7 +105,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutPaddingSize"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutPaddingSizeProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutPaddingSize),
             getter: node => node.LayoutPaddingSize);
     
@@ -112,7 +113,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutContentPosition"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutContentPositionProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutContentPosition),
             getter: node => node.LayoutContentPosition);
     
@@ -120,7 +121,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutContentSize"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutContentSizeProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutContentSize),
             getter: node => node.LayoutContentSize);
     
@@ -128,7 +129,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutMargin"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutMarginProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutMargin),
             getter: node => node.LayoutMargin);
     
@@ -136,7 +137,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutPadding"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutPaddingProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutPadding),
             getter: node => node.LayoutPadding);
     
@@ -144,7 +145,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutBorder"/>.
     /// </summary>
     public static DirectProperty<Node, Vector2> LayoutBorderProperty { get; } =
-        DirectProperty<Node, Vector2>.Register(
+        DirectProperty<Node, Vector2>.RegisterDirect<Node, Vector2>(
             name:   nameof(LayoutBorder),
             getter: node => node.LayoutBorder);
     
@@ -152,7 +153,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutWidth"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutWidthProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutWidth),
             getter: node => node.LayoutWidth);
     
@@ -160,7 +161,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutHeight"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutHeightProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutHeight),
             getter: node => node.LayoutHeight);
     
@@ -168,7 +169,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutX"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutXProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutX),
             getter: node => node.LayoutX);
     
@@ -176,7 +177,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutY"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutYProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutY),
             getter: node => node.LayoutY);
     
@@ -184,7 +185,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutDirection"/>.
     /// </summary>
     public static DirectProperty<Node, YgDirection> LayoutDirectionProperty { get; } =
-        DirectProperty<Node, YgDirection>.Register(
+        DirectProperty<Node, YgDirection>.RegisterDirect<Node, YgDirection>(
             name:   nameof(LayoutDirection),
             getter: node => node.LayoutDirection);
     
@@ -192,7 +193,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="HadOverflow"/>.
     /// </summary>
     public static DirectProperty<Node, bool> HadOverflowProperty { get; } =
-        DirectProperty<Node, bool>.Register(
+        DirectProperty<Node, bool>.RegisterDirect<Node, bool>(
             name:   nameof(HadOverflow),
             getter: node => node.HadOverflow);
     
@@ -200,7 +201,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutMarginTop"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutMarginTopProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutMarginTop),
             getter: node => node.LayoutMarginTop);
     
@@ -208,7 +209,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutMarginBottom"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutMarginBottomProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutMarginBottom),
             getter: node => node.LayoutMarginBottom);
     
@@ -216,7 +217,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutMarginLeft"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutMarginLeftProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutMarginLeft),
             getter: node => node.LayoutMarginLeft);
     
@@ -224,7 +225,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutMarginRight"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutMarginRightProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutMarginRight),
             getter: node => node.LayoutMarginRight);
     
@@ -232,7 +233,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutPaddingTop"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutPaddingTopProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutPaddingTop),
             getter: node => node.LayoutPaddingTop);
     
@@ -240,7 +241,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutPaddingBottom"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutPaddingBottomProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutPaddingBottom),
             getter: node => node.LayoutPaddingBottom);
     
@@ -248,7 +249,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutPaddingLeft"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutPaddingLeftProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutPaddingLeft),
             getter: node => node.LayoutPaddingLeft);
     
@@ -256,7 +257,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutPaddingRight"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutPaddingRightProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutPaddingRight),
             getter: node => node.LayoutPaddingRight);
     
@@ -264,7 +265,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutBorderTop"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutBorderTopProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutBorderTop),
             getter: node => node.LayoutBorderTop);
     
@@ -272,7 +273,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutBorderBottom"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutBorderBottomProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutBorderBottom),
             getter: node => node.LayoutBorderBottom);
     
@@ -280,7 +281,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutBorderLeft"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutBorderLeftProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutBorderLeft),
             getter: node => node.LayoutBorderLeft);
     
@@ -288,7 +289,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="LayoutBorderRight"/>.
     /// </summary>
     public static DirectProperty<Node, float> LayoutBorderRightProperty { get; } =
-        DirectProperty<Node, float>.Register(
+        DirectProperty<Node, float>.RegisterDirect<Node, float>(
             name:   nameof(LayoutBorderRight),
             getter: node => node.LayoutBorderRight);
     
@@ -376,7 +377,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="Direction"/>.
     /// </summary>
     public static DirectProperty<Node, YgDirection> DirectionProperty { get; } =
-        DirectProperty<Node, YgDirection>.Register(
+        DirectProperty<Node, YgDirection>.RegisterDirect<Node, YgDirection>(
             name:         nameof(Direction),
             getter:       node => node.NodeInternal.Direction.ToNfmDirection(),
             setter:       (node, value) => node.NodeInternal.Direction = value.ToYogaDirection(),
@@ -392,7 +393,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="FlexDirection"/>.
     /// </summary>
     public static DirectProperty<Node, YgFlexDirection> FlexDirectionProperty { get; } =
-        DirectProperty<Node, YgFlexDirection>.Register(
+        DirectProperty<Node, YgFlexDirection>.RegisterDirect<Node, YgFlexDirection>(
             name:         nameof(FlexDirection),
             getter:       node => node.NodeInternal.FlexDirection.ToNfmFlexDirection(),
             setter:       (node, value) => node.NodeInternal.FlexDirection = value.ToYogaFlexDirection(),
@@ -408,7 +409,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="JustifyContent"/>.
     /// </summary>
     public static DirectProperty<Node, YgJustify> JustifyContentProperty { get; } =
-        DirectProperty<Node, YgJustify>.Register(
+        DirectProperty<Node, YgJustify>.RegisterDirect<Node, YgJustify>(
             name:         nameof(JustifyContent),
             getter:       node => node.NodeInternal.JustifyContent.ToNfmJustify(),
             setter:       (node, value) => node.NodeInternal.JustifyContent = value.ToYogaJustify(),
@@ -424,7 +425,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="AlignItems"/>.
     /// </summary>
     public static DirectProperty<Node, YgAlign> AlignItemsProperty { get; } =
-        DirectProperty<Node, YgAlign>.Register(
+        DirectProperty<Node, YgAlign>.RegisterDirect<Node, YgAlign>(
             name:         nameof(AlignItems),
             getter:       node => node.NodeInternal.AlignItems.ToNfmAlign(),
             setter:       (node, value) => node.NodeInternal.AlignItems = value.ToYogaAlign(),
@@ -440,7 +441,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="AlignSelf"/>.
     /// </summary>
     public static DirectProperty<Node, YgAlign> AlignSelfProperty { get; } =
-        DirectProperty<Node, YgAlign>.Register(
+        DirectProperty<Node, YgAlign>.RegisterDirect<Node, YgAlign>(
             name:         nameof(AlignSelf),
             getter:       node => node.NodeInternal.AlignSelf.ToNfmAlign(),
             setter:       (node, value) => node.NodeInternal.AlignSelf = value.ToYogaAlign(),
@@ -456,7 +457,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="AlignContent"/>.
     /// </summary>
     public static DirectProperty<Node, YgAlign> AlignContentProperty { get; } =
-        DirectProperty<Node, YgAlign>.Register(
+        DirectProperty<Node, YgAlign>.RegisterDirect<Node, YgAlign>(
             name:         nameof(AlignContent),
             getter:       node => node.NodeInternal.AlignContent.ToNfmAlign(),
             setter:       (node, value) => node.NodeInternal.AlignContent = value.ToYogaAlign(),
@@ -472,7 +473,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="Position"/>.
     /// </summary>
     public static DirectProperty<Node, YgPositionType> PositionProperty { get; } =
-        DirectProperty<Node, YgPositionType>.Register(
+        DirectProperty<Node, YgPositionType>.RegisterDirect<Node, YgPositionType>(
             name:         nameof(Position),
             getter:       node => node.NodeInternal.PositionType.ToNfmPositionType(),
             setter:       (node, value) => node.NodeInternal.PositionType = value.ToYogaPositionType(),
@@ -488,7 +489,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="FlexWrap"/>.
     /// </summary>
     public static DirectProperty<Node, YgWrap> FlexWrapProperty { get; } =
-        DirectProperty<Node, YgWrap>.Register(
+        DirectProperty<Node, YgWrap>.RegisterDirect<Node, YgWrap>(
             name:         nameof(FlexWrap),
             getter:       node => node.NodeInternal.FlexWrap.ToNfmWrap(),
             setter:       (node, value) => node.NodeInternal.FlexWrap = value.ToYogaWrap(),
@@ -504,7 +505,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="Overflow"/>.
     /// </summary>
     public static DirectProperty<Node, YgOverflow> OverflowProperty { get; } =
-        DirectProperty<Node, YgOverflow>.Register(
+        DirectProperty<Node, YgOverflow>.RegisterDirect<Node, YgOverflow>(
             name:         nameof(Overflow),
             getter:       node => node.NodeInternal.Overflow.ToNfmOverflow(),
             setter:       (node, value) => node.NodeInternal.Overflow = value.ToYogaOverflow(),
@@ -520,7 +521,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="Display"/>.
     /// </summary>
     public static DirectProperty<Node, YgDisplay> DisplayProperty { get; } =
-        DirectProperty<Node, YgDisplay>.Register(
+        DirectProperty<Node, YgDisplay>.RegisterDirect<Node, YgDisplay>(
             name:         nameof(Display),
             getter:       node => node.NodeInternal.Display.ToNfmDisplay(),
             setter:       (node, value) => node.NodeInternal.Display = value.ToYogaDisplay(),
@@ -610,7 +611,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="Flex"/>.
     /// </summary>
     public static DirectProperty<Node, float?> FlexProperty { get; } =
-        DirectProperty<Node, float?>.Register(
+        DirectProperty<Node, float?>.RegisterDirect<Node, float?>(
             name:         nameof(Flex),
             getter:       node => node.NodeInternal.Flex is var v && !float.IsNaN(v) ? v : null,
             setter:       (node, value) => node.NodeInternal.Flex = value ?? float.NaN);
@@ -625,7 +626,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="FlexGrow"/>.
     /// </summary>
     public static DirectProperty<Node, float?> FlexGrowProperty { get; } =
-        DirectProperty<Node, float?>.Register(
+        DirectProperty<Node, float?>.RegisterDirect<Node, float?>(
             name:         nameof(FlexGrow),
             getter:       node => node.NodeInternal.FlexGrow is var v && !float.IsNaN(v) ? v : null,
             setter:       (node, value) => node.NodeInternal.FlexGrow = value ?? float.NaN);
@@ -640,7 +641,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="FlexShrink"/>.
     /// </summary>
     public static DirectProperty<Node, float?> FlexShrinkProperty { get; } =
-        DirectProperty<Node, float?>.Register(
+        DirectProperty<Node, float?>.RegisterDirect<Node, float?>(
             name:         nameof(FlexShrink),
             getter:       node => node.NodeInternal.FlexShrink is var v && !float.IsNaN(v) ? v : null,
             setter:       (node, value) => node.NodeInternal.FlexShrink = value ?? float.NaN);
@@ -822,8 +823,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="FlexBasis"/>.
     /// </summary>
-    public static readonly Property<MeasurementFlexBasis> FlexBasisProperty =
-        Property.Register<Node, MeasurementFlexBasis>(
+    public static readonly StyledProperty<MeasurementFlexBasis> FlexBasisProperty =
+        AvaloniaProperty.Register<Node, MeasurementFlexBasis>(
             name:         nameof(FlexBasis),
             defaultValue: MeasurementFlexBasis.Undefined,
             onChanged:    (node, value) => node.NodeInternal.FlexBasis = value.Scale(XamlG.Scale));
@@ -968,8 +969,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="Left"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> LeftProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> LeftProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(Left),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.Left = value.Scale(XamlG.Scale));
@@ -983,8 +984,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="Top"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> TopProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> TopProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(Top),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.Top = value.Scale(XamlG.Scale));
@@ -998,8 +999,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="Right"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> RightProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> RightProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(Right),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.Right = value.Scale(XamlG.Scale));
@@ -1013,8 +1014,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="Bottom"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> BottomProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> BottomProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(Bottom),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.Bottom = value.Scale(XamlG.Scale));
@@ -1170,8 +1171,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MarginTop"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> MarginTopProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> MarginTopProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(MarginTop),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MarginTop = value.Scale(XamlG.Scale));
@@ -1185,8 +1186,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MarginBottom"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> MarginBottomProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> MarginBottomProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(MarginBottom),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MarginBottom = value.Scale(XamlG.Scale));
@@ -1200,8 +1201,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MarginLeft"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> MarginLeftProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> MarginLeftProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(MarginLeft),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MarginLeft = value.Scale(XamlG.Scale));
@@ -1215,8 +1216,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MarginRight"/>.
     /// </summary>
-    public static readonly Property<MeasurementMarginPosition> MarginRightProperty =
-        Property.Register<Node, MeasurementMarginPosition>(
+    public static readonly StyledProperty<MeasurementMarginPosition> MarginRightProperty =
+        AvaloniaProperty.Register<Node, MeasurementMarginPosition>(
             name:         nameof(MarginRight),
             defaultValue: MeasurementMarginPosition.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MarginRight = value.Scale(XamlG.Scale));
@@ -1484,8 +1485,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="PaddingTop"/>.
     /// </summary>
-    public static readonly Property<MeasurementPadding> PaddingTopProperty =
-        Property.Register<Node, MeasurementPadding>(
+    public static readonly StyledProperty<MeasurementPadding> PaddingTopProperty =
+        AvaloniaProperty.Register<Node, MeasurementPadding>(
             name:         nameof(PaddingTop),
             defaultValue: MeasurementPadding.Undefined,
             onChanged:    (node, value) => node.NodeInternal.PaddingTop = value.Scale(XamlG.Scale));
@@ -1499,8 +1500,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="PaddingBottom"/>.
     /// </summary>
-    public static readonly Property<MeasurementPadding> PaddingBottomProperty =
-        Property.Register<Node, MeasurementPadding>(
+    public static readonly StyledProperty<MeasurementPadding> PaddingBottomProperty =
+        AvaloniaProperty.Register<Node, MeasurementPadding>(
             name:         nameof(PaddingBottom),
             defaultValue: MeasurementPadding.Undefined,
             onChanged:    (node, value) => node.NodeInternal.PaddingBottom = value.Scale(XamlG.Scale));
@@ -1514,8 +1515,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="PaddingLeft"/>.
     /// </summary>
-    public static readonly Property<MeasurementPadding> PaddingLeftProperty =
-        Property.Register<Node, MeasurementPadding>(
+    public static readonly StyledProperty<MeasurementPadding> PaddingLeftProperty =
+        AvaloniaProperty.Register<Node, MeasurementPadding>(
             name:         nameof(PaddingLeft),
             defaultValue: MeasurementPadding.Undefined,
             onChanged:    (node, value) => node.NodeInternal.PaddingLeft = value.Scale(XamlG.Scale));
@@ -1529,8 +1530,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="PaddingRight"/>.
     /// </summary>
-    public static readonly Property<MeasurementPadding> PaddingRightProperty =
-        Property.Register<Node, MeasurementPadding>(
+    public static readonly StyledProperty<MeasurementPadding> PaddingRightProperty =
+        AvaloniaProperty.Register<Node, MeasurementPadding>(
             name:         nameof(PaddingRight),
             defaultValue: MeasurementPadding.Undefined,
             onChanged:    (node, value) => node.NodeInternal.PaddingRight = value.Scale(XamlG.Scale));
@@ -1673,8 +1674,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="BorderTop"/>.
     /// </summary>
-    public static readonly Property<float?> BorderTopProperty =
-        Property.Register<Node, float?>(
+    public static readonly StyledProperty<float?> BorderTopProperty =
+        AvaloniaProperty.Register<Node, float?>(
             name:         nameof(BorderTop),
             onChanged:    (node, value) => node.NodeInternal.BorderTop = (value * XamlG.Scale) ?? YG.YGUndefined);
 
@@ -1688,8 +1689,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="BorderBottom"/>.
     /// </summary>
-    public static readonly Property<float?> BorderBottomProperty =
-        Property.Register<Node, float?>(
+    public static readonly StyledProperty<float?> BorderBottomProperty =
+        AvaloniaProperty.Register<Node, float?>(
             name:         nameof(BorderBottom),
             onChanged:    (node, value) => node.NodeInternal.BorderBottom = (value * XamlG.Scale) ?? YG.YGUndefined);
 
@@ -1703,8 +1704,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="BorderLeft"/>.
     /// </summary>
-    public static readonly Property<float?> BorderLeftProperty =
-        Property.Register<Node, float?>(
+    public static readonly StyledProperty<float?> BorderLeftProperty =
+        AvaloniaProperty.Register<Node, float?>(
             name:         nameof(BorderLeft),
             onChanged:    (node, value) => node.NodeInternal.BorderLeft = (value * XamlG.Scale) ?? YG.YGUndefined);
 
@@ -1718,8 +1719,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="BorderRight"/>.
     /// </summary>
-    public static readonly Property<float?> BorderRightProperty =
-        Property.Register<Node, float?>(
+    public static readonly StyledProperty<float?> BorderRightProperty =
+        AvaloniaProperty.Register<Node, float?>(
             name:         nameof(BorderRight),
             onChanged:    (node, value) => node.NodeInternal.BorderRight = (value * XamlG.Scale) ?? YG.YGUndefined);
 
@@ -1863,8 +1864,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="GapColumn"/>.
     /// </summary>
-    public static readonly Property<MeasurementGap> GapColumnProperty =
-        Property.Register<Node, MeasurementGap>(
+    public static readonly StyledProperty<MeasurementGap> GapColumnProperty =
+        AvaloniaProperty.Register<Node, MeasurementGap>(
             name:         nameof(GapColumn),
             defaultValue: MeasurementGap.Undefined,
             onChanged:    (node, value) => node.NodeInternal.GapColumn = value);
@@ -1878,8 +1879,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="GapRow"/>.
     /// </summary>
-    public static readonly Property<MeasurementGap> GapRowProperty =
-        Property.Register<Node, MeasurementGap>(
+    public static readonly StyledProperty<MeasurementGap> GapRowProperty =
+        AvaloniaProperty.Register<Node, MeasurementGap>(
             name:         nameof(GapRow),
             defaultValue: MeasurementGap.Undefined,
             onChanged:    (node, value) => node.NodeInternal.GapRow = value);
@@ -1894,7 +1895,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="BoxSizing"/>.
     /// </summary>
     public static DirectProperty<Node, YgBoxSizing> BoxSizingProperty { get; } =
-        DirectProperty<Node, YgBoxSizing>.Register(
+        DirectProperty<Node, YgBoxSizing>.RegisterDirect<Node, YgBoxSizing>(
             name:         nameof(BoxSizing),
             getter:       node => node.NodeInternal.BoxSizing.ToNfmBoxSizing(),
             setter:       (node, value) => node.NodeInternal.BoxSizing = value.ToYogaBoxSizing(),
@@ -2085,8 +2086,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="Width"/>.
     /// </summary>
-    public static readonly Property<MeasurementWidthHeight> WidthProperty =
-        Property.Register<Node, MeasurementWidthHeight>(
+    public static readonly StyledProperty<MeasurementWidthHeight> WidthProperty =
+        AvaloniaProperty.Register<Node, MeasurementWidthHeight>(
             name:         nameof(Width),
             defaultValue: MeasurementWidthHeight.Undefined,
             onChanged:    (node, value) => node.NodeInternal.Width = value.Scale(XamlG.Scale));
@@ -2100,8 +2101,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="Height"/>.
     /// </summary>
-    public static readonly Property<MeasurementWidthHeight> HeightProperty =
-        Property.Register<Node, MeasurementWidthHeight>(
+    public static readonly StyledProperty<MeasurementWidthHeight> HeightProperty =
+        AvaloniaProperty.Register<Node, MeasurementWidthHeight>(
             name:         nameof(Height),
             defaultValue: MeasurementWidthHeight.Undefined,
             onChanged:    (node, value) => node.NodeInternal.Height = value.Scale(XamlG.Scale));
@@ -2115,8 +2116,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MinWidth"/>.
     /// </summary>
-    public static readonly Property<MeasurementWidthHeight> MinWidthProperty =
-        Property.Register<Node, MeasurementWidthHeight>(
+    public static readonly StyledProperty<MeasurementWidthHeight> MinWidthProperty =
+        AvaloniaProperty.Register<Node, MeasurementWidthHeight>(
             name:         nameof(MinWidth),
             defaultValue: MeasurementWidthHeight.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MinWidth = value.Scale(XamlG.Scale));
@@ -2130,8 +2131,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MinHeight"/>.
     /// </summary>
-    public static readonly Property<MeasurementWidthHeight> MinHeightProperty =
-        Property.Register<Node, MeasurementWidthHeight>(
+    public static readonly StyledProperty<MeasurementWidthHeight> MinHeightProperty =
+        AvaloniaProperty.Register<Node, MeasurementWidthHeight>(
             name:         nameof(MinHeight),
             defaultValue: MeasurementWidthHeight.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MinHeight = value.Scale(XamlG.Scale));
@@ -2145,8 +2146,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MaxWidth"/>.
     /// </summary>
-    public static readonly Property<MeasurementWidthHeight> MaxWidthProperty =
-        Property.Register<Node, MeasurementWidthHeight>(
+    public static readonly StyledProperty<MeasurementWidthHeight> MaxWidthProperty =
+        AvaloniaProperty.Register<Node, MeasurementWidthHeight>(
             name:         nameof(MaxWidth),
             defaultValue: MeasurementWidthHeight.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MaxWidth = value.Scale(XamlG.Scale));
@@ -2160,8 +2161,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// <summary>
     /// Property field for <see cref="MaxHeight"/>.
     /// </summary>
-    public static readonly Property<MeasurementWidthHeight> MaxHeightProperty =
-        Property.Register<Node, MeasurementWidthHeight>(
+    public static readonly StyledProperty<MeasurementWidthHeight> MaxHeightProperty =
+        AvaloniaProperty.Register<Node, MeasurementWidthHeight>(
             name:         nameof(MaxHeight),
             defaultValue: MeasurementWidthHeight.Undefined,
             onChanged:    (node, value) => node.NodeInternal.MaxHeight = value.Scale(XamlG.Scale));
@@ -2176,7 +2177,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     /// Property field for <see cref="AspectRatio"/>.
     /// </summary>
     public static DirectProperty<Node, float?> AspectRatioProperty { get; } =
-        DirectProperty<Node, float?>.Register(
+        DirectProperty<Node, float?>.RegisterDirect<Node, float?>(
             name:         nameof(AspectRatio),
             getter:       node => node.NodeInternal.AspectRatio is var v && !float.IsNaN(v) ? v : null,
             setter:       (node, value) => node.NodeInternal.AspectRatio = value ?? float.NaN);

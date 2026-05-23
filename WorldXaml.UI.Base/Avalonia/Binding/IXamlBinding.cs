@@ -1,4 +1,6 @@
-﻿namespace WorldXaml.UI.Base;
+﻿using Avalonia;
+
+namespace WorldXaml.UI.Base;
 
 /// <summary>
 /// Implemented by markup extensions (e.g. {Bind}) so XamlX can call
@@ -6,5 +8,5 @@
 /// </summary>
 public interface IXamlBinding
 {
-    IDisposable Apply<TValue>(IBindingTarget target, Property<TValue> property);
+    IDisposable Apply<TValue>(IBindingTarget target, StyledProperty<TValue> property);
 }
