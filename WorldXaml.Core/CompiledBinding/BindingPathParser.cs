@@ -32,7 +32,7 @@ class BindingPathParser(string CompiledBindFqn) : IXamlAstTransformer
             return node;
 
         // Replace the string value with a typed path node.
-        var segments = pathText.Text.Split('.').ToList();
+        var segments = pathText.Text.Split('.');
         pathAssignment.Values[0] = new ParsedBindingPathNode(pathText, segments);
 
         return node;
@@ -43,10 +43,10 @@ class BindingPathParser(string CompiledBindFqn) : IXamlAstTransformer
 #if !XAMLX_INTERNAL
 public
 #endif
-class ParsedBindingPathNode(IXamlLineInfo lineInfo, List<string> segments)
+class ParsedBindingPathNode(IXamlLineInfo lineInfo, IReadOnlyList<string> segments)
     : XamlAstNode(lineInfo), IXamlAstValueNode
 {
-    public List<string> Segments { get; } = segments;
+    public IReadOnlyList<string> Segments { get; } = segments;
 
     // Type is string until the path transformer resolves it to the real type.
     // Will be filled in by BindingPathTransformer.
