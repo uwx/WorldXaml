@@ -88,9 +88,15 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             )
             .WithTrackingName(TrackingNames.PropertyAttributesProvider);
         
+        // Map MSBuild properties onto readonly GeneratorOptions.
+        var options = context.AnalyzerConfigOptionsProvider
+            .Select(static (options, _) => new GeneratorOptions(options.GlobalOptions))
+            .WithTrackingName(TrackingNames.XamlGeneratorOptionsProvider);
+
         // Generate implementation Register code from PropertyAttributes
-        context.RegisterSourceOutput(bindableProperties.Collect(), static (context, bindableProperties) =>
+        context.RegisterSourceOutput(bindableProperties.Collect().Combine(options), static (context, pair) =>
         {
+            var (bindableProperties, options) = pair;
             foreach (var props in bindableProperties.GroupBy(static prop => prop, PropHierarchyComparer.Instance))
             {
                 var declaringTypeNamespace = props.Key.DeclaringNamespace;
@@ -116,7 +122,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                         sb.AppendLine("/// <summary>");
                         sb.AppendLine($"/// Property field for <see cref=\"{prop.PropertyName}\"/>.");
                         sb.AppendLine("/// </summary>");
-                        sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} static global::WorldXaml.UI.Base.Property<{prop.PropertyType}> {prop.PropertyName}Property {{ get; }} = global::WorldXaml.UI.Base.Property.Register<{containingTypes}, {prop.PropertyType}>(nameof({prop.PropertyName}), defaultValue: {ToCSharpString(prop.DefaultValue)}, defaultMode: {ToCSharpString(prop.DefaultMode)});");
+                        sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} static global::{options.KnownTypes.PropertyGeneric.Replace("`1", "")}<{prop.PropertyType}> {prop.PropertyName}Property {{ get; }} = global::{options.KnownTypes.Property}.Register<{containingTypes}, {prop.PropertyType}>(nameof({prop.PropertyName}), defaultValue: {ToCSharpString(prop.DefaultValue)}, defaultMode: {ToCSharpString(prop.DefaultMode)});");
                     }
 
                     sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} partial {prop.PropertyType} {prop.PropertyName} {{ get => GetValue({prop.PropertyName}Property); set => SetValue({prop.PropertyName}Property, value); }}");
@@ -152,11 +158,6 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             }
         });
         
-        // Map MSBuild properties onto readonly GeneratorOptions.
-        var options = context.AnalyzerConfigOptionsProvider
-            .Select(static (options, _) => new GeneratorOptions(options.GlobalOptions))
-            .WithTrackingName(TrackingNames.XamlGeneratorOptionsProvider);
-
         // Generate __XamlKnownTypes used for hot reload based on KnownTypes.
         context.RegisterSourceOutput(options, static (context, options) =>
         {

@@ -15,6 +15,7 @@
         <WorldXamlGeneratorPropertyObjectTypeName Condition="'$(WorldXamlGeneratorPropertyObjectTypeName)' == ''">WorldXaml.UI.Base.PropertyObject</WorldXamlGeneratorPropertyObjectTypeName>
         <WorldXamlGeneratorBindableObjectTypeName Condition="'$(WorldXamlGeneratorBindableObjectTypeName)' == ''">WorldXaml.UI.Base.BindableObject</WorldXamlGeneratorBindableObjectTypeName>
         <WorldXamlGeneratorPropertyGenericTypeName Condition="'$(WorldXamlGeneratorPropertyGenericTypeName)' == ''">Avalonia.StyledProperty`1</WorldXamlGeneratorPropertyGenericTypeName>
+        <WorldXamlGeneratorPropertyTypeName Condition="'$(WorldXamlGeneratorPropertyTypeName)' == ''">Avalonia.AvaloniaProperty</WorldXamlGeneratorPropertyTypeName>
         <WorldXamlGeneratorIXamlBindingTypeName Condition="'$(WorldXamlGeneratorIXamlBindingTypeName)' == ''">WorldXaml.UI.Base.IXamlBinding</WorldXamlGeneratorIXamlBindingTypeName>
         <!-- NB: Rider will only parse XmlnsDefinition if it is from System.Windows.Markup -->
         <WorldXamlGeneratorXmlnsDefinitionAttributeTypeName Condition="'$(WorldXamlGeneratorXmlnsDefinitionAttributeTypeName)' == ''">System.Windows.Markup.XmlnsDefinitionAttribute</WorldXamlGeneratorXmlnsDefinitionAttributeTypeName>

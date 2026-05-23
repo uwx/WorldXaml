@@ -26,6 +26,7 @@ public interface IKnownTypes
     public string PropertyObject { get; } // WorldXaml.UI.Base.PropertyObject
     public string BindableObject { get; } // WorldXaml.UI.Base.BindableObject
     public string PropertyGeneric { get; } // WorldXaml.UI.Base.Property`1
+    public string Property { get; } // WorldXaml.UI.Base.Property
     public string IXamlBinding { get; } // WorldXaml.UI.Base.IXamlBinding
     public string? HotReload { get; } // WorldXaml.UI.Base.Xaml.XamlHotReload
 }
