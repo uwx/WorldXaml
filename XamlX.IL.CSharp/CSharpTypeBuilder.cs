@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using WorldXaml.Generator.Common;
 using XamlX.IL;
+using XamlX.IL.CSharp;
 using XamlX.TypeSystem;
 
 namespace XamlX.CSharp;
@@ -21,15 +22,16 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
     private readonly string _name;
     private readonly IXamlType? _baseType;
     private readonly XamlVisibility _visibility;
-    private readonly List<CSharpFieldInfo> _fields = new();
-    private readonly List<CSharpMethodBuilder> _methods = new();
-    private readonly List<CSharpConstructorBuilder> _constructors = new();
-    private readonly List<CSharpPropertyInfo> _properties = new();
-    private readonly List<IXamlType> _interfaces = new();
-    private readonly List<CSharpTypeBuilder> _nestedTypes = new();
-    private readonly List<KeyValuePair<string, XamlGenericParameterConstraint>> _genericParams = new();
-    private readonly List<CSharpGenericParameterType> _genericParamTypes = new();
+    private readonly List<CSharpFieldInfo> _fields = [];
+    private readonly List<CSharpMethodBuilder> _methods = [];
+    private readonly List<CSharpConstructorBuilder> _constructors = [];
+    private readonly List<CSharpPropertyInfo> _properties = [];
+    private readonly List<IXamlType> _interfaces = [];
+    private readonly List<CSharpTypeBuilder> _nestedTypes = [];
+    private readonly List<KeyValuePair<string, XamlGenericParameterConstraint>> _genericParams = [];
+    private readonly List<CSharpGenericParameterType> _genericParamTypes = [];
     private readonly CSharpTypeBuilder? _parent;
+    private readonly CSharpEmitterKnownTypes _knownTypes;
 
     internal CSharpTypeBuilder(IXamlTypeSystem typeSystem, string namespaceName, string name,
         IXamlType? baseType, XamlVisibility visibility, CSharpTypeBuilder? parent = null)
@@ -40,6 +42,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
         _baseType = baseType;
         _visibility = visibility;
         _parent = parent;
+        _knownTypes = new CSharpEmitterKnownTypes(typeSystem);
     }
 
     public string FullName
@@ -62,12 +65,12 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
     public bool IsNestedPrivate => _visibility == XamlVisibility.Private && _parent != null;
     public IXamlAssembly? Assembly => null;
     public IReadOnlyList<IXamlProperty> Properties => _properties;
-    public IReadOnlyList<IXamlEventInfo> Events => Array.Empty<IXamlEventInfo>();
+    public IReadOnlyList<IXamlEventInfo> Events => [];
     public IReadOnlyList<IXamlField> Fields => _fields;
     public IReadOnlyList<IXamlMethod> Methods => _methods;
     public IReadOnlyList<IXamlConstructor> Constructors => _constructors;
-    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => Array.Empty<IXamlCustomAttribute>();
-    public IReadOnlyList<IXamlType> GenericArguments => Array.Empty<IXamlType>();
+    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => [];
+    public IReadOnlyList<IXamlType> GenericArguments => [];
     public IXamlType? GenericTypeDefinition => null;
     public bool IsArray => false;
     public IXamlType? ArrayElementType => null;
@@ -114,7 +117,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
             argNames[i] = $"arg{i}";
 
         var methodCtx = new CSharpMethodContext(returnType, isStatic, false, argNames, argsList.ToArray(), this);
-        var emitter = new CSharpEmitter(_typeSystem, methodCtx);
+        var emitter = new CSharpEmitter(_knownTypes, _typeSystem, methodCtx);
         var method = new CSharpMethodBuilder(this, returnType, argsList, name, visibility, isStatic, isInterfaceImpl, argNames, emitter, overrideMethod);
         _methods.Add(method);
         return method;
@@ -134,7 +137,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
             argNames[i] = $"arg{i}";
 
         var methodCtx = new CSharpMethodContext(null, isStatic, true, argNames, args, this);
-        var emitter = new CSharpEmitter(_typeSystem, methodCtx);
+        var emitter = new CSharpEmitter(_knownTypes, _typeSystem, methodCtx);
         var ctor = new CSharpConstructorBuilder(this, isStatic, args, argNames, emitter);
         _constructors.Add(ctor);
         return ctor;
@@ -191,7 +194,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
                 _ => "private"
             };
             var staticMod = field.IsStatic ? "static " : "";
-            sb.AppendLine($"{fieldVis} {staticMod}{CSharpFormatting.FormatType(field.FieldType)} {field.Name};");
+            sb.AppendLine($"{fieldVis} {staticMod}{CSharpFormatting.FormatType(_knownTypes, field.FieldType)} {field.Name};");
         }
         if (_fields.Count > 0) sb.AppendLine();
 
@@ -275,8 +278,8 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
         var baseClause = "";
         var bases = new List<string>();
         if (_baseType != null)
-            bases.Add(CSharpFormatting.FormatType(_baseType));
-        bases.AddRange(_interfaces.Select(CSharpFormatting.FormatType));
+            bases.Add(CSharpFormatting.FormatType(_knownTypes, _baseType));
+        bases.AddRange(_interfaces.Select(t => CSharpFormatting.FormatType(_knownTypes, t)));
         if (bases.Count > 0)
             baseClause = " : " + string.Join(", ", bases);
 
@@ -296,7 +299,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
                     _ => "private"
                 };
                 var staticMod = field.IsStatic ? "static " : "";
-                sb.AppendLine($"{fieldVis} {staticMod}{CSharpFormatting.FormatType(field.FieldType)} {field.Name};");
+                sb.AppendLine($"{fieldVis} {staticMod}{CSharpFormatting.FormatType(_knownTypes, field.FieldType)} {field.Name};");
             }
 
             if (_fields.Count > 0) sb.AppendLine();
@@ -351,7 +354,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
     private void GenerateConstructor(IndentedStringBuilder sb, CSharpConstructorBuilder ctor)
     {
         var staticMod = ctor.IsStatic ? "static " : "public ";
-        var args = string.Join(", ", ctor.Parameters.Select((p, i) => $"{CSharpFormatting.FormatType(p)} {ctor.ArgNames[i]}"));
+        var args = string.Join(", ", ctor.Parameters.Select((p, i) => $"{CSharpFormatting.FormatType(_knownTypes, p)} {ctor.ArgNames[i]}"));
 
         sb.AppendLine($"{staticMod}{_name}({args})");
         sb.AppendLine($"{{");
@@ -377,8 +380,8 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
             _ => "private "
         };
         var staticMod = method.IsStatic ? "static " : "";
-        var retType = CSharpFormatting.FormatType(method.ReturnType);
-        var args = string.Join(", ", method.Parameters.Select((p, i) => $"{CSharpFormatting.FormatType(p)} {method.ArgNames[i]}"));
+        var retType = CSharpFormatting.FormatType(_knownTypes, method.ReturnType);
+        var args = string.Join(", ", method.Parameters.Select((p, i) => $"{CSharpFormatting.FormatType(_knownTypes, p)} {method.ArgNames[i]}"));
 
         // For explicit interface implementations, format the interface part properly
         // to handle generic interfaces (replace backtick metadata names with C# generic syntax)
@@ -401,7 +404,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
     /// Formats a method name, converting explicit interface implementation names
     /// from metadata format (using backtick) to C# generic syntax.
     /// </summary>
-    private static string FormatMethodName(CSharpMethodBuilder method)
+    private string FormatMethodName(CSharpMethodBuilder method)
     {
         if (!method.Name.Contains('.'))
             return method.Name;
@@ -410,11 +413,11 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
         if (method.OverrideMethod?.DeclaringType is { } interfaceType)
         {
             var lastDot = method.Name.LastIndexOf('.');
-            var simpleName = method.Name.Substring(lastDot + 1);
-            var formattedInterface = CSharpFormatting.FormatType(interfaceType);
+            var simpleName = method.Name[(lastDot + 1)..];
+            var formattedInterface = CSharpFormatting.FormatType(_knownTypes, interfaceType);
             // Remove "global::" prefix since explicit implementations don't use it
             if (formattedInterface.StartsWith("global::"))
-                formattedInterface = formattedInterface.Substring("global::".Length);
+                formattedInterface = formattedInterface["global::".Length..];
             return $"{formattedInterface}.{simpleName}";
         }
 
@@ -425,7 +428,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
     /// <summary>
     /// Formats a property name, handling explicit interface implementation names.
     /// </summary>
-    private static string FormatPropertyName(CSharpPropertyInfo prop)
+    private string FormatPropertyName(CSharpPropertyInfo prop)
     {
         if (!prop.Name.Contains('.'))
             return prop.Name;
@@ -436,10 +439,10 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
         if (overrideMethod?.DeclaringType is { } interfaceType)
         {
             var lastDot = prop.Name.LastIndexOf('.');
-            var simpleName = prop.Name.Substring(lastDot + 1);
-            var formattedInterface = CSharpFormatting.FormatType(interfaceType);
+            var simpleName = prop.Name[(lastDot + 1)..];
+            var formattedInterface = CSharpFormatting.FormatType(_knownTypes, interfaceType);
             if (formattedInterface.StartsWith("global::"))
-                formattedInterface = formattedInterface.Substring("global::".Length);
+                formattedInterface = formattedInterface["global::".Length..];
             return $"{formattedInterface}.{simpleName}";
         }
 
@@ -470,7 +473,7 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
 
     private void GenerateProperty(IndentedStringBuilder sb, CSharpPropertyInfo prop)
     {
-        var typeName = CSharpFormatting.FormatType(prop.PropertyType);
+        var typeName = CSharpFormatting.FormatType(_knownTypes, prop.PropertyType);
         var isExplicitImpl = prop.Name.Contains('.');
         var vis = isExplicitImpl ? "" : "public ";
         var propName = FormatPropertyName(prop);
@@ -540,6 +543,8 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
     /// </summary>
     private static string ReplaceSetterArg(string statement)
     {
+        // TODO figure out a more robust solution for this
+        
         // The setter's CSharpMethodContext has argNames = ["arg0"], and for a non-static method,
         // GetArgName(1) returns argNames[0] = "arg0". In C# property setters, this is 'value'.
         return statement.Replace("arg0", "value");
@@ -550,73 +555,59 @@ class CSharpTypeBuilder : IXamlTypeBuilder<IXamlILEmitter>
 
 #region Supporting Types
 
-internal class CSharpFieldInfo : IXamlField
+internal class CSharpFieldInfo(
+    CSharpTypeBuilder declaringType,
+    IXamlType fieldType,
+    string name,
+    XamlVisibility visibility,
+    bool isStatic)
+    : IXamlField
 {
-    private readonly CSharpTypeBuilder _declaringType;
-
-    public CSharpFieldInfo(CSharpTypeBuilder declaringType, IXamlType fieldType, string name,
-        XamlVisibility visibility, bool isStatic)
-    {
-        _declaringType = declaringType;
-        FieldType = fieldType;
-        Name = name;
-        Visibility = visibility;
-        IsStatic = isStatic;
-    }
-
-    public string Name { get; }
-    public IXamlType DeclaringType => _declaringType;
-    public IXamlType FieldType { get; }
+    public string Name { get; } = name;
+    public IXamlType DeclaringType => declaringType;
+    public IXamlType FieldType { get; } = fieldType;
     public bool IsPublic => Visibility == XamlVisibility.Public;
-    public bool IsStatic { get; }
+    public bool IsStatic { get; } = isStatic;
     public bool IsLiteral => false;
-    public XamlVisibility Visibility { get; }
-    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => Array.Empty<IXamlCustomAttribute>();
+    public XamlVisibility Visibility { get; } = visibility;
+    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => [];
 
-    public object GetLiteralValue() => throw new NotSupportedException();
+    public object GetLiteralValue() => throw new NotSupportedException("Field has no literal value");
     public bool Equals(IXamlField? other) => ReferenceEquals(this, other);
 }
 
-internal class CSharpMethodBuilder : IXamlMethodBuilder<IXamlILEmitter>
+internal class CSharpMethodBuilder(
+    CSharpTypeBuilder declaringType,
+    IXamlType returnType,
+    List<IXamlType> parameters,
+    string name,
+    XamlVisibility visibility,
+    bool isStatic,
+    bool isInterfaceImpl,
+    string[] argNames,
+    CSharpEmitter emitter,
+    IXamlMethod? overrideMethod = null)
+    : IXamlMethodBuilder<IXamlILEmitter>
 {
-    private readonly CSharpTypeBuilder _declaringType;
-
-    public CSharpMethodBuilder(CSharpTypeBuilder declaringType, IXamlType returnType,
-        List<IXamlType> parameters, string name, XamlVisibility visibility,
-        bool isStatic, bool isInterfaceImpl, string[] argNames, CSharpEmitter emitter,
-        IXamlMethod? overrideMethod = null)
-    {
-        _declaringType = declaringType;
-        ReturnType = returnType;
-        Parameters = parameters;
-        Name = name;
-        MethodVisibility = visibility;
-        IsStatic = isStatic;
-        IsInterfaceImpl = isInterfaceImpl;
-        OverrideMethod = overrideMethod;
-        ArgNames = argNames;
-        Emitter = emitter;
-    }
-
-    public string Name { get; }
-    public IXamlType DeclaringType => _declaringType;
-    public IXamlType ReturnType { get; }
-    public IReadOnlyList<IXamlType> Parameters { get; }
-    public XamlVisibility MethodVisibility { get; }
+    public string Name { get; } = name;
+    public IXamlType DeclaringType => declaringType;
+    public IXamlType ReturnType { get; } = returnType;
+    public IReadOnlyList<IXamlType> Parameters { get; } = parameters;
+    public XamlVisibility MethodVisibility { get; } = visibility;
     public bool IsPublic => MethodVisibility == XamlVisibility.Public;
     public bool IsPrivate => MethodVisibility == XamlVisibility.Private;
     public bool IsFamily => false;
-    public bool IsStatic { get; }
-    public bool IsInterfaceImpl { get; }
-    public IXamlMethod? OverrideMethod { get; }
+    public bool IsStatic { get; } = isStatic;
+    public bool IsInterfaceImpl { get; } = isInterfaceImpl;
+    public IXamlMethod? OverrideMethod { get; } = overrideMethod;
     public bool ContainsGenericParameters => false;
     public bool IsGenericMethod => false;
     public bool IsGenericMethodDefinition => false;
-    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => Array.Empty<IXamlCustomAttribute>();
-    public IReadOnlyList<IXamlType> GenericParameters => Array.Empty<IXamlType>();
-    public IReadOnlyList<IXamlType> GenericArguments => Array.Empty<IXamlType>();
-    public string[] ArgNames { get; }
-    public CSharpEmitter Emitter { get; }
+    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => [];
+    public IReadOnlyList<IXamlType> GenericParameters => [];
+    public IReadOnlyList<IXamlType> GenericArguments => [];
+    public string[] ArgNames { get; } = argNames;
+    public CSharpEmitter Emitter { get; } = emitter;
 
     IXamlILEmitter IXamlMethodBuilder<IXamlILEmitter>.Generator => Emitter;
 
@@ -626,27 +617,21 @@ internal class CSharpMethodBuilder : IXamlMethodBuilder<IXamlILEmitter>
     public bool Equals(IXamlMethod? other) => ReferenceEquals(this, other);
 }
 
-internal class CSharpConstructorBuilder : IXamlConstructorBuilder<IXamlILEmitter>
+internal class CSharpConstructorBuilder(
+    CSharpTypeBuilder declaringType,
+    bool isStatic,
+    IXamlType[] parameters,
+    string[] argNames,
+    CSharpEmitter emitter)
+    : IXamlConstructorBuilder<IXamlILEmitter>
 {
-    private readonly CSharpTypeBuilder _declaringType;
-
-    public CSharpConstructorBuilder(CSharpTypeBuilder declaringType, bool isStatic,
-        IXamlType[] parameters, string[] argNames, CSharpEmitter emitter)
-    {
-        _declaringType = declaringType;
-        IsStatic = isStatic;
-        Parameters = parameters;
-        ArgNames = argNames;
-        Emitter = emitter;
-    }
-
     public string Name => IsStatic ? ".cctor" : ".ctor";
-    public IXamlType DeclaringType => _declaringType;
+    public IXamlType DeclaringType => declaringType;
     public bool IsPublic => !IsStatic;
-    public bool IsStatic { get; }
-    public IReadOnlyList<IXamlType> Parameters { get; }
-    public string[] ArgNames { get; }
-    public CSharpEmitter Emitter { get; }
+    public bool IsStatic { get; } = isStatic;
+    public IReadOnlyList<IXamlType> Parameters { get; } = parameters;
+    public string[] ArgNames { get; } = argNames;
+    public CSharpEmitter Emitter { get; } = emitter;
 
     IXamlILEmitter IXamlConstructorBuilder<IXamlILEmitter>.Generator => Emitter;
 
@@ -655,64 +640,50 @@ internal class CSharpConstructorBuilder : IXamlConstructorBuilder<IXamlILEmitter
     public bool Equals(IXamlConstructor? other) => ReferenceEquals(this, other);
 }
 
-internal class CSharpPropertyInfo : IXamlProperty
+internal class CSharpPropertyInfo(
+    CSharpTypeBuilder declaringType,
+    IXamlType propertyType,
+    string name,
+    IXamlMethod? setter,
+    IXamlMethod? getter)
+    : IXamlProperty
 {
-    private readonly CSharpTypeBuilder _declaringType;
-
-    public CSharpPropertyInfo(CSharpTypeBuilder declaringType, IXamlType propertyType, string name,
-        IXamlMethod? setter, IXamlMethod? getter)
-    {
-        _declaringType = declaringType;
-        PropertyType = propertyType;
-        Name = name;
-        Setter = setter;
-        Getter = getter;
-    }
-
-    public string Name { get; }
-    public IXamlType DeclaringType => _declaringType;
-    public IXamlType PropertyType { get; }
-    public IXamlMethod? Setter { get; }
-    public IXamlMethod? Getter { get; }
-    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => Array.Empty<IXamlCustomAttribute>();
-    public IReadOnlyList<IXamlType> IndexerParameters => Array.Empty<IXamlType>();
+    public string Name { get; } = name;
+    public IXamlType DeclaringType => declaringType;
+    public IXamlType PropertyType { get; } = propertyType;
+    public IXamlMethod? Setter { get; } = setter;
+    public IXamlMethod? Getter { get; } = getter;
+    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => [];
+    public IReadOnlyList<IXamlType> IndexerParameters => [];
     public bool Equals(IXamlProperty? other) => ReferenceEquals(this, other);
 }
 
-internal class CSharpGenericParameterType : IXamlType
+internal class CSharpGenericParameterType(string name, CSharpTypeBuilder declaringType) : IXamlType
 {
-    private readonly CSharpTypeBuilder _declaringType;
-
-    public CSharpGenericParameterType(string name, CSharpTypeBuilder declaringType)
-    {
-        Name = name;
-        _declaringType = declaringType;
-    }
-
     public object Id { get; } = Guid.NewGuid();
-    public string Name { get; }
+    public string Name { get; } = name;
     public string? Namespace => null;
     public string FullName => Name;
     public bool IsPublic => true;
     public bool IsNestedPrivate => false;
     public IXamlAssembly? Assembly => null;
-    public IReadOnlyList<IXamlProperty> Properties => Array.Empty<IXamlProperty>();
-    public IReadOnlyList<IXamlEventInfo> Events => Array.Empty<IXamlEventInfo>();
-    public IReadOnlyList<IXamlField> Fields => Array.Empty<IXamlField>();
-    public IReadOnlyList<IXamlMethod> Methods => Array.Empty<IXamlMethod>();
-    public IReadOnlyList<IXamlConstructor> Constructors => Array.Empty<IXamlConstructor>();
-    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => Array.Empty<IXamlCustomAttribute>();
-    public IReadOnlyList<IXamlType> GenericArguments => Array.Empty<IXamlType>();
+    public IReadOnlyList<IXamlProperty> Properties => [];
+    public IReadOnlyList<IXamlEventInfo> Events => [];
+    public IReadOnlyList<IXamlField> Fields => [];
+    public IReadOnlyList<IXamlMethod> Methods => [];
+    public IReadOnlyList<IXamlConstructor> Constructors => [];
+    public IReadOnlyList<IXamlCustomAttribute> CustomAttributes => [];
+    public IReadOnlyList<IXamlType> GenericArguments => [];
     public IXamlType? GenericTypeDefinition => null;
     public bool IsArray => false;
     public IXamlType? ArrayElementType => null;
     public IXamlType? BaseType => null;
-    public IXamlType? DeclaringType => _declaringType;
+    public IXamlType? DeclaringType => declaringType;
     public bool IsValueType => false;
     public bool IsEnum => false;
-    public IReadOnlyList<IXamlType> Interfaces => Array.Empty<IXamlType>();
+    public IReadOnlyList<IXamlType> Interfaces => [];
     public bool IsInterface => false;
-    public IReadOnlyList<IXamlType> GenericParameters => Array.Empty<IXamlType>();
+    public IReadOnlyList<IXamlType> GenericParameters => [];
     public bool IsFunctionPointer => false;
 
     public bool IsAssignableFrom(IXamlType type) => Equals(type);
@@ -737,10 +708,11 @@ internal class ConstructedCSharpType : IXamlType
     {
         _definition = definition;
         _typeArguments = typeArguments;
+
         // Wrap constructors so they report this constructed type as DeclaringType
         Constructors = definition.Constructors
-            .Select(c => (IXamlConstructor)new ConstructedCtorWrapper(this, c))
-            .ToList();
+            .Select(c => new ConstructedCtorWrapper(this, c))
+            .ToArray();
     }
 
     public object Id { get; } = Guid.NewGuid();
@@ -751,8 +723,8 @@ internal class ConstructedCSharpType : IXamlType
     {
         get
         {
-            var baseName = ((IXamlType)_definition).FullName;
-            return baseName + "<" + string.Join(", ", _typeArguments.Select(t => t.FullName)) + ">";
+            var baseName = _definition.FullName;
+            return $"{baseName}<{string.Join(", ", _typeArguments.Select(t => t.FullName))}>";
         }
     }
 
@@ -774,7 +746,7 @@ internal class ConstructedCSharpType : IXamlType
     public bool IsEnum => false;
     public IReadOnlyList<IXamlType> Interfaces => _definition.Interfaces;
     public bool IsInterface => false;
-    public IReadOnlyList<IXamlType> GenericParameters => Array.Empty<IXamlType>();
+    public IReadOnlyList<IXamlType> GenericParameters => [];
     public bool IsFunctionPointer => false;
 
     public bool IsAssignableFrom(IXamlType type) => type.Equals(this) || _definition.IsAssignableFrom(type);
@@ -791,17 +763,11 @@ internal class ConstructedCSharpType : IXamlType
     }
 }
 
-internal class ConstructedCtorWrapper : IXamlConstructor
+internal class ConstructedCtorWrapper(IXamlType declaringType, IXamlConstructor inner) : IXamlConstructor
 {
-    private readonly IXamlConstructor _inner;
+    private readonly IXamlConstructor _inner = inner;
 
-    public ConstructedCtorWrapper(IXamlType declaringType, IXamlConstructor inner)
-    {
-        DeclaringType = declaringType;
-        _inner = inner;
-    }
-
-    public IXamlType DeclaringType { get; }
+    public IXamlType DeclaringType { get; } = declaringType;
     public string Name => _inner.Name;
     public bool IsPublic => _inner.IsPublic;
     public bool IsStatic => _inner.IsStatic;

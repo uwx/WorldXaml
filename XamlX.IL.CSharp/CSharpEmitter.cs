@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using WorldXaml.Generator.Common;
 using XamlX.IL;
+using XamlX.IL.CSharp;
 using XamlX.TypeSystem;
 using SreOpCode = System.Reflection.Emit.OpCode;
 using SreOpCodes = System.Reflection.Emit.OpCodes;
@@ -30,15 +31,17 @@ class CSharpEmitter : IXamlILEmitter
     private int _labelCounter;
     private int _localCounter;
     private int _tempCounter;
+    private readonly CSharpEmitterKnownTypes _knownTypes;
 
     public IXamlTypeSystem TypeSystem { get; }
     public XamlLocalsPool LocalsPool { get; }
 
-    public CSharpEmitter(IXamlTypeSystem typeSystem, CSharpMethodContext method)
+    public CSharpEmitter(CSharpEmitterKnownTypes knownTypes, IXamlTypeSystem typeSystem, CSharpMethodContext method)
     {
         TypeSystem = typeSystem;
         _method = method;
         LocalsPool = new XamlLocalsPool(DefineLocal);
+        _knownTypes = knownTypes;
     }
 
     /// <summary>
@@ -56,7 +59,7 @@ class CSharpEmitter : IXamlILEmitter
 
     private void Emit(string statement) => _statements.Add(statement);
 
-    private static string FormatType(IXamlType type) => CSharpFormatting.FormatType(type);
+    private string FormatType(IXamlType type) => CSharpFormatting.FormatType(_knownTypes, type);
 
     #region IXamlILEmitter Implementation
 
@@ -65,14 +68,15 @@ class CSharpEmitter : IXamlILEmitter
         if (code == SreOpCodes.Nop) { /* skip */ }
         else if (code == SreOpCodes.Ret)
         {
-            if (_method.ReturnType != null && _method.ReturnType.FullName != "System.Void")
+            if (_method.ReturnType != null && !_method.ReturnType.Equals(_knownTypes.SystemVoid))
             {
                 var val = PopExpr();
                 // Convert int literals to bool when return type is bool
-                if (_method.ReturnType.FullName == "System.Boolean")
+                if (!_method.ReturnType.Equals(_knownTypes.SystemBoolean))
                 {
                     if (val == "0") val = "false";
                     else if (val == "1") val = "true";
+                    else val = $"({val}) != 0";
                 }
                 Emit($"return {val};");
             }
@@ -85,7 +89,7 @@ class CSharpEmitter : IXamlILEmitter
         {
             var val = Pop();
             var temp = AllocTemp();
-            _tempLocals.Add(new CSharpLocal(temp, -1, val.Type ?? TypeSystem.GetType("System.Object, System.Private.CoreLib")));
+            _tempLocals.Add(new CSharpLocal(temp, -1, val.Type ?? _knownTypes.SystemObject));
             Emit($"{temp} = {val.Expression};");
             Push(temp, val.Type);
             Push(temp, val.Type);
@@ -247,7 +251,16 @@ class CSharpEmitter : IXamlILEmitter
             for (var i = args.Length - 1; i >= 0; i--)
                 args[i] = PopExpr();
 
-            Push($"new {FormatType(ctor.DeclaringType)}({string.Join(", ", args)})", ctor.DeclaringType);
+            // Delegate constructor pattern: new Func<A,B>(null, MethodRef) → new Func<A,B>(MethodRef)
+            // IL emits Ldnull + Ldftn + Newobj(delegate..ctor(object, IntPtr))
+            if (args is ["null", _] && _knownTypes.SystemDelegate.IsAssignableFrom(ctor.DeclaringType))
+            {
+                Push($"new {FormatType(ctor.DeclaringType)}({args[1]})", ctor.DeclaringType);
+            }
+            else
+            {
+                Push($"new {FormatType(ctor.DeclaringType)}({string.Join(", ", args)})", ctor.DeclaringType);
+            }
         }
         else if (code == SreOpCodes.Call)
         {
@@ -547,9 +560,9 @@ class CSharpEmitter : IXamlILEmitter
 
     private string FormatGenericArgs(IXamlMethod method)
     {
-        if (method.IsGenericMethod && method.GenericArguments is { Count: > 0 } ga)
-            return $"<{string.Join(", ", ga.Select(FormatType))}>";
-        return "";
+        return method is { IsGenericMethod: true, GenericArguments: { Count: > 0 } ga }
+            ? $"<{string.Join(", ", ga.Select(FormatType))}>"
+            : "";
     }
 
     private void EmitMethodCall(IXamlMethod method, bool isVirtual)
@@ -566,8 +579,8 @@ class CSharpEmitter : IXamlILEmitter
         }
 
         // Special case: Type.GetTypeFromHandle(typeof(X)) → typeof(X)
-        if (method.IsStatic && method.Name == "GetTypeFromHandle" &&
-            method.DeclaringType.FullName == "System.Type" &&
+        if (method is { IsStatic: true, Name: "GetTypeFromHandle" } &&
+            method.DeclaringType.Equals(_knownTypes.SystemType) &&
             args.Length == 1 && args[0].StartsWith("typeof("))
         {
             Push(args[0], method.ReturnType);
@@ -622,17 +635,17 @@ class CSharpEmitter : IXamlILEmitter
             {
                 // Indexer setter: obj[args[0..n-1]] = args[n]
                 var indexArgs = string.Join(", ", args.Take(args.Length - 1));
-                Emit($"{obj}[{indexArgs}] = {args[args.Length - 1]};");
+                Emit($"{obj}[{indexArgs}] = {args[^1]};");
                 return;
             }
             else if (method.Name.StartsWith("get_") && args.Length == 0)
             {
-                var propName = method.Name.Substring(4);
+                var propName = method.Name[4..];
                 call = $"{obj}.{propName}";
             }
             else if (method.Name.StartsWith("set_") && args.Length == 1)
             {
-                var propName = method.Name.Substring(4);
+                var propName = method.Name[4..];
                 Emit($"{obj}.{propName} = {args[0]};");
                 return;
             }
@@ -642,7 +655,7 @@ class CSharpEmitter : IXamlILEmitter
             }
         }
 
-        if (method.ReturnType.FullName == "System.Void")
+        if (method.ReturnType.Equals(_knownTypes.SystemVoid))
         {
             Emit($"{call};");
         }
@@ -704,7 +717,7 @@ class CSharpEmitter : IXamlILEmitter
         foreach (var expr in pending)
         {
             var temp = AllocTemp();
-            var tempType = expr.Type ?? TypeSystem.GetType("System.Object, System.Private.CoreLib");
+            var tempType = expr.Type ?? _knownTypes.SystemObject;
             _tempLocals.Add(new CSharpLocal(temp, -1, tempType));
             Emit($"{temp} = {expr.Expression};");
             _evalStack.Push(new CSharpExpression(temp, expr.Type));
@@ -713,21 +726,20 @@ class CSharpEmitter : IXamlILEmitter
 
     private static bool IsSimpleExpression(string expr)
     {
-        return expr == "null" || expr == "default" || expr == "this"
-               || (expr.Length <= 20 && !expr.Contains('(') && !expr.Contains('['));
+        return expr == "null" || expr == "default" || expr == "this" || (expr.Length <= 20 && !expr.Contains('(') && !expr.Contains('['));
     }
 
     /// <summary>
     /// Formats a falsiness check for Brfalse: branches when value is null/false/0.
     /// </summary>
-    private static string FormatFalsinessCheck(CSharpExpression val)
+    private string FormatFalsinessCheck(CSharpExpression val)
     {
         if (val.Type != null)
         {
-            var fn = val.Type.FullName;
-            if (fn == "System.Boolean")
+            var fn = val.Type;
+            if (fn.Equals(_knownTypes.SystemBoolean))
                 return $"!{val.Expression}";
-            if (val.Type.IsValueType && fn != "System.IntPtr" && fn != "System.UIntPtr")
+            if (val.Type.IsValueType && !fn.Equals(_knownTypes.SystemIntPtr) && !fn.Equals(_knownTypes.SystemUIntPtr))
                 return $"{val.Expression} == 0";
         }
         return $"{val.Expression} == null";
@@ -736,16 +748,16 @@ class CSharpEmitter : IXamlILEmitter
     /// <summary>
     /// Formats a truthiness check for Brtrue: branches when value is non-null/true/non-zero.
     /// </summary>
-    private static string FormatTruthinessCheck(CSharpExpression val)
+    private string FormatTruthinessCheck(CSharpExpression val)
     {
         if (val.Type != null)
         {
-            var fn = val.Type.FullName;
-            if (fn == "System.Boolean")
+            var fn = val.Type;
+            if (fn.Equals(_knownTypes.SystemBoolean))
                 return val.Expression;
-            if (fn is "System.Int32" or "System.Int64" or "System.Byte" or "System.Int16")
+            if (fn.Equals(_knownTypes.SystemInt32) || fn.Equals(_knownTypes.SystemInt64) || fn.Equals(_knownTypes.SystemByte) || fn.Equals(_knownTypes.SystemInt16))
                 return $"{val.Expression} != 0";
-            if (val.Type.IsValueType && fn != "System.IntPtr" && fn != "System.UIntPtr")
+            if (val.Type.IsValueType && !fn.Equals(_knownTypes.SystemIntPtr) && !fn.Equals(_knownTypes.SystemUIntPtr))
                 return $"{val.Expression} != 0";
         }
         return $"{val.Expression} != null";
@@ -769,81 +781,56 @@ class CSharpEmitter : IXamlILEmitter
     #endregion
 }
 
-internal struct CSharpExpression
+internal struct CSharpExpression(string expression, IXamlType? type)
 {
-    public string Expression;
-    public IXamlType? Type;
-
-    public CSharpExpression(string expression, IXamlType? type)
-    {
-        Expression = expression;
-        Type = type;
-    }
+    public string Expression = expression;
+    public IXamlType? Type = type;
 }
 
-internal class CSharpLocal : IXamlILLocal
+internal class CSharpLocal(string name, int index, IXamlType type) : IXamlILLocal
 {
-    public string Name { get; }
-    public int Index { get; }
-    public IXamlType Type { get; }
-
-    public CSharpLocal(string name, int index, IXamlType type)
-    {
-        Name = name;
-        Index = index;
-        Type = type;
-    }
+    public string Name { get; } = name;
+    public int Index { get; } = index;
+    public IXamlType Type { get; } = type;
 }
 
-internal class CSharpLabel : IXamlLabel
+internal class CSharpLabel(string name) : IXamlLabel
 {
-    public string Name { get; }
-
-    public CSharpLabel(string name)
-    {
-        Name = name;
-    }
+    public string Name { get; } = name;
 }
 
 #if !XAMLX_INTERNAL
 public
 #endif
-class CSharpMethodContext
+class CSharpMethodContext(
+    IXamlType? returnType,
+    bool isStatic,
+    bool isConstructor,
+    string[] argNames,
+    IXamlType[] argTypes,
+    IXamlType? declaringType = null)
 {
-    public IXamlType? ReturnType { get; }
-    public bool IsStatic { get; }
-    public bool IsConstructor { get; }
-    private readonly string[] _argNames;
-    private readonly IXamlType[] _argTypes;
-    private readonly IXamlType? _declaringType;
-
-    public CSharpMethodContext(IXamlType? returnType, bool isStatic, bool isConstructor, string[] argNames, IXamlType[] argTypes, IXamlType? declaringType = null)
-    {
-        ReturnType = returnType;
-        IsStatic = isStatic;
-        IsConstructor = isConstructor;
-        _argNames = argNames;
-        _argTypes = argTypes;
-        _declaringType = declaringType;
-    }
+    public IXamlType? ReturnType { get; } = returnType;
+    public bool IsStatic { get; } = isStatic;
+    public bool IsConstructor { get; } = isConstructor;
 
     public string GetArgName(int index)
     {
         if (!IsStatic && index == 0)
             return "this";
         var adjustedIndex = IsStatic ? index : index - 1;
-        if (adjustedIndex >= 0 && adjustedIndex < _argNames.Length)
-            return _argNames[adjustedIndex];
+        if (adjustedIndex >= 0 && adjustedIndex < argNames.Length)
+            return argNames[adjustedIndex];
         return $"__arg_{index}";
     }
 
     public IXamlType? GetArgType(int index)
     {
         if (!IsStatic && index == 0)
-            return _declaringType;
+            return declaringType;
         var adjustedIndex = IsStatic ? index : index - 1;
-        if (adjustedIndex >= 0 && adjustedIndex < _argTypes.Length)
-            return _argTypes[adjustedIndex];
+        if (adjustedIndex >= 0 && adjustedIndex < argTypes.Length)
+            return argTypes[adjustedIndex];
         return null;
     }
 }

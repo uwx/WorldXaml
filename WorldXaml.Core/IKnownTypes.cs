@@ -22,6 +22,7 @@ public interface IKnownTypes
     public string IXamlParentStackProviderV1 { get; } // XamlX.Runtime.IXamlParentStackProviderV1
     public string IXamlXmlNamespaceInfoProviderV1 { get; } // XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1
     
+    public string Binding { get; } // Avalonia.Data.Binding
     public string CompiledBind { get; } // Avalonia.Data.CompiledBinding
     public string PropertyObject { get; } // WorldXaml.UI.Base.PropertyObject
     public string BindableObject { get; } // WorldXaml.UI.Base.BindableObject

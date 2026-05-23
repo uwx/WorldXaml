@@ -24,12 +24,18 @@ static class XamlHelpers
         // These must run in this exact order - same as Avalonia's pipeline.
         var insertIndex = compiler.Transformers.FindIndex(t => t is PropertyReferenceResolver);
 
-        compiler.Transformers.Insert(insertIndex,           new DataContextTypeTransformer());
-        compiler.Transformers.Insert(insertIndex + 1, new BindingPathParser(knownTypes.CompiledBind));
-        compiler.Transformers.Insert(insertIndex + 2, new BindingPathTransformer(knownTypes.CompiledBind, knownTypes.ClrPropertyInfo, knownTypes.ResolvedPath));
-        // PropertyObjectTransformer must run AFTER PropertyReferenceResolver (now at insertIndex+3)
+        compiler.Transformers.Insert(insertIndex, new DataContextTypeTransformer());
+        // PropertyObjectTransformer must run AFTER PropertyReferenceResolver (now at insertIndex+1)
         // so that properties are already resolved to XamlAstClrProperty nodes.
-        compiler.Transformers.Insert(insertIndex + 4, new PropertyObjectTransformer(knownTypes.PropertyObject, knownTypes.BindableObject, knownTypes.PropertyGeneric, knownTypes.IXamlBinding));
+        compiler.Transformers.Insert(insertIndex + 2, new PropertyObjectTransformer(knownTypes.PropertyObject, knownTypes.BindableObject, knownTypes.PropertyGeneric, knownTypes.IXamlBinding));
+
+        // BindingAutoCompileTransformer runs AFTER ConstructableObjectTransformer so that
+        // {Binding} nodes are already XamlAstConstructableObjectNode with resolved properties.
+        // It upgrades {Binding} to CompiledBinding when the DataContext type is known.
+        var ctorIndex = compiler.Transformers.FindIndex(t => t is ConstructableObjectTransformer);
+        compiler.Transformers.Insert(ctorIndex + 1, new BindingAutoCompileTransformer(
+            knownTypes.Binding, knownTypes.CompiledBind,
+            knownTypes.ClrPropertyInfo, knownTypes.ResolvedPath));
     }
     
     public static XamlLanguageTypeMappings CreateTypeMappings(IXamlTypeSystem typeSystem, IKnownTypes knownTypes)

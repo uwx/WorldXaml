@@ -23,6 +23,7 @@ internal enum BuildProperties
     WorldXamlGeneratorHotReloadTypeName,
     WorldXamlGeneratorStyledElementTypeName,
     WorldXamlGeneratorWindowTypeName,
+    WorldXamlGeneratorBindingTypeName,
     WorldXamlGeneratorCompiledBindTypeName,
     WorldXamlGeneratorPropertyObjectTypeName,
     WorldXamlGeneratorBindableObjectTypeName,
@@ -105,6 +106,7 @@ internal record GeneratorOptions
         public string IXamlParentStackProviderV1 { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlParentStackProviderV1TypeName, "XamlX.Runtime.IXamlParentStackProviderV1");
         public string IXamlXmlNamespaceInfoProviderV1 { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName, "XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1");
     
+        public string Binding { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorBindingTypeName, "Avalonia.Data.Binding");
         public string CompiledBind { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorCompiledBindTypeName, "Avalonia.Data.CompiledBinding");
         public string PropertyObject { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyObjectTypeName, "WorldXaml.UI.Base.PropertyObject");
         public string BindableObject { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorBindableObjectTypeName, "WorldXaml.UI.Base.BindableObject");
@@ -133,6 +135,7 @@ internal record GeneratorOptions
             yield return KeyValuePair.Create<string, string?>(nameof(IAddChildGeneric), IAddChildGeneric);
             yield return KeyValuePair.Create<string, string?>(nameof(IXamlParentStackProviderV1), IXamlParentStackProviderV1);
             yield return KeyValuePair.Create<string, string?>(nameof(IXamlXmlNamespaceInfoProviderV1), IXamlXmlNamespaceInfoProviderV1);
+            yield return KeyValuePair.Create<string, string?>(nameof(Binding), Binding);
             yield return KeyValuePair.Create<string, string?>(nameof(CompiledBind), CompiledBind);
             yield return KeyValuePair.Create<string, string?>(nameof(PropertyObject), PropertyObject);
             yield return KeyValuePair.Create<string, string?>(nameof(BindableObject), BindableObject);
