@@ -545,11 +545,25 @@ class CSharpEmitter : IXamlILEmitter
 
     #region Private Helpers
 
+    private string FormatGenericArgs(IXamlMethod method)
+    {
+        if (method.IsGenericMethod && method.GenericArguments is { Count: > 0 } ga)
+            return $"<{string.Join(", ", ga.Select(FormatType))}>";
+        return "";
+    }
+
     private void EmitMethodCall(IXamlMethod method, bool isVirtual)
     {
         var args = new string[method.Parameters.Count];
         for (var i = args.Length - 1; i >= 0; i--)
             args[i] = PopExpr();
+
+        // Cast int literals to enum types when the parameter expects an enum.
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (method.Parameters[i].IsEnum)
+                args[i] = $"(({FormatType(method.Parameters[i])}){args[i]})";
+        }
 
         // Special case: Type.GetTypeFromHandle(typeof(X)) → typeof(X)
         if (method.IsStatic && method.Name == "GetTypeFromHandle" &&
@@ -579,7 +593,7 @@ class CSharpEmitter : IXamlILEmitter
             }
             else
             {
-                call = $"{typeName}.{method.Name}({string.Join(", ", args)})";
+                call = $"{typeName}.{method.Name}{FormatGenericArgs(method)}({string.Join(", ", args)})";
             }
         }
         else
@@ -619,16 +633,12 @@ class CSharpEmitter : IXamlILEmitter
             else if (method.Name.StartsWith("set_") && args.Length == 1)
             {
                 var propName = method.Name.Substring(4);
-                var val = args[0];
-                // Cast int literal to enum type if needed
-                if (method.Parameters[0].IsEnum)
-                    val = $"(({FormatType(method.Parameters[0])}){val})";
-                Emit($"{obj}.{propName} = {val};");
+                Emit($"{obj}.{propName} = {args[0]};");
                 return;
             }
             else
             {
-                call = $"{obj}.{method.Name}({string.Join(", ", args)})";
+                call = $"{obj}.{method.Name}{FormatGenericArgs(method)}({string.Join(", ", args)})";
             }
         }
 
