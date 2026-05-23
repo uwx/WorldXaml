@@ -72,7 +72,7 @@ class CSharpEmitter : IXamlILEmitter
             {
                 var val = PopExpr();
                 // Convert int literals to bool when return type is bool
-                if (!_method.ReturnType.Equals(_knownTypes.SystemBoolean))
+                if (_method.ReturnType.Equals(_knownTypes.SystemBoolean))
                 {
                     if (val == "0") val = "false";
                     else if (val == "1") val = "true";
