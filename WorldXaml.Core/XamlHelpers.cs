@@ -27,7 +27,9 @@ static class XamlHelpers
         compiler.Transformers.Insert(insertIndex,           new DataContextTypeTransformer());
         compiler.Transformers.Insert(insertIndex + 1, new BindingPathParser(knownTypes.CompiledBind));
         compiler.Transformers.Insert(insertIndex + 2, new BindingPathTransformer(knownTypes.CompiledBind));
-        compiler.Transformers.Insert(insertIndex + 3, new PropertyObjectTransformer(knownTypes.PropertyObject, knownTypes.BindableObject, knownTypes.PropertyGeneric, knownTypes.IXamlBinding));
+        // PropertyObjectTransformer must run AFTER PropertyReferenceResolver (now at insertIndex+3)
+        // so that properties are already resolved to XamlAstClrProperty nodes.
+        compiler.Transformers.Insert(insertIndex + 4, new PropertyObjectTransformer(knownTypes.PropertyObject, knownTypes.BindableObject, knownTypes.PropertyGeneric, knownTypes.IXamlBinding));
     }
     
     public static XamlLanguageTypeMappings CreateTypeMappings(IXamlTypeSystem typeSystem, IKnownTypes knownTypes)
