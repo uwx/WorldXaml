@@ -29,4 +29,7 @@ public interface IKnownTypes
     public string Property { get; } // WorldXaml.UI.Base.Property
     public string IXamlBinding { get; } // WorldXaml.UI.Base.IXamlBinding
     public string? HotReload { get; } // WorldXaml.UI.Base.Xaml.XamlHotReload
+    
+    public string ClrPropertyInfo  { get; } // WorldXaml.UI.Base.CompiledClrPropertyInfo
+    public string ResolvedPath { get; } // WorldXaml.UI.Base.ResolvedPath
 }

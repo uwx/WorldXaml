@@ -42,6 +42,8 @@ internal enum BuildProperties
     WorldXamlGeneratorIXamlParentStackProviderV1TypeName,
     WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName,
     WorldXamlGeneratorPropertyTypeName,
+    WorldXamlGeneratorClrPropertyInfoTypeName,
+    WorldXamlGeneratorResolvedPathTypeName
     // TODO add other generators properties here.
 }
 
@@ -110,6 +112,9 @@ internal record GeneratorOptions
         public string Property { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyTypeName, "Avalonia.AvaloniaProperty");
         public string IXamlBinding { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlBindingTypeName, "WorldXaml.UI.Base.IXamlBinding");
         public string? HotReload { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorHotReloadTypeName, "WorldXaml.UI.Base.Xaml.XamlHotReload");
+    
+        public string ClrPropertyInfo { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorClrPropertyInfoTypeName, "WorldXaml.UI.Base.CompiledClrPropertyInfo");
+        public string ResolvedPath { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorResolvedPathTypeName, "WorldXaml.UI.Base.ResolvedPath");
 
         public IEnumerator<KeyValuePair<string, string?>> GetEnumerator()
         {
@@ -135,6 +140,8 @@ internal record GeneratorOptions
             yield return KeyValuePair.Create<string, string?>(nameof(Property), Property);
             yield return KeyValuePair.Create<string, string?>(nameof(IXamlBinding), IXamlBinding);
             yield return KeyValuePair.Create<string, string?>(nameof(HotReload), HotReload);
+            yield return KeyValuePair.Create<string, string?>(nameof(ClrPropertyInfo), ClrPropertyInfo);
+            yield return KeyValuePair.Create<string, string?>(nameof(ResolvedPath), ResolvedPath);
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

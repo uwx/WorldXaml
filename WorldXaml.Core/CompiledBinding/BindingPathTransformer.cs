@@ -12,7 +12,7 @@ namespace WorldXaml.XamlX;
 #if !XAMLX_INTERNAL
 public
 #endif
-class BindingPathTransformer(string CompiledBindFqn) : IXamlAstTransformer
+class BindingPathTransformer(string CompiledBindFqn, string clrPropertyInfoFqn, string resolvedPathFqn) : IXamlAstTransformer
 {
     public IXamlAstNode Transform(AstTransformationContext context, IXamlAstNode node)
     {
@@ -47,10 +47,10 @@ class BindingPathTransformer(string CompiledBindFqn) : IXamlAstTransformer
         return node;
     }
 
-    private static ResolvedBindingPathNode ResolvePath(
+    private ResolvedBindingPathNode ResolvePath(
         AstTransformationContext context,
         IXamlType startType,
-        List<string> segments,
+        IReadOnlyList<string> segments,
         IXamlLineInfo lineInfo)
     {
         var steps = new List<ResolvedPathStep>();
@@ -75,7 +75,11 @@ class BindingPathTransformer(string CompiledBindFqn) : IXamlAstTransformer
             currentType = prop.Getter.ReturnType;
         }
 
-        return new ResolvedBindingPathNode(lineInfo, steps, currentType);
+        var ts = context.Configuration.TypeSystem;
+        var clrPropertyInfoType = ts.GetType(clrPropertyInfoFqn) ?? throw new XamlTypeSystemException($"Type '{clrPropertyInfoFqn}' not found in type system.");
+        var resolvedPathType = ts.GetType(resolvedPathFqn) ?? throw new XamlTypeSystemException($"Type '{resolvedPathFqn}' not found in type system.");
+
+        return new ResolvedBindingPathNode(lineInfo, steps, currentType, clrPropertyInfoType, resolvedPathType);
     }
 }
 
@@ -92,18 +96,11 @@ record ResolvedPathStep(IXamlProperty Property, IXamlType OwnerType);
 #if !XAMLX_INTERNAL
 public
 #endif
-class ResolvedBindingPathNode : XamlAstNode, IXamlAstValueNode,
-    IXamlAstLocalsEmitableNode<IXamlILEmitter, XamlILNodeEmitResult>
+    class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> steps, IXamlType leafType, IXamlType clrPropertyInfoType, IXamlType resolvedPathType)
+    : XamlAstNode(lineInfo), IXamlAstValueNode, IXamlAstLocalsEmitableNode<IXamlILEmitter, XamlILNodeEmitResult>
 {
-    public List<ResolvedPathStep> Steps { get; }
-    public IXamlAstTypeReference Type { get; }
-
-    public ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> steps, IXamlType leafType)
-        : base(lineInfo)
-    {
-        Steps = steps;
-        Type = new XamlAstClrTypeReference(lineInfo, leafType, false);
-    }
+    public List<ResolvedPathStep> Steps { get; } = steps;
+    public IXamlAstTypeReference Type { get; } = new XamlAstClrTypeReference(lineInfo, leafType, false);
 
     public XamlILNodeEmitResult Emit(
         XamlEmitContextWithLocals<IXamlILEmitter, XamlILNodeEmitResult> context,
@@ -115,8 +112,6 @@ class ResolvedBindingPathNode : XamlAstNode, IXamlAstValueNode,
         // Each step = new ClrPropertyInfo(name, getter, setter, type)
         // where getter/setter are lambda method pointers — no reflection.
 
-        var clrPropertyInfoType = ts.GetType("MyApp.CompiledClrPropertyInfo");
-        var resolvedPathType    = ts.GetType("MyApp.ResolvedPath");
         var objectType          = context.Configuration.WellKnownTypes.Object;
 
         // Push array of ClrPropertyInfo onto stack.

@@ -31,6 +31,8 @@
         <WorldXamlGeneratorIAddChildGenericTypeName Condition="'$(WorldXamlGeneratorIAddChildGenericTypeName)' == ''">Avalonia.Metadata.IAddChild`1</WorldXamlGeneratorIAddChildGenericTypeName>
         <WorldXamlGeneratorIXamlParentStackProviderV1TypeName Condition="'$(WorldXamlGeneratorIXamlParentStackProviderV1TypeName)' == ''">XamlX.Runtime.IXamlParentStackProviderV1</WorldXamlGeneratorIXamlParentStackProviderV1TypeName>
         <WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName Condition="'$(WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName)' == ''">XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1</WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName>
+        <WorldXamlGeneratorClrPropertyInfoTypeName Condition="'$(WorldXamlGeneratorClrPropertyInfoTypeName)' == ''">WorldXaml.UI.Base.CompiledClrPropertyInfo</WorldXamlGeneratorClrPropertyInfoTypeName>
+        <WorldXamlGeneratorResolvedPathTypeName Condition="'$(WorldXamlGeneratorResolvedPathTypeName)' == ''">WorldXaml.UI.Base.ResolvedPath</WorldXamlGeneratorResolvedPathTypeName>
     </PropertyGroup>
     <ItemGroup>
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="SourceItemGroup"/>
@@ -63,6 +65,8 @@
         <CompilerVisibleProperty Include="WorldXamlGeneratorIAddChildGenericTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorIXamlParentStackProviderV1TypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorClrPropertyInfoTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorResolvedPathTypeName"/>
     </ItemGroup>
     <Target Name="_InjectAdditionalFiles" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
         <ItemGroup>
