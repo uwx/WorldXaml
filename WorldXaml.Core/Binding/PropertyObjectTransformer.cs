@@ -11,7 +11,7 @@ using XamlX.TypeSystem;
 namespace WorldXaml.XamlX;
 
 /// <summary>
-/// Detects CLR properties backed by a static Property&lt;T&gt; field
+/// Detects CLR properties backed by a static Property&lt;T&gt; field or property
 /// (e.g. public static Property&lt;string&gt; TextProperty) and injects
 /// XamlX-compatible setters so both plain values and {Bind} work.
 /// </summary>
@@ -20,11 +20,6 @@ public
 #endif
 sealed class PropertyObjectTransformer(string PropertyObjectFqn, string BindableObjectFqn, string PropertyGenericFqn, string IXamlBindingFqn) : IXamlAstTransformer
 {
-    // // Fully-qualified names of your runtime types. Adjust to your namespace.
-    // private const string PropertyObjectFqn  = "MyApp.PropertyObject";
-    // private const string PropertyGenericFqn = "MyApp.Property`1";
-    // private const string IXamlBindingFqn    = "MyApp.IXamlBinding";
-
     public IXamlAstNode Transform(AstTransformationContext context, IXamlAstNode node)
     {
         if (node is not XamlAstClrProperty prop)
@@ -32,17 +27,37 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
 
         var ts = context.Configuration.TypeSystem;
 
-        // Find the FooProperty static field on the declaring type.
-        var fieldName = prop.Name + "Property";
-        var field = prop.DeclaringType
-            .GetAllFields()
-            .FirstOrDefault(f => f.IsStatic && f.IsPublic && f.Name == fieldName);
+        // Find the FooProperty static field or auto-property on the declaring type.
+        var memberName = prop.Name + "Property";
 
-        if (field == null)
-            return node;
+        IXamlField? field = prop.DeclaringType
+            .GetAllFields()
+            .FirstOrDefault(f => f.IsStatic && f.IsPublic && f.Name == memberName);
+
+        IXamlMethod? propertyGetter = null;
+        IXamlType? memberType;
+
+        if (field != null)
+        {
+            memberType = field.FieldType;
+        }
+        else
+        {
+            // Auto-properties (e.g. public static StyledProperty<T> FooProperty { get; })
+            // expose a getter method but no public field.
+            propertyGetter = prop.DeclaringType
+                .GetAllProperties()
+                .FirstOrDefault(p => p.Name == memberName && p.Getter is { IsStatic: true, IsPublic: true })
+                ?.Getter;
+
+            if (propertyGetter == null)
+                return node;
+
+            memberType = propertyGetter.ReturnType;
+        }
 
         // Confirm it is (or inherits from) Property<T>.
-        var valueType = ResolvePropertyValueType(field, ts, PropertyGenericFqn);
+        var valueType = ResolvePropertyValueType(memberType, ts, PropertyGenericFqn);
         if (valueType == null)
             return node;
 
@@ -66,12 +81,12 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
 
         // 1. Binding setter — checked first so {Bind} wins over value setter.
         newProp.Setters.Insert(0, new BindingSetter(
-            field, iXamlBindingType, prop.DeclaringType,
+            field, propertyGetter, iXamlBindingType, prop.DeclaringType,
             bindFromXamlMethod.MakeGenericMethod([valueType])));
 
         // 2. Typed value setter — direct assignment.
         newProp.Setters.Insert(1, new ValueSetter(
-            field, valueType, prop.DeclaringType,
+            field, propertyGetter, valueType, prop.DeclaringType,
             setValueMethod.MakeGenericMethod([valueType])));
 
         return newProp;
@@ -80,13 +95,25 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static IXamlType? ResolvePropertyValueType(
-        IXamlField field, IXamlTypeSystem ts, string propertyGenericFqn)
+        IXamlType type, IXamlTypeSystem ts, string propertyGenericFqn)
     {
         var genericBase = ts.FindType(propertyGenericFqn) ?? throw new XamlTypeSystemException($"Couldn't find type {propertyGenericFqn} in the type system.");
-        for (var t = field.FieldType; t != null; t = t.BaseType)
+        for (var t = type; t != null; t = t.BaseType)
             if (t.GenericTypeDefinition?.Equals(genericBase) == true)
                 return t.GenericArguments[0];
         return null;
+    }
+
+    /// <summary>
+    /// Emits the static Property&lt;T&gt; member onto the stack,
+    /// using Ldsfld for fields or a getter call for auto-properties.
+    /// </summary>
+    private static void EmitLoadProperty(IXamlILEmitter emitter, IXamlField? field, IXamlMethod? getter)
+    {
+        if (field != null)
+            emitter.Ldsfld(field);
+        else
+            emitter.EmitCall(getter!);
     }
 
     // ── Custom setters ───────────────────────────────────────────────────────
@@ -95,14 +122,13 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
     /// Emits: this.SetValue&lt;TValue&gt;(FooProperty, value)
     /// </summary>
     private sealed class ValueSetter(
-        IXamlField field,
+        IXamlField? field,
+        IXamlMethod? propertyGetter,
         IXamlType valueType,
         IXamlType declaringType,
         IXamlMethod setValueMethod) // already closed over TValue
         : IXamlILOptimizedEmitablePropertySetter
     {
-        // already closed over TValue
-
         public IXamlType TargetType { get; } = declaringType;
         public PropertySetterBinderParameters BinderParameters { get; } = new()
         {
@@ -118,9 +144,9 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
         {
             // Stack: [this, value]  → need [this, FooProperty, value]
             using var valueLoc = emitter.LocalsPool.GetLocal(Parameters[0]);
+            emitter.Stloc(valueLoc.Local);    // pop value to local
+            EmitLoadProperty(emitter, field, propertyGetter);
             emitter
-                .Stloc(valueLoc.Local)   // pop value to local
-                .Ldsfld(field)           // push FooProperty
                 .Ldloc(valueLoc.Local)   // push value
                 .EmitCall(setValueMethod, true);
         }
@@ -131,7 +157,7 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
             IXamlILEmitter emitter,
             IReadOnlyList<IXamlAstValueNode> arguments)
         {
-            emitter.Ldsfld(field);
+            EmitLoadProperty(emitter, field, propertyGetter);
             context.Emit(arguments[0], emitter, Parameters[0]);
             emitter.EmitCall(setValueMethod, true);
         }
@@ -141,7 +167,8 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
     /// Emits: this.BindFromXaml&lt;TValue&gt;(FooProperty, binding)
     /// </summary>
     private sealed class BindingSetter(
-        IXamlField field,
+        IXamlField? field,
+        IXamlMethod? propertyGetter,
         IXamlType iXamlBindingType,
         IXamlType declaringType,
         IXamlMethod bindMethod) // already closed over TValue
@@ -160,9 +187,9 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
         public void Emit(IXamlILEmitter emitter)
         {
             using var bindLoc = emitter.LocalsPool.GetLocal(Parameters[0]);
+            emitter.Stloc(bindLoc.Local);
+            EmitLoadProperty(emitter, field, propertyGetter);
             emitter
-                .Stloc(bindLoc.Local)
-                .Ldsfld(field)
                 .Ldloc(bindLoc.Local)
                 .EmitCall(bindMethod, true);
         }
@@ -172,7 +199,7 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
             IXamlILEmitter emitter,
             IReadOnlyList<IXamlAstValueNode> arguments)
         {
-            emitter.Ldsfld(field);
+            EmitLoadProperty(emitter, field, propertyGetter);
             context.Emit(arguments[0], emitter, Parameters[0]);
             emitter.EmitCall(bindMethod, true);
         }
