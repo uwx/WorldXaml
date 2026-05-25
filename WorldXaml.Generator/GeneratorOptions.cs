@@ -28,6 +28,7 @@ internal enum BuildProperties
     WorldXamlGeneratorPropertyObjectTypeName,
     WorldXamlGeneratorBindableObjectTypeName,
     WorldXamlGeneratorPropertyGenericTypeName,
+    WorldXamlGeneratorDirectPropertyGenericTypeName,
     WorldXamlGeneratorIXamlBindingTypeName,
     WorldXamlGeneratorXmlnsDefinitionAttributeTypeName,
     WorldXamlGeneratorContentAttributeTypeName,
@@ -111,6 +112,7 @@ internal record GeneratorOptions
         public string PropertyObject { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyObjectTypeName, "WorldXaml.UI.Base.PropertyObject");
         public string BindableObject { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorBindableObjectTypeName, "WorldXaml.UI.Base.BindableObject");
         public string PropertyGeneric { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyGenericTypeName, "Avalonia.StyledProperty`1");
+        public string DirectPropertyGeneric { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorDirectPropertyGenericTypeName, "WorldXaml.UI.Base.DirectProperty`2");
         public string Property { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyTypeName, "Avalonia.AvaloniaProperty");
         public string IXamlBinding { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlBindingTypeName, "WorldXaml.UI.Base.IXamlBinding");
         public string? HotReload { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorHotReloadTypeName, "WorldXaml.UI.Base.Xaml.XamlHotReload");
@@ -140,6 +142,7 @@ internal record GeneratorOptions
             yield return KeyValuePair.Create<string, string?>(nameof(PropertyObject), PropertyObject);
             yield return KeyValuePair.Create<string, string?>(nameof(BindableObject), BindableObject);
             yield return KeyValuePair.Create<string, string?>(nameof(PropertyGeneric), PropertyGeneric);
+            yield return KeyValuePair.Create<string, string?>(nameof(DirectPropertyGeneric), DirectPropertyGeneric);
             yield return KeyValuePair.Create<string, string?>(nameof(Property), Property);
             yield return KeyValuePair.Create<string, string?>(nameof(IXamlBinding), IXamlBinding);
             yield return KeyValuePair.Create<string, string?>(nameof(HotReload), HotReload);

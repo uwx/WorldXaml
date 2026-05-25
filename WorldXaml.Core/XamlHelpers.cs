@@ -27,7 +27,7 @@ static class XamlHelpers
         compiler.Transformers.Insert(insertIndex, new DataContextTypeTransformer());
         // PropertyObjectTransformer must run AFTER PropertyReferenceResolver (now at insertIndex+1)
         // so that properties are already resolved to XamlAstClrProperty nodes.
-        compiler.Transformers.Insert(insertIndex + 2, new PropertyObjectTransformer(knownTypes.PropertyObject, knownTypes.BindableObject, knownTypes.PropertyGeneric, knownTypes.IXamlBinding));
+        compiler.Transformers.Insert(insertIndex + 2, new PropertyObjectTransformer(knownTypes.PropertyObject, knownTypes.BindableObject, knownTypes.PropertyGeneric, knownTypes.DirectPropertyGeneric, knownTypes.IXamlBinding));
 
         // BindingAutoCompileTransformer runs AFTER ConstructableObjectTransformer so that
         // {Binding} nodes are already XamlAstConstructableObjectNode with resolved properties.
