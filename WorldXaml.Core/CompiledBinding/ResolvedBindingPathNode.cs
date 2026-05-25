@@ -1,92 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using XamlX;
 using XamlX.Ast;
 using XamlX.Emit;
 using XamlX.IL;
-using XamlX.Transform;
 using XamlX.TypeSystem;
 
 namespace WorldXaml.XamlX;
-
-#if !XAMLX_INTERNAL
-public
-#endif
-class BindingPathTransformer(string CompiledBindFqn, string clrPropertyInfoFqn, string resolvedPathFqn) : IXamlAstTransformer
-{
-    public IXamlAstNode Transform(AstTransformationContext context, IXamlAstNode node)
-    {
-        if (node is not XamlAstConstructableObjectNode binding)
-            return node;
-        if (binding.Type.GetClrType().FullName != CompiledBindFqn)
-            return node;
-
-        var pathAssignment = binding.Children
-            .OfType<XamlPropertyAssignmentNode>()
-            .FirstOrDefault(p => p.Property.Name == "Path");
-
-        if (pathAssignment?.Values[0] is not ParsedBindingPathNode parsed)
-            return node;
-
-        // ── Resolve starting DataContext type from nearest x:DataType in scope ──
-        var dataContextNode = context.ParentNodes()
-            .OfType<DataContextTypeMetadataNode>()
-            .FirstOrDefault();
-
-        if (dataContextNode is null)
-            throw new XamlTransformException(
-                "Cannot use {CompiledBind} without an x:DataType on this element or a parent.",
-                node);
-
-        // ── Walk the path segments against the type system ────────────────────
-        var resolvedPath = ResolvePath(context, dataContextNode.DataContextType, parsed.Segments, parsed);
-
-        // ── Replace ParsedBindingPathNode with the resolved, emittable node ───
-        pathAssignment.Values[0] = resolvedPath;
-
-        return node;
-    }
-
-    private ResolvedBindingPathNode ResolvePath(
-        AstTransformationContext context,
-        IXamlType startType,
-        IReadOnlyList<string> segments,
-        IXamlLineInfo lineInfo)
-    {
-        var steps = new List<ResolvedPathStep>();
-        var currentType = startType;
-
-        foreach (var seg in segments)
-        {
-            // Find the CLR property on the current type (walk hierarchy).
-            var prop = currentType
-                .GetAllProperties()
-                .FirstOrDefault(p => p.Name == seg);
-
-            if (prop is null)
-                throw new XamlTransformException(
-                    $"Property '{seg}' not found on type '{currentType.GetFqn()}'.", lineInfo);
-
-            if (prop.Getter is null)
-                throw new XamlTransformException(
-                    $"Property '{seg}' on '{currentType.GetFqn()}' has no getter.", lineInfo);
-
-            steps.Add(new ResolvedPathStep(prop, currentType));
-            currentType = prop.Getter.ReturnType;
-        }
-
-        var ts = context.Configuration.TypeSystem;
-        var clrPropertyInfoType = ts.GetType(clrPropertyInfoFqn) ?? throw new XamlTypeSystemException($"Type '{clrPropertyInfoFqn}' not found in type system.");
-        var resolvedPathType = ts.GetType(resolvedPathFqn) ?? throw new XamlTypeSystemException($"Type '{resolvedPathFqn}' not found in type system.");
-
-        return new ResolvedBindingPathNode(lineInfo, steps, currentType, clrPropertyInfoType, resolvedPathType);
-    }
-}
-
-#if !XAMLX_INTERNAL
-public
-#endif
-record ResolvedPathStep(IXamlProperty Property, IXamlType OwnerType);
 
 /// <summary>
 /// AOT-safe emittable node. At emit time it generates a chain of
@@ -96,7 +15,7 @@ record ResolvedPathStep(IXamlProperty Property, IXamlType OwnerType);
 #if !XAMLX_INTERNAL
 public
 #endif
-    class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> steps, IXamlType leafType, IXamlType clrPropertyInfoType, IXamlType resolvedPathType)
+class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> steps, IXamlType leafType, IXamlType clrPropertyInfoType, IXamlType resolvedPathType)
     : XamlAstNode(lineInfo), IXamlAstValueNode, IXamlAstLocalsEmitableNode<IXamlILEmitter, XamlILNodeEmitResult>
 {
     public List<ResolvedPathStep> Steps { get; } = steps;
