@@ -30,6 +30,7 @@ public interface IKnownTypes
     public string DirectPropertyGeneric { get; } // WorldXaml.UI.Base.DirectProperty`2
     public string Property { get; } // WorldXaml.UI.Base.Property
     public string IXamlBinding { get; } // WorldXaml.UI.Base.IXamlBinding
+    public string PropertyAttribute { get; } // WorldXaml.UI.Base.PropertyAttribute
     public string? HotReload { get; } // WorldXaml.UI.Base.Xaml.XamlHotReload
     
     public string ClrPropertyInfo  { get; } // WorldXaml.UI.Base.CompiledClrPropertyInfo

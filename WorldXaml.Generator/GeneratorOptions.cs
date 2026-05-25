@@ -30,6 +30,7 @@ internal enum BuildProperties
     WorldXamlGeneratorPropertyGenericTypeName,
     WorldXamlGeneratorDirectPropertyGenericTypeName,
     WorldXamlGeneratorIXamlBindingTypeName,
+    WorldXamlGeneratorPropertyAttributeTypeName,
     WorldXamlGeneratorXmlnsDefinitionAttributeTypeName,
     WorldXamlGeneratorContentAttributeTypeName,
     WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName,
@@ -115,6 +116,7 @@ internal record GeneratorOptions
         public string DirectPropertyGeneric { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorDirectPropertyGenericTypeName, "WorldXaml.UI.Base.DirectProperty`2");
         public string Property { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyTypeName, "Avalonia.AvaloniaProperty");
         public string IXamlBinding { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorIXamlBindingTypeName, "WorldXaml.UI.Base.IXamlBinding");
+        public string PropertyAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorPropertyAttributeTypeName, "WorldXaml.UI.Base.PropertyAttribute");
         public string? HotReload { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorHotReloadTypeName, "WorldXaml.UI.Base.Xaml.XamlHotReload");
     
         public string ClrPropertyInfo { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorClrPropertyInfoTypeName, "WorldXaml.UI.Base.CompiledClrPropertyInfo");
@@ -145,6 +147,7 @@ internal record GeneratorOptions
             yield return KeyValuePair.Create<string, string?>(nameof(DirectPropertyGeneric), DirectPropertyGeneric);
             yield return KeyValuePair.Create<string, string?>(nameof(Property), Property);
             yield return KeyValuePair.Create<string, string?>(nameof(IXamlBinding), IXamlBinding);
+            yield return KeyValuePair.Create<string, string?>(nameof(PropertyAttribute), PropertyAttribute);
             yield return KeyValuePair.Create<string, string?>(nameof(HotReload), HotReload);
             yield return KeyValuePair.Create<string, string?>(nameof(ClrPropertyInfo), ClrPropertyInfo);
             yield return KeyValuePair.Create<string, string?>(nameof(ResolvedPath), ResolvedPath);
