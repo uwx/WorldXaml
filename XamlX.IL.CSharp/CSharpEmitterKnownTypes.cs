@@ -7,6 +7,7 @@ public
 #endif
 class CSharpEmitterKnownTypes(IXamlTypeSystem typeSystem)
 {
+#pragma warning disable IL2122
     public IXamlType SystemVoid { get; } = typeSystem.GetType("System.Void");
     public IXamlType SystemObject { get; } = typeSystem.GetType("System.Object");
     public IXamlType SystemString { get; } = typeSystem.GetType("System.String");
@@ -27,4 +28,5 @@ class CSharpEmitterKnownTypes(IXamlTypeSystem typeSystem)
     public IXamlType SystemUIntPtr { get; } = typeSystem.GetType("System.UIntPtr");
     public IXamlType SystemDelegate { get; } = typeSystem.GetType("System.Delegate");
     public IXamlType SystemType { get; } = typeSystem.GetType("System.Type");
+#pragma warning restore IL2122
 }

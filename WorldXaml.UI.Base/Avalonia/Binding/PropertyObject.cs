@@ -46,7 +46,7 @@ namespace WorldXaml.UI.Base
         {
             if (_values.TryGetValue(property.Id, out var raw))
                 return (TValue)raw!;
-            return (TValue)property.DefaultValue!;
+            return property.DefaultValue;
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]

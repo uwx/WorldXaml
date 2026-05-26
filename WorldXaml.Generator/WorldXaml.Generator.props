@@ -17,6 +17,7 @@
         <WorldXamlGeneratorPropertyGenericTypeName Condition="'$(WorldXamlGeneratorPropertyGenericTypeName)' == ''">Avalonia.StyledProperty`1</WorldXamlGeneratorPropertyGenericTypeName>
         <WorldXamlGeneratorPropertyTypeName Condition="'$(WorldXamlGeneratorPropertyTypeName)' == ''">Avalonia.AvaloniaProperty</WorldXamlGeneratorPropertyTypeName>
         <WorldXamlGeneratorIXamlBindingTypeName Condition="'$(WorldXamlGeneratorIXamlBindingTypeName)' == ''">WorldXaml.UI.Base.IXamlBinding</WorldXamlGeneratorIXamlBindingTypeName>
+        <WorldXamlGeneratorPropertyAttributeTypeName Condition="'$(WorldXamlGeneratorPropertyAttributeTypeName)' == ''">WorldXaml.UI.Base.PropertyAttribute</WorldXamlGeneratorPropertyAttributeTypeName>
         <!-- NB: Rider will only parse XmlnsDefinition if it is from System.Windows.Markup -->
         <WorldXamlGeneratorXmlnsDefinitionAttributeTypeName Condition="'$(WorldXamlGeneratorXmlnsDefinitionAttributeTypeName)' == ''">System.Windows.Markup.XmlnsDefinitionAttribute</WorldXamlGeneratorXmlnsDefinitionAttributeTypeName>
         <WorldXamlGeneratorContentAttributeTypeName Condition="'$(WorldXamlGeneratorContentAttributeTypeName)' == ''">Avalonia.Metadata.ContentAttribute</WorldXamlGeneratorContentAttributeTypeName>
@@ -53,6 +54,7 @@
         <CompilerVisibleProperty Include="WorldXamlGeneratorBindableObjectTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorPropertyGenericTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorIXamlBindingTypeName"/>
+        <CompilerVisibleProperty Include="WorldXamlGeneratorPropertyAttributeTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorXmlnsDefinitionAttributeTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorContentAttributeTypeName"/>
         <CompilerVisibleProperty Include="WorldXamlGeneratorWhitespaceSignificantCollectionAttributeTypeName"/>

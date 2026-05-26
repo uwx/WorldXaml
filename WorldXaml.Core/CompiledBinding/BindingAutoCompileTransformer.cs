@@ -120,12 +120,12 @@ class BindingAutoCompileTransformer(
         var pathProp = compiledBindType.GetAllProperties().First(p => p.Name == "Path");
         var pathClrProp = new XamlAstClrProperty(
             node, pathProp.Name, compiledBindType, pathProp.Getter,
-            new[] { pathProp.Setter },
+            [pathProp.Setter],
             null);
 
         var pathAssign = new XamlPropertyAssignmentNode(
             node, pathClrProp, pathClrProp.Setters,
-            new IXamlAstValueNode[] { resolvedNode });
+            [resolvedNode]);
 
         var children = new List<IXamlAstNode> { pathAssign };
 
@@ -141,7 +141,7 @@ class BindingAutoCompileTransformer(
                 {
                     var cbClrProp = new XamlAstClrProperty(
                         node, cbProp.Name, compiledBindType, cbProp.Getter,
-                        new[] { cbProp.Setter },
+                        [cbProp.Setter],
                         null);
                     children.Add(new XamlPropertyAssignmentNode(
                         node, cbClrProp, cbClrProp.Setters, propAssign.Values));
@@ -153,7 +153,7 @@ class BindingAutoCompileTransformer(
             node,
             new XamlAstClrTypeReference(node, compiledBindType, false),
             compiledBindCtor,
-            new List<IXamlAstValueNode>(),
+            [],
             children);
     }
 }

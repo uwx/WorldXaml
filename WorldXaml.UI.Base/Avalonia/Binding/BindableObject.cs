@@ -51,6 +51,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
 
     bool ILogical.IsAttachedToLogicalTree => _root != null;
 
+    // TODO if a parent's parent is detached then the child should be detached too, but we don't have a way to track that right now.
     public ILogical? LogicalParent
     {
         get;
@@ -63,7 +64,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
     }
     
     public abstract IReadOnlyList<ILogical> LogicalChildren { get; }
-    
+
     private IDisposable? _parentDataContextBinding;
 
     public BindableObject()
@@ -71,24 +72,38 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
         _root = this as ILogicalRoot;
     }
 
+    public virtual void NotifyAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+    }
+
+    public virtual void NotifyDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+    }
+
     private void OnParentChanged()
     {
         // Update logical tree attachment and raise events as needed.
-        if (_root != null)
+        
+        var newRoot = FindLogicalRoot(this);
+
+        if (_root != newRoot)
         {
-            var e = new LogicalTreeAttachmentEventArgs(_root, this, LogicalParent);
-            DetachedFromLogicalTree?.Invoke(this, e);
+            if (_root != null)
+            {
+                var e = new LogicalTreeAttachmentEventArgs(_root, this, LogicalParent);
+                NotifyDetachedFromLogicalTree(e);
+                DetachedFromLogicalTree?.Invoke(this, e);
+            }
+
+            if (newRoot is not null)
+            {
+                var e = new LogicalTreeAttachmentEventArgs(newRoot, this, LogicalParent);
+                NotifyAttachedToLogicalTree(e);
+                AttachedToLogicalTree?.Invoke(this, e);
+                _root = newRoot;
+            }
         }
 
-        var newRoot = FindLogicalRoot(this);
-        
-        if (newRoot is not null)
-        {
-            var e = new LogicalTreeAttachmentEventArgs(newRoot, this, LogicalParent);
-            AttachedToLogicalTree?.Invoke(this, e);
-            _root = newRoot;
-        }
-        
         // Drop the old inherited DataContext binding.
         {
             var parentDataContextBinding = _parentDataContextBinding;

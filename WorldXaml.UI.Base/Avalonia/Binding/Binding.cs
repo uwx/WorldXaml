@@ -20,6 +20,11 @@ public sealed class Binding : IXamlBinding
     public string?      Path { get; set; }
     public BindingMode  Mode { get; set; } = BindingMode.OneWay;
 
+    public float TransitionDuration { get; set; } = 0;
+    public float TransitionOffset { get; set; } = 0;
+    public EasingFunction Easing { get; set; } = EasingFunction.Linear;
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public Binding()
     {
     }
@@ -57,6 +62,26 @@ public sealed class Binding : IXamlBinding
             .GetObservable(BindableObject.DataContextProperty)
             .Select(dc => ObservePath<TValue>(dc, Path))
             .Switch();
+
+        if (TransitionDuration > 0 && target is IAnimationCallback animationCallback)
+        {
+            var easing = EasingHelpers.EasingFunctions[Easing];
+
+            obs = obs
+                .PairWithPrevious()
+                .Select(pair =>
+                {
+                    var (from, to) = pair;
+                    
+                    var duration = TimeSpan.FromMilliseconds(TransitionDuration);
+                    var offset = TimeSpan.FromMilliseconds(TransitionOffset);
+
+                    return EasingHelpers.GetKeyframeObservable(animationCallback, (float)((object?)from ?? 0f), (float)(object)to!, duration, offset, easing);
+                })
+                .Switch()
+                .Cast<TValue>();
+        }
+
         return target.Bind(property, obs);
     }
 

@@ -35,4 +35,5 @@ public interface IKnownTypes
     
     public string ClrPropertyInfo  { get; } // WorldXaml.UI.Base.CompiledClrPropertyInfo
     public string ResolvedPath { get; } // WorldXaml.UI.Base.ResolvedPath
+    public string Animation { get; } // WorldXaml.UI.Base.Animation
 }

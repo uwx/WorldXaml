@@ -36,6 +36,13 @@ static class XamlHelpers
         compiler.Transformers.Insert(ctorIndex + 1, new BindingAutoCompileTransformer(
             knownTypes.Binding, knownTypes.CompiledBind,
             knownTypes.ClrPropertyInfo, knownTypes.ResolvedPath));
+
+        // AnimationAutoCompileTransformer runs AFTER ConstructableObjectTransformer so that
+        // {Animation} nodes are already XamlAstConstructableObjectNode. It resolves the
+        // animation trigger path at build time and sets NamedObject/Path on the Animation.
+        compiler.Transformers.Insert(ctorIndex + 2, new AnimationAutoCompileTransformer(
+            knownTypes.Animation,
+            knownTypes.ClrPropertyInfo, knownTypes.ResolvedPath));
     }
     
     public static XamlLanguageTypeMappings CreateTypeMappings(IXamlTypeSystem typeSystem, IKnownTypes knownTypes)

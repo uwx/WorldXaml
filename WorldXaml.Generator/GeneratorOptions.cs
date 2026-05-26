@@ -46,7 +46,8 @@ internal enum BuildProperties
     WorldXamlGeneratorIXamlXmlNamespaceInfoProviderV1TypeName,
     WorldXamlGeneratorPropertyTypeName,
     WorldXamlGeneratorClrPropertyInfoTypeName,
-    WorldXamlGeneratorResolvedPathTypeName
+    WorldXamlGeneratorResolvedPathTypeName,
+    WorldXamlGeneratorAnimationTypeName
     // TODO add other generators properties here.
 }
 
@@ -121,6 +122,7 @@ internal record GeneratorOptions
     
         public string ClrPropertyInfo { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorClrPropertyInfoTypeName, "WorldXaml.UI.Base.CompiledClrPropertyInfo");
         public string ResolvedPath { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorResolvedPathTypeName, "WorldXaml.UI.Base.ResolvedPath");
+        public string Animation { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorAnimationTypeName, "WorldXaml.UI.Base.Animation");
 
         public IEnumerator<KeyValuePair<string, string?>> GetEnumerator()
         {
@@ -151,6 +153,7 @@ internal record GeneratorOptions
             yield return KeyValuePair.Create<string, string?>(nameof(HotReload), HotReload);
             yield return KeyValuePair.Create<string, string?>(nameof(ClrPropertyInfo), ClrPropertyInfo);
             yield return KeyValuePair.Create<string, string?>(nameof(ResolvedPath), ResolvedPath);
+            yield return KeyValuePair.Create<string, string?>(nameof(Animation), Animation);
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

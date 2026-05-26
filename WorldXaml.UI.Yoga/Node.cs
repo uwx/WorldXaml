@@ -2,6 +2,9 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Data;
@@ -17,7 +20,7 @@ namespace WorldXaml.UI.Yoga;
 /// Represents a single node in the Yoga layout system.
 /// </summary>
 [DebuggerDisplay("{DebugToString()}")]
-public partial class Node : BindableObject, IDisposable, INamed, ILogical
+public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnimationCallback
 {
     internal static readonly YGConfigPtr Config;
 
@@ -46,6 +49,8 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
         __INTERNAL_CtorCallerMemberName = stackFrame?.GetMethod()?.Name ?? "";
 #endif
     }
+    
+    public event Action? AnimationFrameBegan;
 
     [Property]
     public partial string? Name { get; set; }
@@ -2329,6 +2334,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
 
         RescaleRecursive();
         NodeInternal.CalculateLayout(availableSize, YGDirection.YGDirectionLTR);
+        AnimationFrameBegan?.Invoke();
         RenderRecursive(origin ?? Vector2.Zero);
     }
 
@@ -2339,4 +2345,17 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical
     {
         GameTick();
     }
+
+    public void NotifyAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        Mounted.Trigger();
+    }
+
+    public override void NotifyDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        Unounted.Trigger();
+    }
+
+    public AnimationTrigger Mounted { get; } = new();
+    public AnimationTrigger Unounted { get; } = new();
 }
