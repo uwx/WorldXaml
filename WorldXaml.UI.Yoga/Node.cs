@@ -2384,6 +2384,7 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
     {
         Config = YGConfigPtr.GetDefault();
         Config.UseWebDefaults = true;
+        XamlConfig.InterpolatorProvider ??= new YogaInterpolatorProvider();
     }
 
     ~Node()

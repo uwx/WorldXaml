@@ -12,6 +12,9 @@ from them. For your game, or whatever.
 - Pretends to be Avalonia, so is compatible with all tooling that works with Avalonia
 - Zero reflection by default (hot reloading requires reflection)
 - Bring your own layout or use our Yoga (flexbox) based implementation
+- Bindings/MVVM support
+- Animations with support for all easing functions and keyframes
+  - Transitions similar to Avalonia's control transitions
 
 ## Usage
 
@@ -21,27 +24,36 @@ from them. For your game, or whatever.
 - Write your XAML, for instance using Yoga:
 
 ```xml
-<?xml version="1.0" encoding="utf-8"?>
-
-<yoga:View
+<View
+    xmlns="https://github.com/uwx/worldxaml"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:yoga="clr-namespace:WorldXaml.UI.Yoga;assembly=WorldXaml.UI.Yoga"
-    xmlns:ui="clr-namespace:NFMWorld.UI"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:w="https://github.com/needforrewrite/nfm-world"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d" d:DataContext="{d:DesignInstance w:CentralTextViewModel}"
     x:Class="NFMWorld.UI.Hud.CentralTextView"
-    Name="CentralText"
+    DataType="w:CentralTextViewModel"
     AlignItems="Center"
     FlexDirection="Column">
 
-    <yoga:Box AlignItems="Center" Flex="1">
-        <ui:TextRun Name="CenterText"
-                      Color="black"
-                      Font="bold 1px Adventure"
-                      Display="None" />
-    </yoga:Box>
+    <Box AlignItems="Center" Flex="1">
+        <!--
+            alternatively: Opacity="{Animation Shown, Easing=Linear, KeyFrameFrom=0, KeyFrameTo=1, KeyFrameDuration=250, KeyFrameOffset=0}"
+            but there's no way to combine animations yet (e.g shown + hidden) so we use transitions instead
+        -->
+        <w:TextRun
+            Opacity="{Binding CenterTextOpacity, Easing=Linear, TransitionDuration=250}"
+            Color="{Binding CenterTextColor}"
+            Font="{Binding CenterTextFont}"
+            Text="{Binding CenterText}"
+            StrokeColor="{Binding CenterTextStrokeColor}"
+            Display="Flex" />
+    </Box>
 
-    <yoga:Node Flex="1" />
-</yoga:View>
+    <Node Flex="1" />
+</View>
 ```
+<small>NB: Both DataType and x:DataType are supported for setting the type of a view's data context, but x: will show red squiggles in Rider</small>
 
 And the code-behind:
 
@@ -55,6 +67,7 @@ public partial class CentralTextView : View
     public CentralTextView()
     {
         InitializeComponent();
+        DataContext = new CentralTextViewModel();
     }
 }
 ```
@@ -77,12 +90,14 @@ And update your csproj:
     <WorldXamlGeneratorBehavior>WithXamlXCompilation</WorldXamlGeneratorBehavior>
     <WorldXamlGeneratorIsHotReloadingEnabled>true</WorldXamlGeneratorIsHotReloadingEnabled>
 
-    <!-- If you are not using WorldXaml.UI.Base, set this to your hot reload implementation -->
+    <!-- If you are not using WorldXaml.UI.Base, override the appropriate properties from WorldXaml.Generator.props -->
     <WorldXamlGeneratorHotReloadTypeName>WorldXaml.UI.Base.Xaml.XamlHotReload</WorldXamlGeneratorHotReloadTypeName>
+    <!-- ...etc -->
 
-    <!-- If you are not using WorldXaml.UI.Yoga, set these to your own types -->
+    <!-- If you are not using WorldXaml.UI.Yoga, override the appropriate properties from WorldXaml.Generator.props -->
     <WorldXamlGeneratorStyledElementTypeName>WorldXaml.UI.Yoga.Node</WorldXamlGeneratorStyledElementTypeName>
     <WorldXamlGeneratorWindowTypeName>WorldXaml.UI.Yoga.View</WorldXamlGeneratorWindowTypeName>
+    <!-- ...etc -->
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\WorldXaml\WorldXaml.Generator\WorldXaml.Generator.csproj"
@@ -90,7 +105,7 @@ And update your csproj:
                       ReferenceOutputAssembly="false"
                       OutputItemType="Analyzer"
     />
-    <!-- If you're using our Avalonia types -->
+    <!-- If you're using our Avalonia-inspired types -->
     <ProjectReference Include="..\WorldXaml\WorldXaml.UI.Base\WorldXaml.UI.Base.csproj" />
     <!-- If you're using our Yoga layout engine -->
     <ProjectReference Include="..\WorldXaml\WorldXaml.UI.Yoga\WorldXaml.UI.Yoga.csproj" />
@@ -118,7 +133,7 @@ If you're using WorldXaml.UI.Base instead of bringing your own Avalonia types, y
 implementation:
 
 ```csharp
-Logging.LogMessage = (level, message) =>
+XamlConfig.LogMessage = (level, message) =>
 {
     if (level == LogLevel.Info)
         logger.LogInformation(message);
@@ -133,7 +148,13 @@ Logging.LogMessage = (level, message) =>
 };
 ```
 
-By default it just logs to the console.
+And an interpolator implementation if you want to use animations or transitions:
+
+```csharp
+XamlConfig.InterpolatorProvider = new MyInterpolatorProvider();
+```
+
+By default it just logs to the console and only primitive number/vector/Yoga property transitions are supported.
 
 If you're using our Yoga layout engine, we expect you to assign `IXamlGraphicsBackend.Backend` to an implementation of
 our graphics backend interface. It does the bare minimum so it's really simple.
@@ -167,6 +188,59 @@ That's basically all you need. Everything else works the same as Avalonia. Now y
 You can set or remove AVA_DEBUG in the generator csproj to enable or disable debug logging, which is useful when the
 generator isn't doing what it's supposed to.
 
+### Bindings
+
+You can use `{Binding …}` markup extensions in your XAML to create bindings. For instance:
+
+```xml
+<View DataType="w:CentralTextViewModel" xmlns:w="clr-namespace:YourNamespace">
+    <Box>
+        <!-- TextRun is a custom control (example, bring your own) -->
+        <w:TextRun Text="{Binding HelloWorld}" />
+    </Box>
+</View>
+```
+
+You should set the `DataType` or `x:DataType` of your view to the type of your view model to get AOT compiled bindings,
+otherwise it will use reflection which is not AOT-safe.
+
+### Animations
+
+We do it differently from Avalonia because I thought it would be neater this way.
+
+Create an AnimationTrigger property on your view codebehind, and then you can use {Animation …} markup extensions in your XAML to create animations that trigger when the property is set to a certain value. For instance:
+
+```xml
+<View xmlns:w="clr-namespace:YourNamespace">
+    <Box>
+        <!-- Shown is a default animation triggered when Visibility is set to Visible -->
+        <!-- TextRun is a custom control (example, bring your own) -->
+        <w:TextRun
+            Opacity="{Animation Shown, Easing=Linear, KeyFrameFrom=0, KeyFrameTo=1, KeyFrameDuration=250, KeyFrameOffset=0}"
+            Text="Hello world!" />
+    </Box>
+</View>
+```
+
+If you're not using Yoga you need to implement `IAnimationCallback` and call `AnimationFrameBegan` periodically (e.g.
+every frame, before rendering) to update the animations.
+
+#### Transitions
+
+This is basically the same system as Avalonia's control transitions except we use properties of the Binding.
+
+```xml
+<View xmlns:w="clr-namespace:YourNamespace">
+    <Box>
+        <!-- Linearly interpolates the value when MyOpacity changes -->
+        <!-- TextRun is a custom control (example, bring your own) -->
+        <w:TextRun
+            Opacity="{Binding MyOpacity, Easing=Linear, TransitionDuration=250, TransitionOffset=0}"
+            Text="Hello world!" />
+    </Box>
+</View>
+```
+
 ### Debugging
 
 If you compile WorldXaml.UI.Yoga in debug mode you get access to a NodeDebugger which lets you pull out information
@@ -176,10 +250,6 @@ new frame.
 ### Hot Reloading
 
 Either use WorldXaml.UI.Base (includes hot reloading by default) or implement your own XamlHotReload.Register method.
-
-## Missing stuff
-
-Bindings are possible but I haven't tried implementing them yet.
 
 ## Examples
 

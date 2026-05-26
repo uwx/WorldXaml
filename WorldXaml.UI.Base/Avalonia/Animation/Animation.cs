@@ -1,5 +1,7 @@
 ﻿using System.Collections.Frozen;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
@@ -133,6 +135,157 @@ internal static class EasingHelpers
                 }
             }
         });
+    }
+
+    private static class InterpolatorCache<T>
+    {
+        public static Interpolator<T>? Interpolator { get; } = XamlConfig.InterpolatorProvider?.GetInterpolator<T>();
+        public static Interpolator<T>? DefaultInterpolator { get; } = DefaultInterpolatorProvider.GetInterpolator<T>();
+    }
+
+    private static class DefaultInterpolatorProvider
+    {
+        public static Interpolator<T>? GetInterpolator<T>()
+        {
+            if (typeof(T) == typeof(double))
+                return (Interpolator<T>)(object)(Interpolator<double>)((from, to, alpha) => from + (to - from) * alpha);
+            if (typeof(T) == typeof(float))
+                return (Interpolator<T>)(object)(Interpolator<float>)((from, to, alpha) => from + (to - from) * alpha);
+            if (typeof(T) == typeof(decimal))
+                return (Interpolator<T>)(object)(Interpolator<decimal>)((from, to, alpha) => from + (to - from) * (decimal)alpha);
+            if (typeof(T) == typeof(byte))
+                return (Interpolator<T>)(object)(Interpolator<byte>)((from, to, alpha) => (byte)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(sbyte))
+                return (Interpolator<T>)(object)(Interpolator<sbyte>)((from, to, alpha) => (sbyte)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(short))
+                return (Interpolator<T>)(object)(Interpolator<short>)((from, to, alpha) => (short)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(ushort))
+                return (Interpolator<T>)(object)(Interpolator<ushort>)((from, to, alpha) => (ushort)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(int))
+                return (Interpolator<T>)(object)(Interpolator<int>)((from, to, alpha) => (int)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(uint))
+                return (Interpolator<T>)(object)(Interpolator<uint>)((from, to, alpha) => (uint)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(long))
+                return (Interpolator<T>)(object)(Interpolator<long>)((from, to, alpha) => (long)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(ulong))
+                return (Interpolator<T>)(object)(Interpolator<ulong>)((from, to, alpha) => (ulong)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(Int128))
+                return (Interpolator<T>)(object)(Interpolator<Int128>)((from, to, alpha) => (Int128)((float)from + (float)(to - from) * alpha));
+            if (typeof(T) == typeof(UInt128))
+                return (Interpolator<T>)(object)(Interpolator<UInt128>)((from, to, alpha) => (UInt128)((float)from + (float)(to - from) * alpha));
+            if (typeof(T) == typeof(Vector2))
+                return (Interpolator<T>)(object)(Interpolator<Vector2>)((from, to, alpha) => new Vector2(from.X + (to.X - from.X) * alpha, from.Y + (to.Y - from.Y) * alpha));
+            if (typeof(T) == typeof(Vector3))
+                return (Interpolator<T>)(object)(Interpolator<Vector3>)((from, to, alpha) => new Vector3(from.X + (to.X - from.X) * alpha, from.Y + (to.Y - from.Y) * alpha, from.Z + (to.Z - from.Z) * alpha));
+            if (typeof(T) == typeof(Vector4))
+                return (Interpolator<T>)(object)(Interpolator<Vector4>)((from, to, alpha) => new Vector4(from.X + (to.X - from.X) * alpha, from.Y + (to.Y - from.Y) * alpha, from.Z + (to.Z - from.Z) * alpha, from.W + (to.W - from.W) * alpha));
+            if (typeof(T) == typeof(double?))
+                return (Interpolator<T>)(object)(Interpolator<double?>)((from, to, alpha) => from + (to - from) * alpha);
+            if (typeof(T) == typeof(float?))
+                return (Interpolator<T>)(object)(Interpolator<float?>)((from, to, alpha) => from + (to - from) * alpha);
+            if (typeof(T) == typeof(decimal?))
+                return (Interpolator<T>)(object)(Interpolator<decimal?>)((from, to, alpha) => from + (to - from) * (decimal)alpha);
+            if (typeof(T) == typeof(byte?))
+                return (Interpolator<T>)(object)(Interpolator<byte?>)((from, to, alpha) => (byte?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(sbyte?))
+                return (Interpolator<T>)(object)(Interpolator<sbyte?>)((from, to, alpha) => (sbyte?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(short?))
+                return (Interpolator<T>)(object)(Interpolator<short?>)((from, to, alpha) => (short?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(ushort?))
+                return (Interpolator<T>)(object)(Interpolator<ushort?>)((from, to, alpha) => (ushort?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(int?))
+                return (Interpolator<T>)(object)(Interpolator<int?>)((from, to, alpha) => (int?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(uint?))
+                return (Interpolator<T>)(object)(Interpolator<uint?>)((from, to, alpha) => (uint?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(long?))
+                return (Interpolator<T>)(object)(Interpolator<long?>)((from, to, alpha) => (long?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(ulong?))
+                return (Interpolator<T>)(object)(Interpolator<ulong?>)((from, to, alpha) => (ulong?)(from + (to - from) * alpha));
+            if (typeof(T) == typeof(Int128?))
+                return (Interpolator<T>)(object)(Interpolator<Int128?>)((from, to, alpha) => (Int128?)((float?)from + (float?)(to - from) * alpha));
+            if (typeof(T) == typeof(UInt128?))
+                return (Interpolator<T>)(object)(Interpolator<UInt128?>)((from, to, alpha) => (UInt128?)((float?)from + (float?)(to - from) * alpha));
+            if (typeof(T) == typeof(Vector2?))
+                return (Interpolator<T>)(object)(Interpolator<Vector2?>)((from, to, alpha) =>
+                {
+                    if (from is { } fromValue && to is { } toValue)
+                    {
+                        var fromX = fromValue!.X;
+                        var fromY = fromValue!.Y;
+                        var toX = toValue!.X;
+                        var toY = toValue!.Y;
+                        var x = fromX + (toX - fromX) * alpha;
+                        var y = fromY + (toY - fromY) * alpha;
+                        return new Vector2(x, y);
+                    }
+
+                    if (alpha < 0.5f) return from;
+                    return to;
+                });
+            if (typeof(T) == typeof(Vector3?))
+                return (Interpolator<T>)(object)(Interpolator<Vector3?>)((from, to, alpha) =>
+                {
+                    if (from is { } fromValue && to is { } toValue)
+                    {
+                        var fromX = fromValue!.X;
+                        var fromY = fromValue!.Y;
+                        var fromZ = fromValue!.Z;
+                        var toX = toValue!.X;
+                        var toY = toValue!.Y;
+                        var toZ = toValue!.Z;
+                        var x = fromX + (toX - fromX) * alpha;
+                        var y = fromY + (toY - fromY) * alpha;
+                        var z = fromZ + (toZ - fromZ) * alpha;
+                        return new Vector3(x, y, z);
+                    }
+
+                    if (alpha < 0.5f) return from;
+                    return to;
+                });
+            if (typeof(T) == typeof(Vector4?))
+                return (Interpolator<T>)(object)(Interpolator<Vector4?>)((from, to, alpha) =>
+                {
+                    if (from is { } fromValue && to is { } toValue)
+                    {
+                        var fromX = fromValue!.X;
+                        var fromY = fromValue!.Y;
+                        var fromZ = fromValue!.Z;
+                        var fromW = fromValue!.W;
+                        var toX = toValue!.X;
+                        var toY = toValue!.Y;
+                        var toZ = toValue!.Z;
+                        var toW = toValue!.W;
+                        var x = fromX + (toX - fromX) * alpha;
+                        var y = fromY + (toY - fromY) * alpha;
+                        var z = fromZ + (toZ - fromZ) * alpha;
+                        var w = fromW + (toW - fromW) * alpha;
+                        return new Vector4(x, y, z, w);
+                    }
+
+                    if (alpha < 0.5f) return from;
+                    return to;
+                });
+            return null;
+        }
+    }
+
+    public static TValue Interpolate<TValue>(TValue from, TValue to, float alpha)
+    {
+        var interpolator = InterpolatorCache<TValue>.Interpolator ?? InterpolatorCache<TValue>.DefaultInterpolator;
+
+        if (interpolator != null)
+        {
+            return interpolator(from, to, alpha);
+        }
+        
+        ThrowError();
+        return default!;
+
+        [DoesNotReturn]
+        static void ThrowError()
+        {
+            throw new ArgumentException($"Cannot interpolate values of type {typeof(TValue)}");
+        }
     } 
 }
 
