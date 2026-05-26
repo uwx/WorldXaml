@@ -36,6 +36,19 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
     }
 #endif
 
+    private readonly record struct PropertyAttributeInfo(
+        string DeclaringNamespace,
+        (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy,
+        Accessibility PropertyVisibility,
+        string PropertyName,
+        string PropertyType,
+        bool PropertyIsStatic,
+        TypedConstant? DefaultValue,
+        string? DefaultValueMember,
+        TypedConstant? DefaultMode,
+        string? OnChangedMethod,
+        bool PropertyHasBackingProperty);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         Print("hi from AvaloniaNameIncrementalGenerator");
@@ -58,15 +71,17 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                     var prop = context.SemanticModel.GetDeclaredSymbol(syntax)!;
                     var attr = context.Attributes.FirstOrDefault();
 
-                    return (
+                    return new PropertyAttributeInfo(
                         DeclaringNamespace: prop.ContainingNamespace.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).Remove(0, "global::".Length),
                         Hierarchy: GetTypeHierarchy(prop.ContainingType).ToArray(),
                         PropertyVisibility: prop.DeclaredAccessibility,
                         PropertyName: prop.Name,
                         PropertyType: prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         PropertyIsStatic: prop.IsStatic,
-                        DefaultValue: attr!.ConstructorArguments.FirstOrDefault(),
-                        DefaultMode: attr.ConstructorArguments.Skip(1).FirstOrDefault(),
+                        DefaultValue: attr!.NamedArguments.FirstOrDefault(static kv => kv.Key == "DefaultValue").Value,
+                        DefaultValueMember: attr.NamedArguments.FirstOrDefault(static kv => kv.Key == "DefaultValueMember").Value.Value as string,
+                        DefaultMode: attr.NamedArguments.FirstOrDefault(static kv => kv.Key == "DefaultMode").Value,
+                        OnChangedMethod: attr.NamedArguments.FirstOrDefault(static kv => kv.Key == "OnChangedMethod").Value.Value as string,
                         PropertyHasBackingProperty: prop.ContainingType.GetMembers(prop.Name + "Property").Any()
                     );
 
@@ -122,10 +137,26 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                         sb.AppendLine("/// <summary>");
                         sb.AppendLine($"/// Property field for <see cref=\"{prop.PropertyName}\"/>.");
                         sb.AppendLine("/// </summary>");
-                        sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} static global::{options.KnownTypes.PropertyGeneric.Replace("`1", "")}<{prop.PropertyType}> {prop.PropertyName}Property {{ get; }} = global::{options.KnownTypes.Property}.Register<{containingTypes}, {prop.PropertyType}>(nameof({prop.PropertyName}), defaultValue: {ToCSharpString(prop.DefaultValue)}, defaultMode: {ToCSharpString(prop.DefaultMode)});");
+                        sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} static global::{options.KnownTypes.PropertyGeneric.Replace("`1", "")}<{prop.PropertyType}> {prop.PropertyName}Property {{ get; }} = global::{options.KnownTypes.Property}.Register<{containingTypes}, {prop.PropertyType}>(nameof({prop.PropertyName}), defaultValue: {(prop.DefaultValueMember is {} defaultValueMember ? defaultValueMember : prop.DefaultValue is {} defaultValue ? ToCSharpString(defaultValue) : "null")}, defaultMode: {(prop.DefaultMode is {} defaultMode ? ToCSharpString(defaultMode) : "global::Avalonia.Data.BindingMode.OneWay")}, onChanged: {(prop.OnChangedMethod != null ? $"(obj, prop) => obj.{prop.OnChangedMethod}(prop)" : "null")});");
                     }
 
-                    sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} partial {prop.PropertyType} {prop.PropertyName} {{ get => GetValue({prop.PropertyName}Property); set => SetValue({prop.PropertyName}Property, value); }}");
+                    if (prop.DefaultValueMember != null)
+                    {
+                        sb.AppendLine("/// <summary>");
+                        sb.AppendLine($"/// Gets the default value of <see cref=\"{prop.PropertyName}\"/>.");
+                        sb.AppendLine("/// </summary>");
+                        sb.AppendLine($"private static partial {prop.PropertyType} {prop.DefaultValueMember} {{ get; }}");
+                    }
+
+                    if (prop.OnChangedMethod != null)
+                    {
+                        sb.AppendLine("/// <summary>");
+                        sb.AppendLine($"/// Invoked when the value of <see cref=\"{prop.PropertyName}\"/> changes.");
+                        sb.AppendLine("/// </summary>");
+                        sb.AppendLine($"private partial void {prop.OnChangedMethod}({prop.PropertyType} prop);");
+                    }
+
+                    sb.AppendLine($"{ToCSharp(prop.PropertyVisibility)} {(prop.PropertyIsStatic ? "static " : "")}partial {prop.PropertyType} {prop.PropertyName} {{ get => GetValue({prop.PropertyName}Property); set => SetValue({prop.PropertyName}Property, value); }}");
                 }
 
                 foreach (var type in iter)
@@ -524,30 +555,30 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             Location.Create(LinePosition.Path, default, new(LinePosition.StartLinePosition, LinePosition.EndLinePosition)),
             messageArgs: [.. FormatArguments]);
     }
-}
 
-public class PropHierarchyComparer : IEqualityComparer<(string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty)>
-{
-    public static PropHierarchyComparer Instance { get; } = new();
+    private class PropHierarchyComparer : IEqualityComparer<PropertyAttributeInfo>
+    {
+        public static PropHierarchyComparer Instance { get; } = new();
     
-    public bool Equals((string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty) x, (string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty) y)
-    {
-        return x.DeclaringNamespace == y.DeclaringNamespace && x.Hierarchy.SequenceEqual(y.Hierarchy);
-    }
-
-    public int GetHashCode((string DeclaringNamespace, (string Type, bool TypeIsRecord, bool TypeIsStruct)[] Hierarchy, Accessibility PropertyVisibility, string PropertyName, string PropertyType, bool PropertyIsStatic, TypedConstant DefaultValue, TypedConstant DefaultMode, bool PropertyHasBackingProperty) obj)
-    {
-        unchecked
+        public bool Equals(PropertyAttributeInfo x, PropertyAttributeInfo y)
         {
-            var hash = 17;
-            hash = hash * 23 + obj.DeclaringNamespace.GetHashCode();
-            foreach (var type in obj.Hierarchy)
+            return x.DeclaringNamespace == y.DeclaringNamespace && x.Hierarchy.SequenceEqual(y.Hierarchy);
+        }
+
+        public int GetHashCode(PropertyAttributeInfo obj)
+        {
+            unchecked
             {
-                hash = hash * 23 + type.Type.GetHashCode();
-                hash = hash * 23 + type.TypeIsRecord.GetHashCode();
-                hash = hash * 23 + type.TypeIsStruct.GetHashCode();
+                var hash = 17;
+                hash = hash * 23 + obj.DeclaringNamespace.GetHashCode();
+                foreach (var type in obj.Hierarchy)
+                {
+                    hash = hash * 23 + type.Type.GetHashCode();
+                    hash = hash * 23 + type.TypeIsRecord.GetHashCode();
+                    hash = hash * 23 + type.TypeIsStruct.GetHashCode();
+                }
+                return hash;
             }
-            return hash;
         }
     }
 }

@@ -1,16 +1,15 @@
-﻿using Avalonia;
-using Avalonia.Data;
+﻿using Avalonia.Data;
 
 namespace WorldXaml.UI.Base;
 
 /// <summary>
-/// Marks a property of a <see cref="PropertyObject"/> as a bindable property that can be used in XAML bindings. Or,
-/// attach it to a static property of type <see cref="DirectProperty{TOwner, TValue}"/> or
-/// <see cref="StyledProperty{TValue}"/> whose name ends with 'FooProperty' to generate a 'Foo' property. 
+/// Marks a property of a <see cref="PropertyObject"/> as a bindable property that can be used in XAML bindings.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class PropertyAttribute(object? defaultValue = null, BindingMode defaultMode = BindingMode.OneWay) : Attribute
+public class PropertyAttribute : Attribute
 {
-    public object? DefaultValue { get; }
-    public BindingMode DefaultMode { get; }
+    public object? DefaultValue { get; set; }
+    public string? DefaultValueMember { get; set; }
+    public BindingMode DefaultMode { get; set; } = BindingMode.OneWay;
+    public string? OnChangedMethod { get; set; }
 }
