@@ -15,6 +15,10 @@ public sealed class CompiledBinding : IXamlBinding
     public ResolvedPath? Path { get; set; }
     public BindingMode Mode { get; set; } = BindingMode.OneWay;
 
+    public float TransitionDuration { get; set; } = 0;
+    public float TransitionOffset { get; set; } = 0;
+    public EasingFunction Easing { get; set; } = EasingFunction.Linear;
+
     public IDisposable Apply<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         var path = Path ?? throw new InvalidOperationException("CompiledBinding path was not resolved.");
@@ -37,17 +41,38 @@ public sealed class CompiledBinding : IXamlBinding
         };
     }
 
-    private static IDisposable ApplyOneWay<TValue>(
+    private IDisposable ApplyOneWay<TValue>(
         IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         var obs = target
             .GetObservable(BindableObject.DataContextProperty)
             .Select(dc => path.Observe(dc).Select(v => v is TValue tv ? tv : default!))
             .Switch();
+
+        if (TransitionDuration > 0 && target is IAnimationCallback animationCallback)
+        {
+            var easing = EasingHelpers.EasingFunctions[Easing];
+
+            obs = obs
+                .PairWithPrevious()
+                .Select(pair =>
+                {
+                    var (from, to) = pair;
+                    
+                    var duration = TimeSpan.FromMilliseconds(TransitionDuration);
+                    var offset = TimeSpan.FromMilliseconds(TransitionOffset);
+
+                    // TODO transitions for non-float properties
+                    return EasingHelpers.GetKeyframeObservable(animationCallback, (float)((object?)from ?? 0f), (float)(object)to!, duration, offset, easing);
+                })
+                .Switch()
+                .Cast<TValue>();
+        }
+        
         return target.Bind(property, obs);
     }
 
-    private static IDisposable ApplyOneTime<TValue>(
+    private IDisposable ApplyOneTime<TValue>(
         IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         var obs = target
@@ -58,7 +83,7 @@ public sealed class CompiledBinding : IXamlBinding
         return target.Bind(property, obs);
     }
 
-    private static IDisposable ApplyTwoWay<TValue>(
+    private IDisposable ApplyTwoWay<TValue>(
         IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         var forward = ApplyOneWay(target, property, path);
