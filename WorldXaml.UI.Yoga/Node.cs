@@ -312,62 +312,211 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
             name:   nameof(LayoutBorderRight),
             getter: node => node.LayoutBorderRight);
     
+    /// <summary>
+    /// In the CSS box model, gets the top-left position of the margin box.
+    /// </summary>
     public Vector2 LayoutMarginPosition => _root + new Vector2(LayoutX, LayoutY);
+    
+    /// <summary>
+    /// In the CSS box model, gets the size of the margin box, from the top-left to the bottom-right.
+    /// </summary>
     public Vector2 LayoutMarginSize => new(LayoutWidth, LayoutHeight);
+    
+    /// <summary>
+    /// In the CSS box model, gets the top-left position of the border box.
+    /// </summary>
     public Vector2 LayoutBorderPosition => _root + new Vector2(LayoutX + LayoutMarginLeft, LayoutY + LayoutMarginTop);
+    
+    /// <summary>
+    /// In the CSS box model, gets the size of the border box, from the top-left to the bottom-right.
+    /// </summary>
     public Vector2 LayoutBorderSize => new(LayoutWidth - (LayoutMarginLeft + LayoutMarginRight), LayoutHeight - (LayoutMarginTop + LayoutMarginBottom));
+    
+    /// <summary>
+    /// In the CSS box model, gets the top-left position of the padding box.
+    /// </summary>
     public Vector2 LayoutPaddingPosition => _root + new Vector2(LayoutX + LayoutMarginLeft + LayoutBorderLeft, LayoutY + LayoutMarginTop + LayoutBorderTop);
+    
+    /// <summary>
+    /// In the CSS box model, gets the size of the padding box, from the top-left to the bottom-right.
+    /// </summary>
     public Vector2 LayoutPaddingSize => new(LayoutWidth - (LayoutMarginLeft + LayoutMarginRight + LayoutBorderLeft + LayoutBorderRight), LayoutHeight - (LayoutMarginTop + LayoutMarginBottom + LayoutBorderTop + LayoutBorderBottom));
+    
+    /// <summary>
+    /// In the CSS box model, gets the top-left position of the content box.
+    /// </summary>
     public Vector2 LayoutContentPosition => _root + new Vector2(LayoutX + LayoutMarginLeft + LayoutBorderLeft + LayoutPaddingLeft, LayoutY + LayoutMarginTop + LayoutBorderTop + LayoutPaddingTop);
+    
+    /// <summary>
+    /// In the CSS box model, gets the size of the content box, from the top-left to the bottom-right.
+    /// </summary>
     public Vector2 LayoutContentSize => new(LayoutWidth - (LayoutMarginLeft + LayoutMarginRight + LayoutBorderLeft + LayoutBorderRight + LayoutPaddingLeft + LayoutPaddingRight), LayoutHeight - (LayoutMarginTop + LayoutMarginBottom + LayoutBorderTop + LayoutBorderBottom + LayoutPaddingTop + LayoutPaddingBottom));
 
+    /// <summary>
+    /// Gets the margin width and height of the node as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 LayoutMargin => new(LayoutMarginLeft + LayoutMarginRight, LayoutMarginTop + LayoutMarginBottom);
+    
+    /// <summary>
+    /// Gets the padding width and height of the node as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 LayoutPadding => new(LayoutPaddingLeft + LayoutPaddingRight, LayoutPaddingTop + LayoutPaddingBottom);
+    
+    /// <summary>
+    /// Gets the border width and height of the node as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 LayoutBorder => new(LayoutBorderLeft + LayoutBorderRight, LayoutBorderTop + LayoutBorderBottom);
 
+    /// <summary>
+    /// Gets the width of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and does not include margins, borders, or padding.
+    /// </summary>
     public float LayoutWidth => NodeInternal.LayoutWidth;
+    
+    /// <summary>
+    /// Gets the height of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and does not include margins, borders, or padding.
+    /// </summary>
     public float LayoutHeight => NodeInternal.LayoutHeight;
+    
+    /// <summary>
+    /// Gets the X position of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the left edge of the parent node's content box to the left edge of this node's margin box.
+    /// </summary>
     public float LayoutX => NodeInternal.LayoutX;
+    
+    /// <summary>
+    /// Gets the Y position of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the top edge of the parent node's content box to the top edge of this node's margin box.
+    /// </summary>
     public float LayoutY => NodeInternal.LayoutY;
+    
+    /// <summary>
+    /// Gets the layout direction of the node as determined by the Yoga layout engine after a layout pass.
+    /// </summary>
     public YgDirection LayoutDirection => NodeInternal.LayoutDirection.ToNfmDirection();
+    
+    /// <summary>
+    /// Gets a value indicating whether the node's content overflowed its layout bounds during the last layout pass.
+    /// </summary>
     public bool HadOverflow => NodeInternal.HadOverflow;
+    
+    /// <summary>
+    /// Gets the top margin of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the top edge of this node's margin box to the top edge of its border box.
+    /// </summary>
     public float LayoutMarginTop => NodeInternal.LayoutMarginTop;
+    
+    /// <summary>
+    /// Gets the bottom margin of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the bottom edge of this node's margin box to the bottom edge of its border box.
+    /// </summary>
     public float LayoutMarginBottom => NodeInternal.LayoutMarginBottom;
+    
+    /// <summary>
+    /// Gets the left margin of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the left edge of this node's margin box to the left edge of its border box.
+    /// </summary>
     public float LayoutMarginLeft => NodeInternal.LayoutMarginLeft;
+    
+    /// <summary>
+    /// Gets the right margin of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the right edge of this node's margin box to the right edge of its border box.
+    /// This value is in points and represents the distance from the right edge of this node's margin box to the right edge of its border box.
+    /// </summary>
     public float LayoutMarginRight => NodeInternal.LayoutMarginRight;
+    
+    /// <summary>
+    /// Gets the top padding of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the top edge of this node's border box to the top edge of its padding box.
+    /// </summary>
     public float LayoutPaddingTop => NodeInternal.LayoutPaddingTop;
+    
+    /// <summary>
+    /// Gets the bottom padding of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the bottom edge of this node's border box to the bottom edge of its padding box.
+    /// </summary>
     public float LayoutPaddingBottom => NodeInternal.LayoutPaddingBottom;
+    
+    /// <summary>
+    /// Gets the left padding of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the left edge of this node's border box to the left edge of its padding box.
+    /// </summary>
     public float LayoutPaddingLeft => NodeInternal.LayoutPaddingLeft;
+    
+    /// <summary>
+    /// Gets the right padding of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the right edge of this node's border box to the right edge of its padding box.
+    /// </summary>
     public float LayoutPaddingRight => NodeInternal.LayoutPaddingRight;
+    
+    /// <summary>
+    /// Gets the top border of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the top edge of this node's border box to the top edge of its margin box.
+    /// </summary>
     public float LayoutBorderTop => NodeInternal.LayoutBorderTop;
+    
+    /// <summary>
+    /// Gets the bottom border of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the bottom edge of this node's border box to the bottom edge of its margin box.
+    /// </summary>
     public float LayoutBorderBottom => NodeInternal.LayoutBorderBottom;
+    
+    /// <summary>
+    /// Gets the left border of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the left edge of this node's border box to the left edge of its margin box.
+    /// </summary>
     public float LayoutBorderLeft => NodeInternal.LayoutBorderLeft;
+    
+    /// <summary>
+    /// Gets the right border of the node's layout as determined by the Yoga layout engine after a layout pass.
+    /// This value is in points and represents the distance from the right edge of this node's border box to the right edge of its margin box.
+    /// </summary>
     public float LayoutBorderRight => NodeInternal.LayoutBorderRight;
 
+    /// <summary>
+    /// Gets or sets whether the node's Yoga layout changed. Must be reset by setting it to false.
+    /// </summary>
     public bool HasNewLayout
     {
         get => NodeInternal.HasNewLayout;
         set => NodeInternal.HasNewLayout = value;
     }
 
+    /// <summary>
+    /// Gets or sets whether the node's Yoga layout results are dirty due to it or its children changing.
+    /// </summary>
     public bool IsDirty
     {
         get => NodeInternal.IsDirty;
         set => NodeInternal.IsDirty = value;
     }
 
+    /// <summary>
+    /// Gets or sets whether this node is set as the reference baseline.
+    /// </summary>
     public bool IsReferenceBaseline
     {
         set => NodeInternal.IsReferenceBaseline = value;
         get => NodeInternal.IsReferenceBaseline;
     }
 
+    /// <summary>
+    /// Gets or sets whether a leaf node's layout results may be truncated during layout rounding.
+    /// </summary>
     public YgNodeType NodeType
     {
         get => NodeInternal.NodeType.ToNfmNodeType();
         set => NodeInternal.NodeType = value.ToYogaNodeType();
     }
 
+    /// <summary>
+    /// Make it so that this node will always form a containing block for any
+    /// descendant nodes. This is useful for when a node has a property outside of
+    /// of Yoga that will form a containing block. For example, transforms or some of
+    /// the others listed in
+    /// https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block
+    /// </summary>
     public bool AlwaysFormsContainingBlock
     {
         get => NodeInternal.AlwaysFormsContainingBlock;
@@ -400,13 +549,13 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
     /// <summary>
     /// CSS: visibility - Controls whether the element is visible (visible/hidden/collapsed)
     /// </summary>
-    [Property(defaultValue: Visibility.Visible)]
+    [Property(DefaultValue = Visibility.Visible)]
     public partial Visibility Visibility { get; set; }
 
     /// <summary>
     /// CSS: opacity - Sets the transparency level (0.0 = fully transparent, 1.0 = fully opaque)
     /// </summary>
-    [Property(defaultValue: 1.0f)]
+    [Property(DefaultValue = 1.0f)]
     public partial float Opacity { get; set; }
 
     // https://css-tricks.com/snippets/css/a-guide-to-flexbox/
