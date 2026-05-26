@@ -221,6 +221,7 @@ public class Animation : IXamlBinding
                 return EasingHelpers.GetKeyframeObservable(animationCallback, from, to, duration, offset, easing);
             })
             .Switch()
+            .Prepend(KeyFrameFrom)
             .Cast<TValue>();
         
         return target.Bind(property, obs);
