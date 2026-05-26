@@ -2310,8 +2310,14 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
         XamlG.Alpha = 1f;
     }
 
+    private protected void OnAnimationFrameBegan()
+    {
+        AnimationFrameBegan?.Invoke();
+    }
+
     internal virtual void RenderRecursive(Vector2 root, float rootOpacity = 1f)
     {
+        OnAnimationFrameBegan();
         _root = root;
         if (Display != YgDisplay.None && Visibility == Visibility.Visible && Opacity > 0f)
         {
@@ -2334,7 +2340,6 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
 
         RescaleRecursive();
         NodeInternal.CalculateLayout(availableSize, YGDirection.YGDirectionLTR);
-        AnimationFrameBegan?.Invoke();
         RenderRecursive(origin ?? Vector2.Zero);
     }
 
@@ -2346,16 +2351,4 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
         GameTick();
     }
 
-    public void NotifyAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
-    {
-        Mounted.Trigger();
-    }
-
-    public override void NotifyDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
-    {
-        Unounted.Trigger();
-    }
-
-    public AnimationTrigger Mounted { get; } = new();
-    public AnimationTrigger Unounted { get; } = new();
 }

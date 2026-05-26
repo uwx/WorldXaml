@@ -61,6 +61,7 @@ public class Box : Node
 
     internal override void RenderRecursive(Vector2 root, float rootOpacity = 1)
     {
+        OnAnimationFrameBegan();
         _root = root;
         if (Display != YgDisplay.None && Visibility == Visibility.Visible && Opacity > 0f)
         {
