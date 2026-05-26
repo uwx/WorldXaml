@@ -18,7 +18,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
     private protected readonly Dictionary<int, IDisposable> _bindings = new();
 
     public static readonly StyledProperty<object?> DataContextProperty =
-        AvaloniaProperty.RegisterDirect<PropertyObject, object?>(nameof(DataContext), null);
+        AvaloniaProperty.Register<BindableObject, object?>(nameof(DataContext), null);
 
     /// <summary>
     /// Sets the type of the associated data context for this object.
@@ -51,7 +51,6 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
 
     bool ILogical.IsAttachedToLogicalTree => _root != null;
 
-    // TODO if a parent's parent is detached then the child should be detached too, but we don't have a way to track that right now.
     public ILogical? LogicalParent
     {
         get;
@@ -65,6 +64,16 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
     
     public abstract IReadOnlyList<ILogical> LogicalChildren { get; }
 
+    /// <summary>
+    /// Triggered when the object is mounted onto the logical tree.
+    /// </summary>
+    public AnimationTrigger Mounted { get; } = new();
+    
+    /// <summary>
+    /// Triggered when the object is unmounted from the logical tree.
+    /// </summary>
+    public AnimationTrigger Unmounted { get; } = new();
+
     private IDisposable? _parentDataContextBinding;
 
     public BindableObject()
@@ -72,12 +81,48 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
         _root = this as ILogicalRoot;
     }
 
-    public virtual void NotifyAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    private void OnDetachedFromLogicalTreeCore(LogicalTreeAttachmentEventArgs args)
     {
+        if (_root != null)
+        {
+            DetachedFromLogicalTree?.Invoke(this, args);
+            Unmounted.Trigger();
+
+            var logicalChildren = LogicalChildren;
+            var logicalChildrenCount = logicalChildren.Count;
+
+            for (var i = 0; i < logicalChildrenCount; i++)
+            {
+                if (logicalChildren[i] is BindableObject child && child._root != args.Root) // child may already have been attached within an event handler
+                {
+                    child.OnDetachedFromLogicalTreeCore(args);
+                }
+            }
+        }
+        
+        _root = null;
     }
 
-    public virtual void NotifyDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    private void OnAttachedToLogicalTreeCore(LogicalTreeAttachmentEventArgs args)
     {
+        if (_root == null)
+        {
+            AttachedToLogicalTree?.Invoke(this, args);
+            Mounted.Trigger();
+
+            var logicalChildren = LogicalChildren;
+            var logicalChildrenCount = logicalChildren.Count;
+
+            for (var i = 0; i < logicalChildrenCount; i++)
+            {
+                if (logicalChildren[i] is BindableObject child && child._root != args.Root) // child may already have been attached within an event handler
+                {
+                    child.OnAttachedToLogicalTreeCore(args);
+                }
+            }
+
+            _root = args.Root;
+        }
     }
 
     private void OnParentChanged()
@@ -91,16 +136,13 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
             if (_root != null)
             {
                 var e = new LogicalTreeAttachmentEventArgs(_root, this, LogicalParent);
-                NotifyDetachedFromLogicalTree(e);
-                DetachedFromLogicalTree?.Invoke(this, e);
+                OnDetachedFromLogicalTreeCore(e);
             }
 
             if (newRoot is not null)
             {
                 var e = new LogicalTreeAttachmentEventArgs(newRoot, this, LogicalParent);
-                NotifyAttachedToLogicalTree(e);
-                AttachedToLogicalTree?.Invoke(this, e);
-                _root = newRoot;
+                OnAttachedToLogicalTreeCore(e);
             }
         }
 
@@ -111,20 +153,21 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
             parentDataContextBinding?.Dispose();
         }
 
-        if (LogicalParent is not IGetSetValue gsv) return;
-
-        // If DataContext has not been set locally, inherit from parent.
-        // We watch the parent's DataContext observable so that future
-        // changes also propagate automatically.
-        if (!_values.ContainsKey(DataContextProperty.Id))
+        if (LogicalParent is IGetSetValue gsv)
         {
-            _parentDataContextBinding = gsv
-                .GetObservable(DataContextProperty)
-                .Subscribe(Observer.Create<object?>(dc =>
-                    SetValueCore(DataContextProperty, dc)));
+            // If DataContext has not been set locally, inherit from parent.
+            // We watch the parent's DataContext observable so that future
+            // changes also propagate automatically.
+            if (!_values.ContainsKey(DataContextProperty.Id))
+            {
+                _parentDataContextBinding = gsv
+                    .GetObservable(DataContextProperty)
+                    .Subscribe(Observer.Create<object?>(dc =>
+                        SetValueCore(DataContextProperty, dc)));
+            }
         }
     }
-    
+
     private static ILogicalRoot? FindLogicalRoot(ILogical? e)
     {
         while (e != null)
