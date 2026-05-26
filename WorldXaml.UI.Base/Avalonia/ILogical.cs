@@ -10,28 +10,19 @@ public interface ILogicalRoot : ILogical;
 /// Holds the event arguments for the <see cref="ILogical.AttachedToLogicalTree"/> and 
 /// <see cref="ILogical.DetachedFromLogicalTree"/> events.
 /// </summary>
-public class LogicalTreeAttachmentEventArgs : EventArgs
+/// <param name="root">The root of the logical tree.</param>
+/// <param name="source">The control being attached/detached.</param>
+/// <param name="parent">The <see cref="Parent"/>.</param>
+public class LogicalTreeAttachmentEventArgs(
+    ILogicalRoot root,
+    ILogical source,
+    ILogical? parent)
+    : EventArgs
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LogicalTreeAttachmentEventArgs"/> class.
-    /// </summary>
-    /// <param name="root">The root of the logical tree.</param>
-    /// <param name="source">The control being attached/detached.</param>
-    /// <param name="parent">The <see cref="Parent"/>.</param>
-    public LogicalTreeAttachmentEventArgs(
-        ILogicalRoot root,
-        ILogical source,
-        ILogical? parent)
-    {
-        Root = root ?? throw new ArgumentNullException(nameof(root));
-        Source = source ?? throw new ArgumentNullException(nameof(source));
-        Parent = parent;
-    }
-
     /// <summary>
     /// Gets the root of the logical tree that the control is being attached to or detached from.
     /// </summary>
-    public ILogicalRoot Root { get; }
+    public ILogicalRoot Root { get; } = root ?? throw new ArgumentNullException(nameof(root));
 
     /// <summary>
     /// Gets the control that was attached or detached from the logical tree.
@@ -41,7 +32,7 @@ public class LogicalTreeAttachmentEventArgs : EventArgs
     /// attachment/detachment, so this control may be different from the control that the
     /// event is being raised on.
     /// </remarks>
-    public ILogical Source { get; }
+    public ILogical Source { get; } = source ?? throw new ArgumentNullException(nameof(source));
 
     /// <summary>
     /// Gets the control that <see cref="Source"/> is being attached to or detached from.
@@ -51,7 +42,7 @@ public class LogicalTreeAttachmentEventArgs : EventArgs
     /// detachment, holds the old logical parent of <see cref="Source"/>. If the detachment event
     /// was caused by a top-level control being closed, then this property will be null.
     /// </remarks>
-    public ILogical? Parent { get; }
+    public ILogical? Parent { get; } = parent;
 }
 
 /// <summary>
@@ -84,25 +75,25 @@ public interface ILogical
     /// </summary>
     IReadOnlyList<ILogical> LogicalChildren { get; }
 
-    /// <summary>
-    /// Notifies the control that it is being attached to a rooted logical tree.
-    /// </summary>
-    /// <param name="e">The event args.</param>
-    /// <remarks>
-    /// This method will be called automatically by the framework, you should not need to call
-    /// this method yourself.
-    /// </remarks>
-    void NotifyAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e);
-    
-    /// <summary>
-    /// Notifies the control that it is being detached from a rooted logical tree.
-    /// </summary>
-    /// <param name="e">The event args.</param>
-    /// <remarks>
-    /// This method will be called automatically by the framework, you should not need to call
-    /// this method yourself.
-    /// </remarks>
-    void NotifyDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e);
+    // /// <summary>
+    // /// Notifies the control that it is being attached to a rooted logical tree.
+    // /// </summary>
+    // /// <param name="e">The event args.</param>
+    // /// <remarks>
+    // /// This method will be called automatically by the framework, you should not need to call
+    // /// this method yourself.
+    // /// </remarks>
+    // void NotifyAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e);
+    //
+    // /// <summary>
+    // /// Notifies the control that it is being detached from a rooted logical tree.
+    // /// </summary>
+    // /// <param name="e">The event args.</param>
+    // /// <remarks>
+    // /// This method will be called automatically by the framework, you should not need to call
+    // /// this method yourself.
+    // /// </remarks>
+    // void NotifyDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e);
     
     // /// <summary>
     // /// Notifies the control that a change has been made to resources that apply to it.
