@@ -76,6 +76,7 @@ public sealed class Binding : IXamlBinding
                     var duration = TimeSpan.FromMilliseconds(TransitionDuration);
                     var offset = TimeSpan.FromMilliseconds(TransitionOffset);
 
+                    // TODO transitions for non-float properties
                     return EasingHelpers.GetKeyframeObservable(animationCallback, (float)((object?)from ?? 0f), (float)(object)to!, duration, offset, easing);
                 })
                 .Switch()
