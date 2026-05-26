@@ -14,6 +14,7 @@ public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IRea
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
         item.LogicalParent = parent;
+        parent.NodeInternal.InsertChild(item.NodeInternal, (uint)index);
         base.InsertItem(index, item);
     }
 
@@ -23,6 +24,7 @@ public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IRea
         var oldItem = Items[index];
         oldItem.LogicalParent = null;
         item.LogicalParent = parent;
+        parent.NodeInternal.SwapChild(item.NodeInternal, (uint)index);
         base.SetItem(index, item);
     }
 
@@ -32,6 +34,7 @@ public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IRea
         {
             node.LogicalParent = null;
         }
+        parent.NodeInternal.RemoveAllChildren();
         base.ClearItems();
     }
 
@@ -39,6 +42,7 @@ public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IRea
     {
         var item = Items[index];
         item.LogicalParent = null;
+        parent.NodeInternal.RemoveChild(item.NodeInternal);
         base.RemoveItem(index);
     }
 
