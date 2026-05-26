@@ -11,7 +11,7 @@ namespace WorldXaml.UI.Yoga;
 /// Represents a container node that can hold multiple child nodes.
 /// </summary>
 [DebuggerDisplay("{DebugToString()}")]
-public class Box : Node
+public class Box : Node, IAddChild<Node>
 {
     [Content]
     public NodeChildCollection Children { get; }
@@ -73,6 +73,19 @@ public class Box : Node
                 child.RenderRecursive(root + new Vector2(LayoutX, LayoutY), ownOpacity); // todo should this be LayoutContentPosition
             }
             XamlG.Alpha = 1f;
+        }
+    }
+
+    void IAddChild<Node>.AddChild(Node child)
+    {
+        Children.Add(child);
+    }
+
+    void IAddChild.AddChild(object child)
+    {
+        if (child is Node node)
+        {
+            Children.Add(node);
         }
     }
 }

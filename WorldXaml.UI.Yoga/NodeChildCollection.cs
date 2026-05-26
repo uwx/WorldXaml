@@ -1,104 +1,46 @@
-﻿using System.Collections;
+﻿using System.Collections.ObjectModel;
 using Avalonia.LogicalTree;
 
 namespace WorldXaml.UI.Yoga;
 
-public class NodeChildCollection(Node parent) : IList<Node>, IReadOnlyList<ILogical>
+public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IReadOnlyList<ILogical>
 {
-    private List<Node> _internalList = new();
-
     IEnumerator<ILogical> IEnumerable<ILogical>.GetEnumerator()
     {
         return GetEnumerator();
     }
 
-    ILogical IReadOnlyList<ILogical>.this[int index] => this[index];
-
-    public IEnumerator<Node> GetEnumerator()
+    protected override void InsertItem(int index, Node item)
     {
-        return _internalList.GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    public void Add(Node item)
-    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
         item.LogicalParent = parent;
-        parent.NodeInternal.InsertChild(item.NodeInternal, parent.NodeInternal.GetChildCount());
-        _internalList.Add(item);
+        base.InsertItem(index, item);
     }
 
-    public void Clear()
+    protected override void SetItem(int index, Node item)
     {
-        foreach (var node in _internalList)
+        ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
+        var oldItem = Items[index];
+        oldItem.LogicalParent = null;
+        item.LogicalParent = parent;
+        base.SetItem(index, item);
+    }
+
+    protected override void ClearItems()
+    {
+        foreach (var node in Items)
         {
             node.LogicalParent = null;
         }
-        parent.NodeInternal.RemoveAllChildren();
-        _internalList.Clear();
+        base.ClearItems();
     }
 
-    public bool Contains(Node item)
+    protected override void RemoveItem(int index)
     {
-        return _internalList.Contains(item);
-    }
-
-    public void CopyTo(Node[] array, int arrayIndex)
-    {
-        _internalList.CopyTo(array, arrayIndex);
-    }
-
-    public bool Remove(Node item)
-    {
-        if (_internalList.Remove(item))
-        {
-            item.LogicalParent = null;
-            parent.NodeInternal.RemoveChild(item.NodeInternal);
-            return true;
-        }
-
-        return false;
-    }
-
-    public int Count => _internalList.Count;
-    public bool IsReadOnly => false;
-
-    public int IndexOf(Node item)
-    {
-        return _internalList.IndexOf(item);
-    }
-
-    public void Insert(int index, Node item)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
-        item.LogicalParent = parent;
-        parent.NodeInternal.InsertChild(item.NodeInternal, (uint)index);
-        _internalList.Insert(index, item);
-    }
-
-    public void RemoveAt(int index)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
-        var item = _internalList[index];
+        var item = Items[index];
         item.LogicalParent = null;
-        parent.NodeInternal.RemoveChild(item.NodeInternal);
-        _internalList.RemoveAt(index);
+        base.RemoveItem(index);
     }
 
-    public Node this[int index]
-    {
-        get => _internalList[index];
-        set
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
-            var oldItem = _internalList[index];
-            oldItem.LogicalParent = null;
-            value.LogicalParent = parent;
-            _internalList[index] = value;
-            parent.NodeInternal.SwapChild(value.NodeInternal, (uint)index);
-        }
-    }
+    ILogical IReadOnlyList<ILogical>.this[int index] => this[index];
 }
