@@ -61,6 +61,20 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
         return $"Node(Name={Name}, LayoutX={LayoutX}, LayoutY={LayoutY}, LayoutWidth={LayoutWidth}, LayoutHeight={LayoutHeight})";
     }
 
+    #region Animations
+
+    /// <summary>
+    /// Triggered when <see cref="Visibility"/> is set to <see cref="Visibility.Visible"/>
+    /// </summary>
+    public AnimationTrigger Shown { get; } = new();
+    
+    /// <summary>
+    /// Triggered when <see cref="Visibility"/> is set to <see cref="Visibility.Hidden"/>
+    /// </summary>
+    public AnimationTrigger Hidden { get; } = new();
+
+    #endregion
+
     #region Layout
 
     // https://www.w3schools.com/css/css_boxmodel.asp
@@ -363,6 +377,25 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
     #endregion
 
     #region Style
+
+    /// <summary>
+    /// Property field for <see cref="Visibility"/>.
+    /// </summary>
+    public static StyledProperty<Visibility> VisibilityProperty { get; } = AvaloniaProperty.Register<Node, Visibility>(
+        nameof(Visibility),
+        defaultValue: Visibility.Visible,
+        defaultMode: BindingMode.OneWay,
+        onChanged: (node, visibility) =>
+        {
+            if (visibility == Visibility.Visible)
+            {
+                node.Shown.Trigger();
+            }
+            else
+            {
+                node.Hidden.Trigger();
+            }
+        });
 
     /// <summary>
     /// CSS: visibility - Controls whether the element is visible (visible/hidden/collapsed)
