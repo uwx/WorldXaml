@@ -8,11 +8,11 @@ using WorldXaml.UI.Base;
 
 namespace WorldXaml.UI.Base
 {
-    public readonly record struct PropertyChangedEventArgs(AvaloniaProperty Property, object? OldValue, object? NewValue);
+    public readonly record struct StyledPropertyChangedEventArgs(AvaloniaProperty Property, object? OldValue, object? NewValue);
 
     public interface IGetSetValue
     {
-        event EventHandler<PropertyChangedEventArgs>? PropertyChanged;
+        event EventHandler<StyledPropertyChangedEventArgs>? StyledPropertyChanged;
 
         void SetValue<TValue>(StyledProperty<TValue> property, TValue value);
         TValue GetValue<TValue>(StyledProperty<TValue> property);
@@ -23,23 +23,25 @@ namespace WorldXaml.UI.Base
             return Observable.Create<TValue>(observer =>
             {
                 observer.OnNext(GetValue(property));
-                EventHandler<PropertyChangedEventArgs> handler = (_, e) =>
+                EventHandler<StyledPropertyChangedEventArgs> handler = (_, e) =>
                 {
                     if (e.Property.Id == property.Id)
                         observer.OnNext((TValue)e.NewValue!);
                 };
-                PropertyChanged += handler;
-                return () => PropertyChanged -= handler;
+                StyledPropertyChanged += handler;
+                return () => StyledPropertyChanged -= handler;
             });
         }
     }
 
-    public abstract class PropertyObject : IGetSetValue
+    public abstract class PropertyObject : IGetSetValue, INotifyPropertyChanging, INotifyPropertyChanged
     {
         // Stores local values
         private protected readonly Dictionary<int, object?> _values = new();
 
-        public event EventHandler<PropertyChangedEventArgs>? PropertyChanged;
+        public event EventHandler<StyledPropertyChangedEventArgs>? StyledPropertyChanged;
+        public event PropertyChangingEventHandler? PropertyChanging;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TValue GetValue<TValue>(StyledProperty<TValue> property)
@@ -58,12 +60,15 @@ namespace WorldXaml.UI.Base
         private protected void SetValueCore<TValue>(StyledProperty<TValue> property, TValue value)
         {
             var oldValue = GetValue(property);
+            
+            PropertyChanging?.Invoke(this, property.CachedChangingArgs);
             _values[property.Id] = value;
+            PropertyChanged?.Invoke(this, property.CachedChangedArgs);
 
             property.OnChanged?.Invoke(this, value);
 
             if (!EqualityComparer<TValue>.Default.Equals(oldValue, value))
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property, oldValue, value));
+                StyledPropertyChanged?.Invoke(this, new StyledPropertyChangedEventArgs(property, oldValue, value));
         }
 
         internal void WritebackValue<TValue>(StyledProperty<TValue> property, TValue value)
@@ -92,7 +97,7 @@ namespace WorldXaml.UI.Base
             var newValue = property.Getter((TOwner)this); // re-read in case setter coerces
 
             if (!EqualityComparer<TValue>.Default.Equals(oldValue, newValue))
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property, oldValue, newValue));
+                StyledPropertyChanged?.Invoke(this, new StyledPropertyChangedEventArgs(property, oldValue, newValue));
         }
     }
 
@@ -131,6 +136,9 @@ namespace Avalonia
         public BindingMode DefaultMode { get; }
         public Action<PropertyObject, object?>? OnChanged { get; }
 
+        internal PropertyChangingEventArgs CachedChangingArgs;
+        internal PropertyChangedEventArgs CachedChangedArgs;
+
         private protected AvaloniaProperty(string name, Type propertyType, Type ownerType, object? defaultValue,
             BindingMode defaultMode = BindingMode.OneWay, Action<PropertyObject, object?>? onChanged = null)
         {
@@ -140,6 +148,8 @@ namespace Avalonia
             DefaultValue = defaultValue;
             DefaultMode = defaultMode;
             OnChanged = onChanged;
+            CachedChangingArgs = new PropertyChangingEventArgs(name);
+            CachedChangedArgs = new PropertyChangedEventArgs(name);
         }
 
         public static StyledProperty<TValue> Register<TOwner, TValue>(string name, TValue defaultValue = default!,

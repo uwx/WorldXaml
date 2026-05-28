@@ -99,10 +99,10 @@ internal static class EasingHelpers
         }
     }.ToFrozenDictionary();
 
-    public static IObservable<object> GetKeyframeObservable(
+    public static IObservable<T> GetKeyframeObservable<T>(
         IAnimationCallback animationCallback,
-        float from,
-        float to,
+        T from,
+        T to,
         TimeSpan duration,
         TimeSpan offset,
         Func<float, float> easing
@@ -110,7 +110,7 @@ internal static class EasingHelpers
     {
         var startTime = DateTimeOffset.Now + offset;
 
-        return Observable.Create<object>(observer =>
+        return Observable.Create<T>(observer =>
         {
             animationCallback.AnimationFrameBegan += AnimationFrame;
             return Disposable.Create(() => animationCallback.AnimationFrameBegan -= AnimationFrame);
@@ -130,8 +130,7 @@ internal static class EasingHelpers
                 else
                 {
                     var easedT = easing(t);
-                    var value = from + (to - from) * easedT;
-                    observer.OnNext(value);
+                    observer.OnNext(Interpolate(from, to, easedT));
                 }
             }
         });
@@ -375,7 +374,7 @@ public class Animation : IXamlBinding
             })
             .Switch()
             .Prepend(KeyFrameFrom)
-            .Cast<TValue>();
+            .UnsafeCast<float, TValue>();
         
         return target.Bind(property, obs);
     }

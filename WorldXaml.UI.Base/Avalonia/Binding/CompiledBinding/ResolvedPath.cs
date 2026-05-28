@@ -9,6 +9,8 @@ namespace WorldXaml.UI.Base;
 /// </summary>
 public sealed class ResolvedPath(CompiledClrPropertyInfo[] steps)
 {
+    public Type LeafType => steps[^1].PropertyType;
+
     /// <summary>Read the leaf value, walking the chain.</summary>
     public (bool Found, object? Value) TryRead(object? root)
     {

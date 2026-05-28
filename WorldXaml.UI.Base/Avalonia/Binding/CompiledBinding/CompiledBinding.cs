@@ -18,6 +18,9 @@ public sealed class CompiledBinding : IXamlBinding
     public float TransitionDuration { get; set; } = 0;
     public float TransitionOffset { get; set; } = 0;
     public EasingFunction Easing { get; set; } = EasingFunction.Linear;
+    
+    public IValueConverter? Converter          { get; set; }
+    public object?          ConverterParameter { get; set; }
 
     public IDisposable Apply<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
@@ -46,8 +49,9 @@ public sealed class CompiledBinding : IXamlBinding
     {
         var obs = target
             .GetObservable(BindableObject.DataContextProperty)
-            .Select(dc => path.Observe(dc).Select(v => v is TValue tv ? tv : default!))
-            .Switch();
+            .Select(path.Observe)
+            .Switch()
+            .Select(raw => TypeCoercer.Coerce<TValue>(raw, Converter, ConverterParameter)!);
 
         if (TransitionDuration > 0 && target is IAnimationCallback animationCallback)
         {
@@ -62,11 +66,9 @@ public sealed class CompiledBinding : IXamlBinding
                     var duration = TimeSpan.FromMilliseconds(TransitionDuration);
                     var offset = TimeSpan.FromMilliseconds(TransitionOffset);
 
-                    // TODO transitions for non-float properties
-                    return EasingHelpers.GetKeyframeObservable(animationCallback, (float)((object?)from ?? 0f), (float)(object)to!, duration, offset, easing);
+                    return EasingHelpers.GetKeyframeObservable(animationCallback, from ?? default!, to, duration, offset, easing);
                 })
-                .Switch()
-                .Cast<TValue>();
+                .Switch();
         }
         
         return target.Bind(property, obs);
@@ -79,7 +81,8 @@ public sealed class CompiledBinding : IXamlBinding
             .GetObservable(BindableObject.DataContextProperty)
             .Where(dc => dc is not null)
             .Take(1)
-            .Select(dc => { var (_, v) = path.TryRead(dc); return v is TValue tv ? tv : default!; });
+            .Select(dc => { var (_, v) = path.TryRead(dc); return v; })
+            .Select(val => TypeCoercer.Coerce<TValue>(val, Converter, ConverterParameter)!);
         return target.Bind(property, obs);
     }
 
@@ -88,31 +91,36 @@ public sealed class CompiledBinding : IXamlBinding
     {
         var forward = ApplyOneWay(target, property, path);
         var skipFirst = true;
-        EventHandler<PropertyChangedEventArgs> onTargetChanged = (_, e) =>
+        EventHandler<StyledPropertyChangedEventArgs> onTargetChanged = (_, e) =>
         {
             if (e.Property.Id != property.Id) return;
             if (skipFirst) { skipFirst = false; return; }
-            path.TryWrite(target.DataContext, e.NewValue);
+            var converted = TypeCoercer.CoerceBack(e.NewValue, path.LeafType, Converter, ConverterParameter);
+            path.TryWrite(target.DataContext, converted);
         };
-        target.PropertyChanged += onTargetChanged;
+        target.StyledPropertyChanged += onTargetChanged;
         return Disposable.Create(() =>
         {
             forward.Dispose();
-            target.PropertyChanged -= onTargetChanged;
+            target.StyledPropertyChanged -= onTargetChanged;
         });
     }
 
-    private static IDisposable ApplyOneWayToSource<TValue>(
+    private IDisposable ApplyOneWayToSource<TValue>(
         IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
         object? currentDc = null;
-        void Push() => path.TryWrite(currentDc, target.GetValue(property));
+        void Push()
+        {
+            var converted = TypeCoercer.CoerceBack(target.GetValue(property), path.LeafType, Converter, ConverterParameter);
+            path.TryWrite(currentDc, converted);
+        }
 
-        EventHandler<PropertyChangedEventArgs> onTargetChanged = (_, e) =>
+        EventHandler<StyledPropertyChangedEventArgs> onTargetChanged = (_, e) =>
         {
             if (e.Property.Id == property.Id) Push();
         };
-        target.PropertyChanged += onTargetChanged;
+        target.StyledPropertyChanged += onTargetChanged;
 
         var dcSub = target
             .GetObservable(BindableObject.DataContextProperty)
@@ -121,7 +129,7 @@ public sealed class CompiledBinding : IXamlBinding
         return Disposable.Create(() =>
         {
             dcSub.Dispose();
-            target.PropertyChanged -= onTargetChanged;
+            target.StyledPropertyChanged -= onTargetChanged;
         });
     }
 }

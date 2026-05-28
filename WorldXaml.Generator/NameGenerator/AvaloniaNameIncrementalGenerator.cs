@@ -59,6 +59,57 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             //Debugger.Launch(); 
         }
 #endif
+        
+        // Find all types annotated with [TypeConverter] attribute
+        var typeConverterProperties = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "System.ComponentModel.TypeConverterAttribute",
+                static (node, _) => node is TypeDeclarationSyntax,
+                static (context, _) =>
+                {
+                    var syntax = (TypeDeclarationSyntax)context.TargetNode;
+                    var type = context.SemanticModel.GetDeclaredSymbol(syntax)!;
+                    var attr = context.Attributes.FirstOrDefault()!;
+
+                    return (
+                        Name: type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        ConverterName: attr.ConstructorArguments.FirstOrDefault().ToCSharpString()
+                    );
+                }
+            )
+            .WithTrackingName(TrackingNames.TypeConverterPropertiesProvider);
+        
+        // Registers them into the TypeConverterRegistry
+        context.RegisterSourceOutput(typeConverterProperties.Collect(), static (context, attrs) =>
+        {
+            var sb = new IndentedStringBuilder();
+            sb.AppendLine("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");;
+            sb.AppendLine("internal static class __TypeConverterHook");
+            sb.AppendLine("{");
+            using (sb.Indent())
+            {
+                sb.AppendLine("[module: System.Runtime.CompilerServices.ModuleInitializerAttribute]");
+                sb.AppendLine("public static void Init()");
+                sb.AppendLine("{");
+                using (sb.Indent())
+                {
+                    foreach (var (name, converterName) in attrs)
+                    {
+                        sb.AppendLine($"global::WorldXaml.UI.Base.TypeConverterRegistry.RegisterConverter<{name}>({TypeOfToNewInstance(converterName)});");
+                    }
+                }
+                sb.AppendLine("}");
+            }
+            sb.AppendLine("}");
+            
+            context.AddSource($"__TypeConverterHook.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+            
+            static string TypeOfToNewInstance(string typeOf)
+            {
+                typeOf = typeOf["typeof(".Length..^")".Length];
+                return $"new {typeOf}()";
+            }
+        });
 
         // Find all properties annotated with [Property] attribute
         var bindableProperties = context.SyntaxProvider

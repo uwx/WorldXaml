@@ -3,7 +3,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
 using WorldXaml.UI.Base;
-using PropertyChangedEventArgs = WorldXaml.UI.Base.PropertyChangedEventArgs;
 
 // ReSharper disable once CheckNamespace
 namespace Avalonia.Data;
@@ -23,6 +22,9 @@ public sealed class Binding : IXamlBinding
     public float TransitionDuration { get; set; } = 0;
     public float TransitionOffset { get; set; } = 0;
     public EasingFunction Easing { get; set; } = EasingFunction.Linear;
+
+    public IValueConverter? Converter          { get; set; }
+    public object?          ConverterParameter { get; set; }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Binding()
@@ -60,8 +62,9 @@ public sealed class Binding : IXamlBinding
     {
         var obs = target
             .GetObservable(BindableObject.DataContextProperty)
-            .Select(dc => ObservePath<TValue>(dc, Path))
-            .Switch();
+            .Select(dc => ObservePath(dc, Path))
+            .Switch()
+            .Select(val => TypeCoercer.Coerce<TValue>(val, Converter, ConverterParameter)!);
 
         if (TransitionDuration > 0 && target is IAnimationCallback animationCallback)
         {
@@ -76,11 +79,9 @@ public sealed class Binding : IXamlBinding
                     var duration = TimeSpan.FromMilliseconds(TransitionDuration);
                     var offset = TimeSpan.FromMilliseconds(TransitionOffset);
 
-                    // TODO transitions for non-float properties
-                    return EasingHelpers.GetKeyframeObservable(animationCallback, (float)((object?)from ?? 0f), (float)(object)to!, duration, offset, easing);
+                    return EasingHelpers.GetKeyframeObservable(animationCallback, from ?? default!, to, duration, offset, easing);
                 })
-                .Switch()
-                .Cast<TValue>();
+                .Switch();
         }
 
         return target.Bind(property, obs);
@@ -92,7 +93,8 @@ public sealed class Binding : IXamlBinding
             .GetObservable(BindableObject.DataContextProperty)
             .Where(dc => dc is not null)
             .Take(1)
-            .Select(dc => ReadLeaf<TValue>(dc, Path));
+            .Select(dc => ReadLeaf(dc, Path))
+            .Select(val => TypeCoercer.Coerce<TValue>(val, Converter, ConverterParameter)!);
         return target.Bind(property, obs);
     }
 
@@ -101,31 +103,36 @@ public sealed class Binding : IXamlBinding
         var forward = ApplyOneWay(target, property);
 
         var skipFirst = true;
-        EventHandler<PropertyChangedEventArgs> onTargetChanged = (_, e) =>
+        EventHandler<StyledPropertyChangedEventArgs> onTargetChanged = (_, e) =>
         {
             if (e.Property.Id != property.Id) return;
             if (skipFirst) { skipFirst = false; return; }
-            WriteLeaf(target.DataContext, Path, e.NewValue);
+            var converted = TypeCoercer.CoerceBack(e.NewValue, GetLeafType(target.DataContext, Path)!, Converter, ConverterParameter);
+            WriteLeaf(target.DataContext, Path, converted);
         };
-        target.PropertyChanged += onTargetChanged;
+        target.StyledPropertyChanged += onTargetChanged;
 
         return Disposable.Create(() =>
         {
             forward.Dispose();
-            target.PropertyChanged -= onTargetChanged;
+            target.StyledPropertyChanged -= onTargetChanged;
         });
     }
 
     private IDisposable ApplyOneWayToSource<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
         object? currentDc = null;
-        void Push() => WriteLeaf(currentDc, Path, target.GetValue(property));
+        void Push()
+        {
+            var converted = TypeCoercer.CoerceBack(target.GetValue(property), GetLeafType(currentDc, Path)!, Converter, ConverterParameter);
+            WriteLeaf(currentDc, Path, converted);
+        }
 
-        EventHandler<PropertyChangedEventArgs> onTargetChanged = (_, e) =>
+        EventHandler<StyledPropertyChangedEventArgs> onTargetChanged = (_, e) =>
         {
             if (e.Property.Id == property.Id) Push();
         };
-        target.PropertyChanged += onTargetChanged;
+        target.StyledPropertyChanged += onTargetChanged;
 
         var dcSub = target
             .GetObservable(BindableObject.DataContextProperty)
@@ -134,7 +141,7 @@ public sealed class Binding : IXamlBinding
         return Disposable.Create(() =>
         {
             dcSub.Dispose();
-            target.PropertyChanged -= onTargetChanged;
+            target.StyledPropertyChanged -= onTargetChanged;
         });
     }
 
@@ -149,7 +156,7 @@ public sealed class Binding : IXamlBinding
         if (root is null || string.IsNullOrEmpty(path))
             return (null, null);
 
-        var segs = path!.Split('.');
+        var segs = path.Split('.');
         object? current = root;
 
         for (int i = 0; i < segs.Length - 1; i++)
@@ -165,11 +172,17 @@ public sealed class Binding : IXamlBinding
         return (current, leafProp);
     }
 
-    private static TValue ReadLeaf<TValue>(object? root, string? path)
+    private static Type? GetLeafType(object? root, string? path)
+    {
+        var (_, prop) = WalkToLeaf(root, path);
+        return prop?.PropertyType;
+    }
+
+    private static object? ReadLeaf(object? root, string? path)
     {
         var (owner, prop) = WalkToLeaf(root, path);
-        if (owner is null || prop is null) return default!;
-        return prop.GetValue(owner) is TValue tv ? tv : default!;
+        if (owner is null || prop is null) return null;
+        return prop.GetValue(owner);
     }
 
     private static void WriteLeaf(object? root, string? path, object? value)
@@ -184,12 +197,12 @@ public sealed class Binding : IXamlBinding
     /// any INPC in the path fires. Re-subscribes to child segments when an
     /// intermediate property changes.
     /// </summary>
-    private static IObservable<TValue> ObservePath<TValue>(object? root, string? path)
+    private static IObservable<object?> ObservePath(object? root, string? path)
     {
         if (root is null || string.IsNullOrEmpty(path))
-            return Observable.Return(default(TValue)!);
+            return Observable.Return<object?>(null);
 
-        return Observable.Create<TValue>(observer =>
+        return Observable.Create<object?>(observer =>
         {
             var bag = new CompositeDisposable();
             var segs = path!.Split('.');
@@ -198,37 +211,37 @@ public sealed class Binding : IXamlBinding
         });
     }
 
-    private static void SubscribeSegment<TValue>(
+    private static void SubscribeSegment(
         object? current,
         string[] segs,
         int segIndex,
         CompositeDisposable bag,
-        IObserver<TValue> observer)
+        IObserver<object?> observer)
     {
         if (current is null)
         {
-            observer.OnNext(default!);
+            observer.OnNext(null);
             return;
         }
 
         var prop = current.GetType().GetProperty(segs[segIndex]);
         if (prop is null)
         {
-            observer.OnNext(default!);
+            observer.OnNext(null);
             return;
         }
 
         if (segIndex == segs.Length - 1)
         {
             // ── Leaf: emit current value and watch for changes ─────────────
-            observer.OnNext(prop.GetValue(current) is TValue tv ? tv : default!);
+            observer.OnNext(prop.GetValue(current)!);
 
             if (current is INotifyPropertyChanged inpc)
             {
                 PropertyChangedEventHandler handler = (_, e) =>
                 {
                     if (e.PropertyName is null || e.PropertyName == segs[segIndex])
-                        observer.OnNext(prop.GetValue(current) is TValue v ? v : default!);
+                        observer.OnNext(prop.GetValue(current));
                 };
                 inpc.PropertyChanged += handler;
                 bag.Add(Disposable.Create(() => inpc.PropertyChanged -= handler));
