@@ -79,12 +79,17 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
     public BindableObject()
     {
         _root = this as ILogicalRoot;
+        if (_root != null)
+        {
+            Mounted.Trigger();
+        }
     }
 
     private void OnDetachedFromLogicalTreeCore(LogicalTreeAttachmentEventArgs args)
     {
         if (_root != null)
         {
+            Mounted.Reset();
             DetachedFromLogicalTree?.Invoke(this, args);
             Unmounted.Trigger();
 
@@ -107,6 +112,7 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
     {
         if (_root == null)
         {
+            Unmounted.Reset();
             AttachedToLogicalTree?.Invoke(this, args);
             Mounted.Trigger();
 

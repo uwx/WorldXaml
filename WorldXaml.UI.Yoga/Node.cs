@@ -538,10 +538,12 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
         {
             if (visibility == Visibility.Visible)
             {
+                node.Hidden.Reset();
                 node.Shown.Trigger();
             }
             else
             {
+                node.Shown.Reset();
                 node.Hidden.Trigger();
             }
         });

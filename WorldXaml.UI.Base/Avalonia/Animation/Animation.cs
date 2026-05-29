@@ -10,11 +10,28 @@ namespace WorldXaml.UI.Base;
 
 public class AnimationTrigger
 {
-    public event Action? Triggered;
+    private bool _hasTriggered;
+    private event Action? TriggeredImpl;
+
+    public event Action? Triggered
+    {
+        add
+        {
+            TriggeredImpl += value;
+            if (_hasTriggered) value?.Invoke();
+        }
+        remove => TriggeredImpl -= value;
+    }
 
     public void Trigger()
     {
-        Triggered?.Invoke();
+        _hasTriggered = true;
+        TriggeredImpl?.Invoke();
+    }
+
+    public void Reset()
+    {
+        _hasTriggered = false;
     }
 }
 
