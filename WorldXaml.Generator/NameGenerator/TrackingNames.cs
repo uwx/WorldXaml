@@ -11,4 +11,5 @@ internal static class TrackingNames
     public const string RoslynTypeSystem = nameof(RoslynTypeSystem);
     public const string PropertyAttributesProvider = nameof(PropertyAttributesProvider);
     public const string TypeConverterPropertiesProvider = nameof(TypeConverterPropertiesProvider);
+    public const string XamlInterpolatorMethodsProvider = nameof(XamlInterpolatorMethodsProvider);
 }

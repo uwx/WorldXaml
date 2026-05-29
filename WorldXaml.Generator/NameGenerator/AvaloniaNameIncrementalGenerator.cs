@@ -88,7 +88,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
             sb.AppendLine("{");
             using (sb.Indent())
             {
-                sb.AppendLine("[module: System.Runtime.CompilerServices.ModuleInitializerAttribute]");
+                sb.AppendLine("[System.Runtime.CompilerServices.ModuleInitializerAttribute]");
                 sb.AppendLine("public static void Init()");
                 sb.AppendLine("{");
                 using (sb.Indent())
@@ -109,6 +109,50 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                 typeOf = typeOf["typeof(".Length..^")".Length];
                 return $"new {typeOf}()";
             }
+        });
+        
+        // Find all methods annotated with [XamlInterpolator] attribute
+        var interpolatorMethods = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "WorldXaml.UI.Base.XamlInterpolatorAttribute",
+                static (node, _) => node is MethodDeclarationSyntax,
+                static (context, _) =>
+                {
+                    var syntax = (MethodDeclarationSyntax)context.TargetNode;
+                    var method = context.SemanticModel.GetDeclaredSymbol(syntax)!;
+
+                    return (
+                        ContainingType: method.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        MethodName: method.Name,
+                        InterpolatedType: method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                    );
+                })
+            .WithTrackingName(TrackingNames.XamlInterpolatorMethodsProvider);
+
+        // Registers them into the InterpolatorRegistry
+        context.RegisterSourceOutput(interpolatorMethods.Collect(), static (context, attrs) =>
+        {
+            var sb = new IndentedStringBuilder();
+            sb.AppendLine("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");;
+            sb.AppendLine("internal static class __InterpolatorHook");
+            sb.AppendLine("{");
+            using (sb.Indent())
+            {
+                sb.AppendLine("[System.Runtime.CompilerServices.ModuleInitializerAttribute]");
+                sb.AppendLine("public static void Init()");
+                sb.AppendLine("{");
+                using (sb.Indent())
+                {
+                    foreach (var (containingType, methodName, interpolatedType) in attrs)
+                    {
+                        sb.AppendLine($"global::WorldXaml.UI.Base.InterpolatorRegistry.RegisterInterpolator<{interpolatedType}>({containingType}.{methodName});");
+                    }
+                }
+                sb.AppendLine("}");
+            }
+            sb.AppendLine("}");
+            
+            context.AddSource($"__InterpolatorHook.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
         });
 
         // Find all properties annotated with [Property] attribute
