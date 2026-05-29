@@ -2487,11 +2487,9 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
 
     protected virtual void Render()
     {
-        XamlG.Alpha = Opacity;
         RenderBackground(LayoutPaddingPosition, LayoutPaddingSize);
         RenderBorder(LayoutBorderPosition, LayoutBorderSize);
         RenderContent(LayoutContentPosition, LayoutContentSize);
-        XamlG.Alpha = 1f;
     }
 
     private protected void OnAnimationFrameBegan()
