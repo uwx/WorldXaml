@@ -48,10 +48,11 @@ internal sealed class XamlCSharpCompiler
             diagnosticsHandler: diagnosticsHandler);
 
         var emitMappings = new XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult>();
+        IXamlMethod? registerMethod = null;
         if (supportHotReloading)
         {
             // Find the XamlHotReload.Register method for runtime support
-            var registerMethod = knownTypes.HotReload is {} hotReloadTypeName
+            registerMethod = knownTypes.HotReload is {} hotReloadTypeName
                 ? typeSystem.Assemblies
                     .Select(ass => ass.FindType(hotReloadTypeName))
                     .FirstOrDefault(type => type != null)
@@ -62,20 +63,9 @@ internal sealed class XamlCSharpCompiler
             {
                 _didNotFindRegisterMethod = true;
             }
-
-            emitMappings.ContextFactoryCallback = (context, codeGen) =>
-            {
-                if (registerMethod != null)
-                {
-                    codeGen
-                        .Ldarg(1) // load element parameter
-                        .Ldstr(context.BaseUrl) // load base URI
-                        .EmitCall(registerMethod); // Call XamlHotReload.Register(element, baseUri)
-                }
-            };
         }
 
-        _compiler = new XamlILCompiler(_configuration, emitMappings, true)
+        _compiler = new WorldXamlILCompiler(_configuration, emitMappings, true, registerMethod)
         {
             EnableIlVerification = false
         };
