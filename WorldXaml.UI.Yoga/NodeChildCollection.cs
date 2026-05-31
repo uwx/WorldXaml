@@ -14,6 +14,7 @@ public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IRea
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
         item.LogicalParent = parent;
+        Console.WriteLine(Environment.StackTrace);
         parent.NodeInternal.InsertChild(item.NodeInternal, (uint)index);
         base.InsertItem(index, item);
     }

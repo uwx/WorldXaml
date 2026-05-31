@@ -1,0 +1,16 @@
+<TemplatedControl
+    xmlns="https://github.com/uwx/worldxaml"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    x:Class="WorldXaml.UI.Yoga.HStack"
+    AlignItems="Center"
+    FlexDirection="Column">
+    <TemplatedControl.Template>
+        <ControlTemplate TargetType="HStack">
+            <Box FlexDirection="Row" AlignItems="Center" Gap="8px">
+                <ContentPresenter />
+            </Box>
+        </ControlTemplate>
+    </TemplatedControl.Template>
+</TemplatedControl>
