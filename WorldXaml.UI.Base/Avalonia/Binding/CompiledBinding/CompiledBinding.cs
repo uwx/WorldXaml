@@ -14,6 +14,7 @@ public sealed class CompiledBinding : IXamlBinding
     // Set by XamlX-generated IL via the ResolvedBindingPathNode emitter.
     public ResolvedPath? Path { get; set; }
     public BindingMode Mode { get; set; } = BindingMode.OneWay;
+    public RelativeSource? RelativeSource { get; set; }
 
     public float TransitionDuration { get; set; } = 0;
     public float TransitionOffset { get; set; } = 0;
@@ -21,6 +22,25 @@ public sealed class CompiledBinding : IXamlBinding
     
     public IValueConverter? Converter          { get; set; }
     public object?          ConverterParameter { get; set; }
+
+    private IObservable<object?> GetSourceObservable(IBindingTarget target)
+    {
+        if (RelativeSource?.Mode == RelativeSourceMode.TemplatedParent)
+        {
+            return target
+                .GetObservable(BindableObject.TemplatedParentProperty);
+        }
+
+        return target.GetObservable(BindableObject.DataContextProperty);
+    }
+
+    private object? GetCurrentSource(IBindingTarget target)
+    {
+        if (RelativeSource?.Mode == RelativeSourceMode.TemplatedParent)
+            return target.GetValue(BindableObject.TemplatedParentProperty);
+
+        return target.DataContext;
+    }
 
     public IDisposable Apply<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
@@ -47,8 +67,7 @@ public sealed class CompiledBinding : IXamlBinding
     private IDisposable ApplyOneWay<TValue>(
         IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
-        var obs = target
-            .GetObservable(BindableObject.DataContextProperty)
+        var obs = GetSourceObservable(target)
             .Select(path.Observe)
             .Switch()
             .Select(raw => TypeCoercer.Coerce<TValue>(raw, Converter, ConverterParameter)!);
@@ -77,8 +96,7 @@ public sealed class CompiledBinding : IXamlBinding
     private IDisposable ApplyOneTime<TValue>(
         IBindingTarget target, StyledProperty<TValue> property, ResolvedPath path)
     {
-        var obs = target
-            .GetObservable(BindableObject.DataContextProperty)
+        var obs = GetSourceObservable(target)
             .Where(dc => dc is not null)
             .Take(1)
             .Select(dc => { var (_, v) = path.TryRead(dc); return v; })
@@ -96,7 +114,7 @@ public sealed class CompiledBinding : IXamlBinding
             if (e.Property.Id != property.Id) return;
             if (skipFirst) { skipFirst = false; return; }
             var converted = TypeCoercer.CoerceBack(e.NewValue, path.LeafType, Converter, ConverterParameter);
-            path.TryWrite(target.DataContext, converted);
+            path.TryWrite(GetCurrentSource(target), converted);
         };
         target.StyledPropertyChanged += onTargetChanged;
         return Disposable.Create(() =>
@@ -122,8 +140,7 @@ public sealed class CompiledBinding : IXamlBinding
         };
         target.StyledPropertyChanged += onTargetChanged;
 
-        var dcSub = target
-            .GetObservable(BindableObject.DataContextProperty)
+        var dcSub = GetSourceObservable(target)
             .Subscribe(dc => { currentDc = dc; Push(); });
 
         return Disposable.Create(() =>

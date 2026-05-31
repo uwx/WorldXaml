@@ -52,6 +52,7 @@ public class TemplatedControl : Node
         if (_templateRoot != null)
         {
             ClearContentPresenter(_templateRoot);
+            ClearTemplatedParentRecursive(_templateRoot);
             NodeInternal.RemoveChild(_templateRoot.NodeInternal);
             _templateRoot.LogicalParent = null;
             _templateRoot = null;
@@ -70,8 +71,32 @@ public class TemplatedControl : Node
         root.LogicalParent = this;
         NodeInternal.InsertChild(root.NodeInternal, 0);
 
+        // Set TemplatedParent on all nodes in the template tree so
+        // {Binding ..., RelativeSource={RelativeSource TemplatedParent}} resolves correctly
+        SetTemplatedParentRecursive(root, this);
+
         // Find ContentPresenter(s) in the template tree and wire them up
         WireContentPresenters(root);
+    }
+
+    private static void SetTemplatedParentRecursive(Node node, TemplatedControl parent)
+    {
+        node.TemplatedParent = parent;
+        if (node is Box box)
+        {
+            foreach (var child in box.Children)
+                SetTemplatedParentRecursive(child, parent);
+        }
+    }
+
+    private static void ClearTemplatedParentRecursive(Node node)
+    {
+        node.TemplatedParent = null;
+        if (node is Box box)
+        {
+            foreach (var child in box.Children)
+                ClearTemplatedParentRecursive(child);
+        }
     }
 
     private void WireContentPresenters(Node node)

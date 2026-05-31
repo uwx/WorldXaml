@@ -21,12 +21,26 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
         AvaloniaProperty.Register<BindableObject, object?>(nameof(DataContext), null);
 
     /// <summary>
+    /// The templated control that owns the template tree this object belongs to.
+    /// Set automatically during template application. Used by bindings with
+    /// <c>RelativeSource={RelativeSource TemplatedParent}</c>.
+    /// </summary>
+    public static readonly StyledProperty<object?> TemplatedParentProperty =
+        AvaloniaProperty.Register<BindableObject, object?>(nameof(TemplatedParent), null);
+
+    /// <summary>
     /// Sets the type of the associated data context for this object.
     /// </summary>
     public object? DataContext
     {
         get => GetValue(DataContextProperty);
         set => SetValue(DataContextProperty, value);
+    }
+
+    public object? TemplatedParent
+    {
+        get => GetValue(TemplatedParentProperty);
+        set => SetValue(TemplatedParentProperty, value);
     }
     
     public static readonly StyledProperty<Type?> DataTypeProperty =

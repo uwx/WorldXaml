@@ -251,6 +251,13 @@ class CSharpEmitter : IXamlILEmitter
             for (var i = args.Length - 1; i >= 0; i--)
                 args[i] = PopExpr();
 
+            // Cast int literals to enum types when the parameter expects an enum.
+            for (var i = 0; i < args.Length; i++)
+            {
+                if (ctor.Parameters[i].IsEnum)
+                    args[i] = $"(({FormatType(ctor.Parameters[i])}){args[i]})";
+            }
+
             // Delegate constructor pattern: new Func<A,B>(null, MethodRef) → new Func<A,B>(MethodRef)
             // IL emits Ldnull + Ldftn + Newobj(delegate..ctor(object, IntPtr))
             if (args is ["null", _] && _knownTypes.SystemDelegate.IsAssignableFrom(ctor.DeclaringType))

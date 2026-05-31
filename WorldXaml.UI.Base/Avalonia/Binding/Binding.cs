@@ -18,6 +18,7 @@ public sealed class Binding : IXamlBinding
 {
     public string?      Path { get; set; }
     public BindingMode  Mode { get; set; } = BindingMode.OneWay;
+    public RelativeSource? RelativeSource { get; set; }
 
     public float TransitionDuration { get; set; } = 0;
     public float TransitionOffset { get; set; } = 0;
@@ -58,10 +59,21 @@ public sealed class Binding : IXamlBinding
 
     // ── Modes ──────────────────────────────────────────────────────────────
 
+    private IObservable<object?> GetSourceObservable(IBindingTarget target)
+    {
+        if (RelativeSource?.Mode == RelativeSourceMode.TemplatedParent)
+        {
+            return target
+                .GetObservable(BindableObject.TemplatedParentProperty)
+                .Select(static tp => (object?)tp);
+        }
+
+        return target.GetObservable(BindableObject.DataContextProperty);
+    }
+
     private IDisposable ApplyOneWay<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
-        var obs = target
-            .GetObservable(BindableObject.DataContextProperty)
+        var obs = GetSourceObservable(target)
             .Select(dc => ObservePath(dc, Path))
             .Switch()
             .Select(val => TypeCoercer.Coerce<TValue>(val, Converter, ConverterParameter)!);
@@ -89,8 +101,7 @@ public sealed class Binding : IXamlBinding
 
     private IDisposable ApplyOneTime<TValue>(IBindingTarget target, StyledProperty<TValue> property)
     {
-        var obs = target
-            .GetObservable(BindableObject.DataContextProperty)
+        var obs = GetSourceObservable(target)
             .Where(dc => dc is not null)
             .Take(1)
             .Select(dc => ReadLeaf(dc, Path))
@@ -107,8 +118,9 @@ public sealed class Binding : IXamlBinding
         {
             if (e.Property.Id != property.Id) return;
             if (skipFirst) { skipFirst = false; return; }
-            var converted = TypeCoercer.CoerceBack(e.NewValue, GetLeafType(target.DataContext, Path)!, Converter, ConverterParameter);
-            WriteLeaf(target.DataContext, Path, converted);
+            var source = GetCurrentSource(target);
+            var converted = TypeCoercer.CoerceBack(e.NewValue, GetLeafType(source, Path)!, Converter, ConverterParameter);
+            WriteLeaf(source, Path, converted);
         };
         target.StyledPropertyChanged += onTargetChanged;
 
@@ -134,8 +146,7 @@ public sealed class Binding : IXamlBinding
         };
         target.StyledPropertyChanged += onTargetChanged;
 
-        var dcSub = target
-            .GetObservable(BindableObject.DataContextProperty)
+        var dcSub = GetSourceObservable(target)
             .Subscribe(dc => { currentDc = dc; Push(); });
 
         return Disposable.Create(() =>
@@ -143,6 +154,16 @@ public sealed class Binding : IXamlBinding
             dcSub.Dispose();
             target.StyledPropertyChanged -= onTargetChanged;
         });
+    }
+
+    // ── Source helpers ──────────────────────────────────────────────────────
+
+    private object? GetCurrentSource(IBindingTarget target)
+    {
+        if (RelativeSource?.Mode == RelativeSourceMode.TemplatedParent)
+            return target.GetValue(BindableObject.TemplatedParentProperty);
+
+        return target.DataContext;
     }
 
     // ── Path helpers ───────────────────────────────────────────────────────

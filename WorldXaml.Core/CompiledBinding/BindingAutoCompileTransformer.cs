@@ -37,6 +37,15 @@ class BindingAutoCompileTransformer(
         if (!isBinding && !isCompiledBind)
             return node;
 
+        // ── Skip compilation for bindings with RelativeSource ────────────────
+        // RelativeSource bindings resolve against a different source (e.g. TemplatedParent)
+        // which may not be known at compile time. Leave as runtime reflection-based Binding.
+        var hasRelativeSource = binding.Children
+            .OfType<XamlPropertyAssignmentNode>()
+            .Any(p => p.Property.Name == "RelativeSource");
+        if (hasRelativeSource)
+            return node;
+
         // ── Extract the path string ──────────────────────────────────────────
         string? pathStr = null;
         bool pathIsPositionalArg = false;
