@@ -9,7 +9,6 @@ public class NodeChildCollection(PlainNode parent) : ObservableCollection<Visual
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
         item.LogicalParent = parent;
-        Console.WriteLine(Environment.StackTrace);
         parent.NodeInternal.InsertChild(item.Contents, (uint)index);
         base.InsertItem(index, item);
     }
