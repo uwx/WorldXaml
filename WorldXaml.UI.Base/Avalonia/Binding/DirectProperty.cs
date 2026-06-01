@@ -3,7 +3,22 @@ using Avalonia.Data;
 
 namespace WorldXaml.UI.Base;
 
-public sealed class DirectProperty<TOwner, TValue> : StyledProperty<TValue>
+public abstract class BaseDirectProperty<TValue>(
+    string name,
+    Type ownerType,
+    TValue defaultValue,
+    BindingMode defaultMode = BindingMode.OneWay,
+    Action<PropertyObject, TValue>? onChanged = null)
+    : StyledProperty<TValue>(name, ownerType, defaultValue, defaultMode, onChanged)
+{
+    /// <summary>Read the backing value via the DirectProperty getter.</summary>
+    internal abstract TValue? GetDirectValue(PropertyObject target);
+    
+    /// <summary>Write the backing value via the DirectProperty setter.</summary>
+    internal abstract void SetDirectValue(PropertyObject target, TValue? value);
+}
+
+public sealed class DirectProperty<TOwner, TValue> : BaseDirectProperty<TValue>
     where TOwner : PropertyObject
 {
     public Func<TOwner, TValue> Getter { get; }
@@ -21,10 +36,8 @@ public sealed class DirectProperty<TOwner, TValue> : StyledProperty<TValue>
         Setter = setter;
     }
 
-    internal override bool IsDirect => true;
+    internal override TValue? GetDirectValue(PropertyObject target) => Getter((TOwner)target);
 
-    internal override object? GetDirectValue(PropertyObject target) => Getter((TOwner)target);
-
-    internal override void SetDirectValue(PropertyObject target, object? value) =>
+    internal override void SetDirectValue(PropertyObject target, TValue? value) =>
         (Setter ?? throw new InvalidOperationException($"Property '{Name}' is read-only."))((TOwner)target, (TValue)value!);
 }

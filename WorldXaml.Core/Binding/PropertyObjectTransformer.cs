@@ -18,7 +18,7 @@ namespace WorldXaml.XamlX;
 #if !XAMLX_INTERNAL
 public
 #endif
-sealed class PropertyObjectTransformer(string PropertyObjectFqn, string BindableObjectFqn, string PropertyGenericFqn, string DirectPropertyGenericFqn, string IXamlBindingFqn, string PropertyAttributeFqn) : IXamlAstTransformer
+sealed class PropertyObjectTransformer(string PropertyObjectFqn, string BindableObjectFqn, string PropertyGenericFqn, string IXamlBindingFqn, string PropertyAttributeFqn) : IXamlAstTransformer
 {
     public IXamlAstNode Transform(AstTransformationContext context, IXamlAstNode node)
     {
@@ -81,9 +81,6 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
         if (valueType == null)
             return node;
 
-        // Check if this is a DirectProperty<TOwner, TValue> (2 generic params) vs StyledProperty<TValue> (1 generic param).
-        var directOwnerType = ResolveDirectPropertyOwnerType(memberType, ts, DirectPropertyGenericFqn);
-
         // Resolve the runtime methods we will call.
         var propertyObjectType = ts.FindType(PropertyObjectFqn) ?? throw new XamlTypeSystemException($"Couldn't find type {PropertyObjectFqn} in the type system.");
         var iXamlBindingType   = ts.FindType(IXamlBindingFqn) ?? throw new XamlTypeSystemException($"Couldn't find type {IXamlBindingFqn} in the type system.");
@@ -92,36 +89,18 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
         IXamlMethod setValueMethod;
         IXamlMethod bindFromXamlMethod;
 
-        if (directOwnerType != null)
-        {
-            // DirectProperty<TOwner, TValue>: use SetValue<TOwner, TValue> and BindFromXaml<TOwner, TValue> (2 generic params)
-            setValueMethod = propertyObjectType
-                .Methods
-                .First(m => m.Name == "SetValue" && m is { IsGenericMethod: true, Parameters.Count: 2 }
-                            && m.GenericParameters.Count == 2)
-                .MakeGenericMethod([directOwnerType, valueType]);
+        // StyledProperty<TValue>: use SetValue<TValue> and BindFromXaml<TValue> (1 generic param)
+        setValueMethod = propertyObjectType
+            .Methods
+            .First(m => m.Name == "SetValue" && m is { IsGenericMethod: true, Parameters.Count: 2 }
+                        && m.GenericParameters.Count == 1)
+            .MakeGenericMethod([valueType]);
 
-            bindFromXamlMethod = bindableObjectType
-                .Methods
-                .First(m => m.Name == "BindFromXaml" && m is { IsGenericMethod: true, Parameters.Count: 2 }
-                            && m.GenericParameters.Count == 2)
-                .MakeGenericMethod([directOwnerType, valueType]);
-        }
-        else
-        {
-            // StyledProperty<TValue>: use SetValue<TValue> and BindFromXaml<TValue> (1 generic param)
-            setValueMethod = propertyObjectType
-                .Methods
-                .First(m => m.Name == "SetValue" && m is { IsGenericMethod: true, Parameters.Count: 2 }
-                            && m.GenericParameters.Count == 1)
-                .MakeGenericMethod([valueType]);
-
-            bindFromXamlMethod = bindableObjectType
-                .Methods
-                .First(m => m.Name == "BindFromXaml" && m is { IsGenericMethod: true, Parameters.Count: 2 }
-                            && m.GenericParameters.Count == 1)
-                .MakeGenericMethod([valueType]);
-        }
+        bindFromXamlMethod = bindableObjectType
+            .Methods
+            .First(m => m.Name == "BindFromXaml" && m is { IsGenericMethod: true, Parameters.Count: 2 }
+                        && m.GenericParameters.Count == 1)
+            .MakeGenericMethod([valueType]);
 
         // Clone the property and prepend our setters (highest-priority first).
         var newProp = new XamlAstClrProperty(prop, prop.Name, prop.DeclaringType, prop.Getter, prop.Setters, []);
@@ -148,21 +127,6 @@ sealed class PropertyObjectTransformer(string PropertyObjectFqn, string Bindable
         for (var t = type; t != null; t = t.BaseType)
             if (t.GenericTypeDefinition?.Equals(genericBase) == true)
                 return t.GenericArguments[0];
-        return null;
-    }
-
-    /// <summary>
-    /// If <paramref name="type"/> is (or inherits from) DirectProperty&lt;TOwner, TValue&gt;,
-    /// returns TOwner. Otherwise returns null.
-    /// </summary>
-    private static IXamlType? ResolveDirectPropertyOwnerType(
-        IXamlType type, IXamlTypeSystem ts, string directPropertyGenericFqn)
-    {
-        var genericBase = ts.FindType(directPropertyGenericFqn);
-        if (genericBase == null) return null;
-        for (var t = type; t != null; t = t.BaseType)
-            if (t.GenericTypeDefinition?.Equals(genericBase) == true)
-                return t.GenericArguments[0]; // TOwner is the first generic arg
         return null;
     }
 

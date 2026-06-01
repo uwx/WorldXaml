@@ -212,17 +212,6 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
         base.SetValue(property, value);
     }
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public override void SetValue<TOwner, TValue>(DirectProperty<TOwner, TValue> property, TValue value)
-    {
-        if (property.Setter is null)
-            throw new InvalidOperationException($"Property '{property.Name}' is read-only.");
-
-        ClearBinding(property);
-        
-        base.SetValue(property, value);
-    }
-
     public IDisposable Bind<TValue>(StyledProperty<TValue> property, IObservable<TValue> source)
     {
         ClearBinding(property);
