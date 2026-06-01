@@ -9,8 +9,8 @@
     <TemplatedControl.Template>
         <ControlTemplate TargetType="HStack">
             <Box FlexDirection="{Binding BoxFlexDirection, RelativeSource={RelativeSource TemplatedParent}}"
-                 AlignItems="Center" GapColumn="{Binding Gap, RelativeSource={RelativeSource TemplatedParent}}"
-                 GapRow="{Binding Gap, RelativeSource={RelativeSource TemplatedParent}}">
+                 AlignItems="Center" GapColumn="{Binding GapColumn, RelativeSource={RelativeSource TemplatedParent}}"
+                 GapRow="{Binding GapRow, RelativeSource={RelativeSource TemplatedParent}}">
                 <ContentPresenter />
             </Box>
         </ControlTemplate>
