@@ -2020,11 +2020,12 @@ public partial class Node : PlainNode, IAnimationCallback
     /// <summary>
     /// Property field for <see cref="GapColumn"/>.
     /// </summary>
-    public static readonly StyledProperty<MeasurementGap> GapColumnProperty =
-        AvaloniaProperty.Register<Node, MeasurementGap>(
+    public static readonly DirectProperty<Node, MeasurementGap> GapColumnProperty =
+        AvaloniaProperty.RegisterDirect<Node, MeasurementGap>(
             name:         nameof(GapColumn),
             defaultValue: MeasurementGap.Undefined,
-            onChanged:    (node, value) => node.NodeInternal.GapColumn = value);
+            getter:       node => node.NodeInternal.GapColumn,
+            setter:       (node, value) => node.NodeInternal.GapColumn = value);
 
     /// <summary>
     /// CSS: column-gap - Sets the gap between columns in a flex container
@@ -2035,11 +2036,12 @@ public partial class Node : PlainNode, IAnimationCallback
     /// <summary>
     /// Property field for <see cref="GapRow"/>.
     /// </summary>
-    public static readonly StyledProperty<MeasurementGap> GapRowProperty =
-        AvaloniaProperty.Register<Node, MeasurementGap>(
+    public static readonly DirectProperty<Node, MeasurementGap> GapRowProperty =
+        AvaloniaProperty.RegisterDirect<Node, MeasurementGap>(
             name:         nameof(GapRow),
             defaultValue: MeasurementGap.Undefined,
-            onChanged:    (node, value) => node.NodeInternal.GapRow = value);
+            getter:       node => node.NodeInternal.GapColumn,
+            setter:       (node, value) => node.NodeInternal.GapRow = value);
 
     /// <summary>
     /// CSS: row-gap - Sets the gap between rows in a flex container
