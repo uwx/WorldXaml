@@ -57,6 +57,18 @@ class CSharpEmitter : IXamlILEmitter
 
     private string PopExpr() => Pop().Expression;
 
+    /// <summary>
+    /// Pops a value expression, casting it to <paramref name="targetType"/> if the stack-tracked
+    /// type is not assignable to it (e.g. <c>object</c> → <c>FlexPanel</c>).
+    /// </summary>
+    private string PopExprCastTo(IXamlType? targetType)
+    {
+        var val = Pop();
+        if (targetType is not null && val.Type is not null && !targetType.IsAssignableFrom(val.Type))
+            return $"(({FormatType(targetType)}){val.Expression})";
+        return val.Expression;
+    }
+
     private void Emit(string statement) => _statements.Add(statement);
 
     private string FormatType(IXamlType type) => CSharpFormatting.FormatType(_knownTypes, type);
@@ -125,10 +137,10 @@ class CSharpEmitter : IXamlILEmitter
         else if (code == SreOpCodes.Ldloc_1) Push(GetLocalName(1), GetLocalType(1));
         else if (code == SreOpCodes.Ldloc_2) Push(GetLocalName(2), GetLocalType(2));
         else if (code == SreOpCodes.Ldloc_3) Push(GetLocalName(3), GetLocalType(3));
-        else if (code == SreOpCodes.Stloc_0) Emit($"{GetLocalName(0)} = {PopExpr()};");
-        else if (code == SreOpCodes.Stloc_1) Emit($"{GetLocalName(1)} = {PopExpr()};");
-        else if (code == SreOpCodes.Stloc_2) Emit($"{GetLocalName(2)} = {PopExpr()};");
-        else if (code == SreOpCodes.Stloc_3) Emit($"{GetLocalName(3)} = {PopExpr()};");
+        else if (code == SreOpCodes.Stloc_0) Emit($"{GetLocalName(0)} = {PopExprCastTo(GetLocalType(0))};");
+        else if (code == SreOpCodes.Stloc_1) Emit($"{GetLocalName(1)} = {PopExprCastTo(GetLocalType(1))};");
+        else if (code == SreOpCodes.Stloc_2) Emit($"{GetLocalName(2)} = {PopExprCastTo(GetLocalType(2))};");
+        else if (code == SreOpCodes.Stloc_3) Emit($"{GetLocalName(3)} = {PopExprCastTo(GetLocalType(3))};");
         else if (code == SreOpCodes.Ldelem_Ref)
         {
             var index = PopExpr();
@@ -305,7 +317,7 @@ class CSharpEmitter : IXamlILEmitter
         else if (code == SreOpCodes.Ldloc || code == SreOpCodes.Ldloc_S)
             Push(GetLocalName(arg));
         else if (code == SreOpCodes.Stloc || code == SreOpCodes.Stloc_S)
-            Emit($"{GetLocalName(arg)} = {PopExpr()};");
+            Emit($"{GetLocalName(arg)} = {PopExprCastTo(GetLocalType(arg))};");
         else
             Emit($"// TODO: Unhandled int opcode: {code.Name} {arg}");
         return this;
@@ -539,7 +551,7 @@ class CSharpEmitter : IXamlILEmitter
         if (code == SreOpCodes.Ldloc || code == SreOpCodes.Ldloc_S)
             Push(csl.Name, csl.Type);
         else if (code == SreOpCodes.Stloc || code == SreOpCodes.Stloc_S)
-            Emit($"{csl.Name} = {PopExpr()};");
+            Emit($"{csl.Name} = {PopExprCastTo(csl.Type)};");
         else if (code == SreOpCodes.Ldloca || code == SreOpCodes.Ldloca_S)
             Push($"ref {csl.Name}", csl.Type);
         else
