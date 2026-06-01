@@ -23,6 +23,7 @@ public class ContentsPanel : PlainNode
     public ContentsPanel()
     {
         Children = new NodeChildCollection(this);
+        NodeInternal.Display = YGDisplay.YGDisplayContents;
     }
 
     /// <summary>
