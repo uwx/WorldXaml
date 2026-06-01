@@ -87,6 +87,13 @@ class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> ste
         return XamlILNodeEmitResult.Type(0, resolvedPathType);
     }
 
+    /// <summary>
+    /// Builds a unique method name encoding the owner type's full name + property name.
+    /// Same owner type + property → same name → dedup. Different owner types → different names.
+    /// </summary>
+    private static string BuildAccessorName(string prefix, ResolvedPathStep step)
+        => $"{prefix}{step.OwnerType.FullName.Replace('.', '_').Replace('+', '_')}_{step.Property.Name}";
+
     // ── Emit a private static method: object Get_PropName(object o) ─────────
     private static IXamlMethod EmitGetterMethod(
         XamlEmitContextWithLocals<IXamlILEmitter, XamlILNodeEmitResult> context,
@@ -95,7 +102,11 @@ class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> ste
         var objectType = context.Configuration.WellKnownTypes.Object;
         var getter = step.Property.Getter!;
 
-        var name = $"__Get_{step.OwnerType.Name}_{step.Property.Name}";
+        var name = BuildAccessorName("__Get_", step);
+        var existing = context.DeclaringType.Methods.FirstOrDefault(m => m.Name == name);
+        if (existing is not null)
+            return existing;
+
         var method = context.DeclaringType.DefineMethod(
             objectType, new[] { objectType }, name,
             XamlVisibility.Private, true, false);
@@ -121,7 +132,11 @@ class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> ste
         var setter = step.Property.Setter!;
         var valueType = setter.Parameters[0];
 
-        var name = $"__Set_{step.OwnerType.Name}_{step.Property.Name}";
+        var name = BuildAccessorName("__Set_", step);
+        var existing = context.DeclaringType.Methods.FirstOrDefault(m => m.Name == name);
+        if (existing is not null)
+            return existing;
+
         var method = context.DeclaringType.DefineMethod(
             context.Configuration.WellKnownTypes.Void,
             new[] { objectType, objectType }, name,
