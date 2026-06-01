@@ -32,6 +32,11 @@ public class ContentPresenter : Box
         }
     }
 
+    public ContentPresenter()
+    {
+        Display = YgDisplay.Contents;
+    }
+
     private void AttachContent()
     {
         if (_templatedParent == null) return;
