@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Numerics;
 using System.Text;
 using Avalonia.LogicalTree;
 using Avalonia.Metadata;
@@ -22,6 +23,19 @@ public class ContentsPanel : PlainNode
     public ContentsPanel()
     {
         Children = new NodeChildCollection(this);
+    }
+
+    /// <summary>
+    /// Renders children, offsetting the context by this node's Yoga layout position
+    /// so that the visual tree stays aligned with the Yoga layout tree.
+    /// </summary>
+    public override void Render(RenderContext context)
+    {
+        var adjusted = new RenderContext(
+            context.TopLeft + new Vector2(NodeInternal.LayoutX, NodeInternal.LayoutY),
+            context.InheritedOpacity);
+        foreach (var child in VisualChildren)
+            child.Render(adjusted);
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
