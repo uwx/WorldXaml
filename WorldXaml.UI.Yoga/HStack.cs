@@ -12,7 +12,7 @@ public partial class HStack : TemplatedControl
     [Property(OnChangedMethod = nameof(OnOrientationChanged))]
     public partial StackOrientation Orientation { get; set; }
     
-    [Property]
+    [Property(DefaultValue = YgFlexDirection.Row)]
     public partial YgFlexDirection BoxFlexDirection { get; set; }
 
     private partial void OnOrientationChanged(StackOrientation prop)
