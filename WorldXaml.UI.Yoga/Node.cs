@@ -693,11 +693,21 @@ public partial class Node : PlainNode, IAnimationCallback
     {
         public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
         {
-            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+            return sourceType == typeof(string)
+                   || sourceType == typeof(float)
+                   || sourceType == typeof(double)
+                   || sourceType == typeof(int)
+                   || sourceType == typeof(long)
+                   || base.CanConvertFrom(context, sourceType);
         }
 
         public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
         {
+            if (value is float f) return f;
+            if (value is double d) return (float)d;
+            if (value is int i) return i;
+            if (value is long l) return l;
+            
             if (value is string str)
             {
                 var trimmed = str.AsSpan().Trim();
@@ -726,11 +736,26 @@ public partial class Node : PlainNode, IAnimationCallback
     {
         public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
         {
-            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+            return sourceType == typeof(string)
+                   || sourceType == typeof(float)
+                   || sourceType == typeof(float?)
+                   || sourceType == typeof(double)
+                   || sourceType == typeof(double?)
+                   || sourceType == typeof(int)
+                   || sourceType == typeof(int?)
+                   || sourceType == typeof(long)
+                   || sourceType == typeof(long?)
+                   || base.CanConvertFrom(context, sourceType);
         }
 
-        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object? value)
         {
+            if (value is null) return null;
+            if (value is float f) return f;
+            if (value is double d) return (float)d;
+            if (value is int i) return i;
+            if (value is long l) return l;
+
             if (value is string str)
             {
                 var trimmed = str.AsSpan().Trim();
@@ -815,11 +840,21 @@ public partial class Node : PlainNode, IAnimationCallback
         {
             public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
             {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+                return sourceType == typeof(string)
+                       || sourceType == typeof(float)
+                       || sourceType == typeof(double)
+                       || sourceType == typeof(int)
+                       || sourceType == typeof(long)
+                       || base.CanConvertFrom(context, sourceType);
             }
 
             public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
             {
+                if (value is float f) return Point(f);
+                if (value is double d) return Point((float)d);
+                if (value is int i) return Point(i);
+                if (value is long l) return Point(l);
+
                 if (value is string str)
                 {
                     var trimmed = str.AsSpan().Trim();
@@ -998,11 +1033,21 @@ public partial class Node : PlainNode, IAnimationCallback
         {
             public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
             {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+                return sourceType == typeof(string)
+                       || sourceType == typeof(float)
+                       || sourceType == typeof(double)
+                       || sourceType == typeof(int)
+                       || sourceType == typeof(long)
+                       || base.CanConvertFrom(context, sourceType);
             }
 
             public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
             {
+                if (value is float f) return Point(f);
+                if (value is double d) return Point((float)d);
+                if (value is int i) return Point(i);
+                if (value is long l) return Point(l);
+
                 if (value is string str)
                 {
                     var trimmed = str.AsSpan().Trim();
@@ -1391,11 +1436,21 @@ public partial class Node : PlainNode, IAnimationCallback
         {
             public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
             {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+                return sourceType == typeof(string)
+                       || sourceType == typeof(float)
+                       || sourceType == typeof(double)
+                       || sourceType == typeof(int)
+                       || sourceType == typeof(long)
+                       || base.CanConvertFrom(context, sourceType);
             }
 
             public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
             {
+                if (value is float f) return Point(f);
+                if (value is double d) return Point((float)d);
+                if (value is int i) return Point(i);
+                if (value is long l) return Point(l);
+
                 if (value is string str)
                 {
                     var trimmed = str.AsSpan().Trim();
@@ -1888,17 +1943,27 @@ public partial class Node : PlainNode, IAnimationCallback
     public partial float? BorderRight { get; set; }
 
     [TypeConverter(typeof(MeasurementGapTypeConverter))]
-    public struct MeasurementGap
+    public struct MeasurementGap : IEquatable<MeasurementGap>
     {
         public class MeasurementGapTypeConverter : TypeConverter
         {
             public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
             {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+                return sourceType == typeof(string)
+                    || sourceType == typeof(float)
+                    || sourceType == typeof(double)
+                    || sourceType == typeof(int)
+                    || sourceType == typeof(long)
+                    || base.CanConvertFrom(context, sourceType);
             }
 
             public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
             {
+                if (value is float f) return Point(f);
+                if (value is double d) return Point((float)d);
+                if (value is int i) return Point(i);
+                if (value is long l) return Point(l);
+
                 if (value is string str)
                 {
                     var trimmed = str.AsSpan().Trim();
@@ -2003,19 +2068,34 @@ public partial class Node : PlainNode, IAnimationCallback
 
             return this;
         }
+        
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
+        public static bool operator ==(MeasurementGap left, MeasurementGap right) => left.InternalValue.value == right.InternalValue.value && left.InternalValue.unit == right.InternalValue.unit;
+        public static bool operator !=(MeasurementGap left, MeasurementGap right) => !(left == right);
+        public override bool Equals(object? obj) => obj is MeasurementGap other && this == other;
+        public bool Equals(MeasurementGap other) => this == other;
+        public override int GetHashCode() => HashCode.Combine(InternalValue.value, InternalValue.unit);
     }
+
+    /// <summary>
+    /// Property field for <see cref="Gap"/>.
+    /// </summary>
+    public static readonly DirectProperty<Node, MeasurementGap> GapProperty =
+        AvaloniaProperty.RegisterDirect<Node, MeasurementGap>(
+            name:         nameof(Gap),
+            defaultValue: MeasurementGap.Undefined,
+            getter:       node => node.GapColumn == node.GapRow ? node.GapColumn : MeasurementGap.Undefined,
+            setter:       (node, value) =>
+            {
+                node.NodeInternal.GapColumn = value;
+                node.NodeInternal.GapRow = value;
+            });
 
     /// <summary>
     /// CSS: gap - Shorthand for setting row-gap and column-gap
     /// </summary>
-    public MeasurementGap Gap
-    {
-        set
-        {
-            GapColumn = value;
-            GapRow = value;
-        }
-    }
+    [Property]
+    public partial MeasurementGap Gap { get; set; }
 
     /// <summary>
     /// Property field for <see cref="GapColumn"/>.
@@ -2076,11 +2156,21 @@ public partial class Node : PlainNode, IAnimationCallback
         {
             public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
             {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+                return sourceType == typeof(string)
+                       || sourceType == typeof(float)
+                       || sourceType == typeof(double)
+                       || sourceType == typeof(int)
+                       || sourceType == typeof(long)
+                       || base.CanConvertFrom(context, sourceType);
             }
 
             public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
             {
+                if (value is float f) return Point(f);
+                if (value is double d) return Point((float)d);
+                if (value is int i) return Point(i);
+                if (value is long l) return Point(l);
+
                 if (value is string str)
                 {
                     var trimmed = str.Trim();
