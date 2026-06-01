@@ -46,6 +46,8 @@ namespace WorldXaml.UI.Base
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TValue GetValue<TValue>(StyledProperty<TValue> property)
         {
+            if (property.IsDirect)
+                return (TValue)property.GetDirectValue(this)!;
             if (_values.TryGetValue(property.Id, out var raw))
                 return (TValue)raw!;
             return property.DefaultValue;
@@ -62,7 +64,12 @@ namespace WorldXaml.UI.Base
             var oldValue = GetValue(property);
             
             PropertyChanging?.Invoke(this, property.CachedChangingArgs);
-            _values[property.Id] = value;
+
+            if (property.IsDirect)
+                property.SetDirectValue(this, value);
+            else
+                _values[property.Id] = value;
+
             PropertyChanged?.Invoke(this, property.CachedChangedArgs);
 
             property.OnChanged?.Invoke(this, value);
@@ -92,12 +99,7 @@ namespace WorldXaml.UI.Base
             if (property.Setter is null)
                 throw new InvalidOperationException($"Property '{property.Name}' is read-only.");
 
-            var oldValue = property.Getter((TOwner)this);
-            property.Setter((TOwner)this, value);
-            var newValue = property.Getter((TOwner)this); // re-read in case setter coerces
-
-            if (!EqualityComparer<TValue>.Default.Equals(oldValue, newValue))
-                StyledPropertyChanged?.Invoke(this, new StyledPropertyChangedEventArgs(property, oldValue, newValue));
+            SetValueCore(property, value);
         }
     }
 
@@ -135,6 +137,15 @@ namespace Avalonia
         public object? DefaultValue { get; }
         public BindingMode DefaultMode { get; }
         public Action<PropertyObject, object?>? OnChanged { get; }
+
+        /// <summary>True when this is a <see cref="DirectProperty{TOwner,TValue}"/>.</summary>
+        internal virtual bool IsDirect => false;
+
+        /// <summary>Read the backing value via the DirectProperty getter (boxes).</summary>
+        internal virtual object? GetDirectValue(PropertyObject target) => throw new InvalidOperationException();
+
+        /// <summary>Write the backing value via the DirectProperty setter (boxes).</summary>
+        internal virtual void SetDirectValue(PropertyObject target, object? value) => throw new InvalidOperationException();
 
         internal PropertyChangingEventArgs CachedChangingArgs;
         internal PropertyChangedEventArgs CachedChangedArgs;

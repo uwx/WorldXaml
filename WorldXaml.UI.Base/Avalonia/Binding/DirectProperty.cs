@@ -20,4 +20,11 @@ public sealed class DirectProperty<TOwner, TValue> : StyledProperty<TValue>
         Getter = getter;
         Setter = setter;
     }
+
+    internal override bool IsDirect => true;
+
+    internal override object? GetDirectValue(PropertyObject target) => Getter((TOwner)target);
+
+    internal override void SetDirectValue(PropertyObject target, object? value) =>
+        (Setter ?? throw new InvalidOperationException($"Property '{Name}' is read-only."))((TOwner)target, (TValue)value!);
 }
