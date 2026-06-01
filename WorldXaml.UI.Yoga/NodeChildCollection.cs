@@ -3,29 +3,24 @@ using Avalonia.LogicalTree;
 
 namespace WorldXaml.UI.Yoga;
 
-public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IReadOnlyList<ILogical>
+public class NodeChildCollection(PlainNode parent) : ObservableCollection<Visual>
 {
-    IEnumerator<ILogical> IEnumerable<ILogical>.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    protected override void InsertItem(int index, Node item)
+    protected override void InsertItem(int index, Visual item)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
         item.LogicalParent = parent;
         Console.WriteLine(Environment.StackTrace);
-        parent.NodeInternal.InsertChild(item.NodeInternal, (uint)index);
+        parent.NodeInternal.InsertChild(item.Contents, (uint)index);
         base.InsertItem(index, item);
     }
 
-    protected override void SetItem(int index, Node item)
+    protected override void SetItem(int index, Visual item)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
         var oldItem = Items[index];
         oldItem.LogicalParent = null;
         item.LogicalParent = parent;
-        parent.NodeInternal.SwapChild(item.NodeInternal, (uint)index);
+        parent.NodeInternal.SwapChild(item.Contents, (uint)index);
         base.SetItem(index, item);
     }
 
@@ -43,9 +38,7 @@ public class NodeChildCollection(Node parent) : ObservableCollection<Node>, IRea
     {
         var item = Items[index];
         item.LogicalParent = null;
-        parent.NodeInternal.RemoveChild(item.NodeInternal);
+        parent.NodeInternal.RemoveChild(item.Contents);
         base.RemoveItem(index);
     }
-
-    ILogical IReadOnlyList<ILogical>.this[int index] => this[index];
 }

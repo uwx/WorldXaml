@@ -8,55 +8,22 @@ using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Data;
-using Avalonia.LogicalTree;
 using WorldXaml.UI.Base;
 using Yoga;
 
 namespace WorldXaml.UI.Yoga;
 
 // ReSharper disable InconsistentNaming
-
 /// <summary>
 /// Represents a single node in the Yoga layout system.
 /// </summary>
 [DebuggerDisplay("{DebugToString()}")]
-public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnimationCallback
+public partial class Node : PlainNode, IAnimationCallback
 {
-    internal static readonly YGConfigPtr Config;
-
-    internal YGNodePtr NodeInternal = new(Config);
-
-    internal readonly string __INTERNAL_CtorCallerFilePath = "";
-    internal readonly int __INTERNAL_CtorCallerLineNumber = 0;
-    internal readonly string __INTERNAL_CtorCallerMemberName = "";
-
-    internal static readonly List<Node> __INTERNAL_YogaRootsThisFrame = new();
-
-    public override IReadOnlyList<ILogical> LogicalChildren => [];
-
-#if DEBUG
-    [MethodImpl(MethodImplOptions.NoInlining)]
-#endif
-    public Node()
-    {
-#if DEBUG
-        var stackTrace = new StackTrace(1, true);
-        // skip inherited constructors
-        var stackFrame = stackTrace.GetFrames()
-            .FirstOrDefault(e => e.GetMethod()?.DeclaringType?.IsAssignableTo(typeof(Node)) != true);
-        __INTERNAL_CtorCallerFilePath = stackFrame?.GetFileName() ?? "";
-        __INTERNAL_CtorCallerLineNumber = stackFrame?.GetFileLineNumber() ?? 0;
-        __INTERNAL_CtorCallerMemberName = stackFrame?.GetMethod()?.Name ?? "";
-#endif
-    }
-    
     public event Action? AnimationFrameBegan;
 
-    [Property]
-    public partial string? Name { get; set; }
-
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public string DebugToString()
+    public override string DebugToString()
     {
         return $"Node(Name={Name}, LayoutX={LayoutX}, LayoutY={LayoutY}, LayoutWidth={LayoutWidth}, LayoutHeight={LayoutHeight})";
     }
@@ -2382,37 +2349,6 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
 
     private float _lastScale = 1f;
 
-    static Node()
-    {
-        Config = YGConfigPtr.GetDefault();
-        Config.UseWebDefaults = true;
-    }
-
-    ~Node()
-    {
-        Dispose(false);
-    }
-
-    private void ReleaseUnmanagedResources()
-    {
-        NodeInternal.Dispose();
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        ReleaseUnmanagedResources();
-        if (disposing)
-        {
-            // Free any other managed objects here.
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Do not use directly.
     /// </summary>
@@ -2462,14 +2398,15 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
     {
     }
 
-    /// <summary>
-    /// DO NOT OVERRIDE. Override OnScaleChanged() instead.
-    /// </summary>
-    internal virtual void RescaleRecursive()
+    internal sealed override void NotifyUiScaleChanged()
     {
         if (Rescale())
         {
             OnScaleChanged();
+            foreach (var child in VisualChildren)
+            {
+                child.NotifyUiScaleChanged();
+            }
         }
     }
 
@@ -2485,29 +2422,28 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
     {
     }
 
-    protected virtual void Render()
+    public sealed override void Render(RenderContext context)
     {
-        RenderBackground(LayoutPaddingPosition, LayoutPaddingSize);
-        RenderBorder(LayoutBorderPosition, LayoutBorderSize);
-        RenderContent(LayoutContentPosition, LayoutContentSize);
+        OnAnimationFrameBegan();
+        _root = context.TopLeft;
+        if (Display != YgDisplay.None && Visibility == Visibility.Visible && Opacity > 0f)
+        {
+            var ownOpacity = context.InheritedOpacity * Opacity;
+            XamlG.Alpha = ownOpacity;
+            RenderBackground(LayoutPaddingPosition, LayoutPaddingSize);
+            RenderBorder(LayoutBorderPosition, LayoutBorderSize);
+            RenderContent(LayoutContentPosition, LayoutContentSize);
+            foreach (var child in VisualChildren)
+            {
+                child.Render(new RenderContext(_root + new Vector2(LayoutX, LayoutY), ownOpacity)); // todo should this be LayoutContentPosition
+            }
+            XamlG.Alpha = 1f;
+        }
     }
 
     private protected void OnAnimationFrameBegan()
     {
         AnimationFrameBegan?.Invoke();
-    }
-
-    internal virtual void RenderRecursive(Vector2 root, float rootOpacity = 1f)
-    {
-        OnAnimationFrameBegan();
-        _root = root;
-        if (Display != YgDisplay.None && Visibility == Visibility.Visible && Opacity > 0f)
-        {
-            var ownOpacity = rootOpacity * Opacity;
-            XamlG.Alpha = ownOpacity;
-            Render();
-            XamlG.Alpha = 1f;
-        }
     }
 
     protected virtual void GameTick()
@@ -2520,17 +2456,82 @@ public partial class Node : BindableObject, IDisposable, INamed, ILogical, IAnim
         __INTERNAL_YogaRootsThisFrame.Add(this);
 #endif
 
-        RescaleRecursive();
+        NotifyUiScaleChanged();
         NodeInternal.CalculateLayout(availableSize, YGDirection.YGDirectionLTR);
-        RenderRecursive(origin ?? Vector2.Zero);
+        Render(new RenderContext(origin ?? Vector2.Zero));
     }
 
-    /// <summary>
-    /// DO NOT OVERRIDE. Override GameTick() instead.
-    /// </summary>
-    public virtual void Update()
+    public sealed override void Update()
     {
         GameTick();
+        foreach (var child in VisualChildren)
+        {
+            child.Update();
+        }
     }
 
 }
+
+public abstract class Visual : BindableObject
+{
+    /// <summary>
+    /// <para>
+    /// Gets the Yoga node associated with this visual element representing its contents.
+    /// </para>
+    ///
+    /// <para>
+    /// For a visual element which is itself a node, this is the backing Yoga node.
+    /// </para>
+    /// 
+    /// <para>
+    /// For a visual element which is a collection of nodes, this should be a parent Yoga node that contains all the
+    /// child nodes as its children. This allows the visual element to manage a group of nodes as a single unit for
+    /// layout and rendering purposes. The node's lifetime should last as long as the parent visual element.
+    /// </para>
+    ///
+    /// <para>
+    /// For a visual element which is a template, this should be a Yoga node that contains the template's layout tree
+    /// (its chrome). The node's lifetime should last as long as the parent visual element.
+    /// </para>
+    ///
+    /// <para>
+    /// The node behind this property should not change during the lifetime of a visual element, because changes to it
+    /// will not automatically be reflected in the parent Yoga node. Thus if the visual element needs to change the Yoga
+    /// node it uses for its contents, it is desirable to provide a wrapper Yoga node with <see cref="YgDisplay"/> set
+    /// to <see cref="YgDisplay.Contents"/> instead.
+    /// </para>
+    /// </summary>
+    internal abstract YGNodePtr Contents { get; }
+
+    /// <summary>
+    /// Gets the visual children of this visual element. Visual elements are ones that participate in the layout tree,
+    /// receive hit testing, game tick updates, and draw calls.
+    /// </summary>
+    public abstract IReadOnlyList<Visual> VisualChildren { get; }
+    
+    internal virtual void NotifyUiScaleChanged()
+    {
+        foreach (var child in VisualChildren)
+        {
+            child.NotifyUiScaleChanged();
+        }
+    }
+
+    public virtual void Update()
+    {
+        foreach (var child in VisualChildren)
+        {
+            child.Update();
+        }
+    }
+
+    public virtual void Render(RenderContext context)
+    {
+        foreach (var child in VisualChildren)
+        {
+            child.Render(context);
+        }
+    }
+}
+
+public readonly record struct RenderContext(Vector2 TopLeft, float InheritedOpacity = 1f);

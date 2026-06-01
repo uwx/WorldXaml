@@ -92,7 +92,7 @@ internal record GeneratorOptions
 
     internal class TheKnownTypes(AnalyzerConfigOptions options) : IKnownTypes, IEnumerable<KeyValuePair<string, string?>>
     {
-        public string StyledElement { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorStyledElementTypeName, "WorldXaml.UI.Yoga.Node");
+        public string StyledElement { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorStyledElementTypeName, "WorldXaml.UI.Yoga.Visual");
         public string Window { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorWindowTypeName, "WorldXaml.UI.Yoga.View");
 
         public string XmlnsDefinitionAttribute { get; } = GetStringProperty(options, BuildProperties.WorldXamlGeneratorXmlnsDefinitionAttributeTypeName, "System.Windows.Markup.XmlnsDefinitionAttribute");

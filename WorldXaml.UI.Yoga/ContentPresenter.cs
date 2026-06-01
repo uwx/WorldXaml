@@ -1,4 +1,7 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Numerics;
+using System.Text;
 using Avalonia.LogicalTree;
 
 namespace WorldXaml.UI.Yoga;
@@ -7,8 +10,34 @@ namespace WorldXaml.UI.Yoga;
 /// A placeholder node used inside a <see cref="Avalonia.Markup.Xaml.Templates.ControlTemplate"/>
 /// to mark where the templated control's content children should be inserted.
 /// </summary>
-public class ContentPresenter : Box
+[DebuggerDisplay("{DebugToString()}")]
+public class ContentPresenter : ContentsPanel
 {
+    public NodeChildCollection Children { get; }
+
+    public override IReadOnlyList<ILogical> LogicalChildren => Children;
+    public override IReadOnlyList<Visual> VisualChildren => Children;
+
+    public ContentPresenter()
+    {
+        Children = new NodeChildCollection(this);
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public override string DebugToString()
+    {
+        var sb = new StringBuilder();
+        sb.Append($"ContentPresenter(Name={Name})");
+        foreach (var child in Children)
+        {
+            sb.AppendLine();
+            sb.Append('{');
+            sb.Append((child is PlainNode node ? node.DebugToString() : child.ToString() ?? "").Replace("\n", "\n  "));
+            sb.Append('}');
+        }
+        return sb.ToString();
+    }
+    
     private TemplatedControl? _templatedParent;
 
     /// <summary>
@@ -30,11 +59,6 @@ public class ContentPresenter : Box
             if (_templatedParent != null)
                 AttachContent();
         }
-    }
-
-    public ContentPresenter()
-    {
-        Display = YgDisplay.Contents;
     }
 
     private void AttachContent()

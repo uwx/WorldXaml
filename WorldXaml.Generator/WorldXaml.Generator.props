@@ -9,7 +9,7 @@
         <WorldXamlGeneratorAttachDevTools Condition="'$(WorldXamlGeneratorAttachDevTools)' == ''">true</WorldXamlGeneratorAttachDevTools>
         <WorldXamlGeneratorIsHotReloadingEnabled Condition="'$(WorldXamlGeneratorIsHotReloadingEnabled)' == ''">true</WorldXamlGeneratorIsHotReloadingEnabled>
         <WorldXamlGeneratorHotReloadTypeName Condition="'$(WorldXamlGeneratorHotReloadTypeName)' == ''">WorldXaml.UI.Base.Xaml.XamlHotReload</WorldXamlGeneratorHotReloadTypeName>
-        <WorldXamlGeneratorStyledElementTypeName Condition="'$(WorldXamlGeneratorStyledElementTypeName)' == ''">WorldXaml.UI.Yoga.Node</WorldXamlGeneratorStyledElementTypeName>
+        <WorldXamlGeneratorStyledElementTypeName Condition="'$(WorldXamlGeneratorStyledElementTypeName)' == ''">WorldXaml.UI.Yoga.Visual</WorldXamlGeneratorStyledElementTypeName>
         <WorldXamlGeneratorWindowTypeName Condition="'$(WorldXamlGeneratorWindowTypeName)' == ''">WorldXaml.UI.Yoga.View</WorldXamlGeneratorWindowTypeName>
         <WorldXamlGeneratorCompiledBindTypeName Condition="'$(WorldXamlGeneratorCompiledBindTypeName)' == ''">Avalonia.Data.CompiledBinding</WorldXamlGeneratorCompiledBindTypeName>
         <WorldXamlGeneratorPropertyObjectTypeName Condition="'$(WorldXamlGeneratorPropertyObjectTypeName)' == ''">WorldXaml.UI.Base.PropertyObject</WorldXamlGeneratorPropertyObjectTypeName>

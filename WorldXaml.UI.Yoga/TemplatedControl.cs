@@ -14,9 +14,29 @@ namespace WorldXaml.UI.Yoga;
 /// User-supplied content children (written inside the element in XAML) are captured into
 /// <see cref="ContentChildren"/> and injected into the template's <see cref="ContentPresenter"/> slot.
 /// </summary>
-public class TemplatedControl : Node
+public class TemplatedControl : Visual
 {
+    // Logical parent tree: TemplatedControl -> ContentsPanel -> TemplateRoot
+    // It could be better for the template root to be a direct logical child of the TemplatedControl, but this is
+    // simpler to implement and retains the DataContext preservation we care about (since the ContentsPanel is invisible
+    // and doesn't have a DataContext of its own, it just inherits the TemplatedControl's DataContext and passes it
+    // through to the template root and its descendants).
+    
+    // Since the template may or may not be null
+    private readonly ContentsPanel _templateContainer;
+
     private Node? _templateRoot;
+
+    public TemplatedControl()
+    {
+        _templateContainer = new ContentsPanel
+        {
+            LogicalParent = this
+        };
+    }
+
+    internal override YGNodePtr Contents => _templateContainer.NodeInternal;
+    public override IReadOnlyList<Visual> VisualChildren => [_templateContainer];
 
     /// <summary>
     /// Children supplied by the user of this control (the content written inside the XAML tag).
@@ -53,8 +73,7 @@ public class TemplatedControl : Node
         {
             ClearContentPresenter(_templateRoot);
             ClearTemplatedParentRecursive(_templateRoot);
-            NodeInternal.RemoveChild(_templateRoot.NodeInternal);
-            _templateRoot.LogicalParent = null;
+            _templateContainer.Children.Remove(_templateRoot);
             _templateRoot = null;
         }
 
@@ -68,38 +87,34 @@ public class TemplatedControl : Node
             return;
 
         _templateRoot = root;
-        root.LogicalParent = this;
-        NodeInternal.InsertChild(root.NodeInternal, 0);
+        _templateContainer.Children.Add(_templateRoot);
 
         // Set TemplatedParent on all nodes in the template tree so
         // {Binding ..., RelativeSource={RelativeSource TemplatedParent}} resolves correctly
-        SetTemplatedParentRecursive(root, this);
+        SetTemplatedParentRecursive(_templateRoot, this);
 
         // Find ContentPresenter(s) in the template tree and wire them up
-        WireContentPresenters(root);
+        WireContentPresenters(_templateRoot);
     }
 
-    private static void SetTemplatedParentRecursive(Node node, TemplatedControl parent)
+    private static void SetTemplatedParentRecursive(Visual node, TemplatedControl parent)
     {
         node.TemplatedParent = parent;
-        if (node is Box box)
+        if (node is FlexPanel box)
         {
             foreach (var child in box.Children)
                 SetTemplatedParentRecursive(child, parent);
         }
     }
 
-    private static void ClearTemplatedParentRecursive(Node node)
+    private static void ClearTemplatedParentRecursive(Visual node)
     {
         node.TemplatedParent = null;
-        if (node is Box box)
-        {
-            foreach (var child in box.Children)
-                ClearTemplatedParentRecursive(child);
-        }
+        foreach (var child in node.VisualChildren)
+            ClearTemplatedParentRecursive(child);
     }
 
-    private void WireContentPresenters(Node node)
+    private void WireContentPresenters(Visual node)
     {
         if (node is ContentPresenter presenter)
         {
@@ -107,14 +122,11 @@ public class TemplatedControl : Node
             return;
         }
 
-        if (node is Box box)
-        {
-            foreach (var child in box.Children)
-                WireContentPresenters(child);
-        }
+        foreach (var child in node.VisualChildren)
+            WireContentPresenters(child);
     }
 
-    private static void ClearContentPresenter(Node node)
+    private static void ClearContentPresenter(Visual node)
     {
         if (node is ContentPresenter presenter)
         {
@@ -122,58 +134,7 @@ public class TemplatedControl : Node
             return;
         }
 
-        if (node is Box box)
-        {
-            foreach (var child in box.Children)
-                ClearContentPresenter(child);
-        }
+        foreach (var child in node.VisualChildren)
+            ClearContentPresenter(child);
     }
-
-    #region Recursive overrides — delegate to _templateRoot
-
-    internal override void RescaleRecursive()
-    {
-        if (Rescale())
-        {
-            OnScaleChanged();
-            _templateRoot?.RescaleRecursive();
-        }
-    }
-
-    public sealed override void Update()
-    {
-        base.Update();
-        _templateRoot?.Update();
-    }
-
-    internal override void RenderRecursive(Vector2 root, float rootOpacity = 1f)
-    {
-        OnAnimationFrameBegan();
-        _root = root;
-        if (Display != YgDisplay.None && Visibility == Visibility.Visible && Opacity > 0f)
-        {
-            var ownOpacity = rootOpacity * Opacity;
-            XamlG.Alpha = ownOpacity;
-            Render();
-            _templateRoot?.RenderRecursive(root + new Vector2(LayoutX, LayoutY), ownOpacity);
-            XamlG.Alpha = 1f;
-        }
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            if (_templateRoot != null)
-            {
-                ClearContentPresenter(_templateRoot);
-                (_templateRoot as IDisposable)?.Dispose();
-                _templateRoot = null;
-            }
-        }
-
-        base.Dispose(disposing);
-    }
-
-    #endregion
 }
