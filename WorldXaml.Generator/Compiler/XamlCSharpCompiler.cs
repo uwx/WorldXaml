@@ -45,7 +45,8 @@ internal sealed class XamlCSharpCompiler
 
         _configuration = new TransformerConfiguration(
             typeSystem, assembly, mappings,
-            diagnosticsHandler: diagnosticsHandler);
+            diagnosticsHandler: diagnosticsHandler,
+            identifierGenerator: new DeterministicIdentifierGenerator(0));
 
         var emitMappings = new XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult>();
         IXamlMethod? registerMethod = null;
@@ -205,16 +206,27 @@ internal sealed class XamlCSharpCompiler
     }
 }
 
-internal class SourceGenFileSource : IFileSource
+internal class DeterministicIdentifierGenerator(int seed) : IXamlIdentifierGenerator
 {
-    public string FilePath { get; }
-    public byte[] FileContents { get; }
+#pragma warning disable RS1035
+    private readonly Random _random = new Random(seed);
+#pragma warning restore RS1035
 
-    public SourceGenFileSource(string filePath, string content)
+    public string GenerateIdentifierPart()
     {
-        FilePath = filePath;
-        FileContents = Encoding.UTF8.GetBytes(content);
+        Span<byte> buffer = stackalloc byte[16];
+#pragma warning disable RS1035
+        _random.NextBytes(buffer);
+#pragma warning restore RS1035
+
+        return Guid.Parse(buffer).ToString().Replace("-", "");
     }
+}
+
+internal class SourceGenFileSource(string filePath, string content) : IFileSource
+{
+    public string FilePath { get; } = filePath;
+    public byte[] FileContents { get; } = Encoding.UTF8.GetBytes(content);
 }
 
 internal class SkipNodeEmitter : IXamlAstNodeEmitter<IXamlILEmitter, XamlILNodeEmitResult>
