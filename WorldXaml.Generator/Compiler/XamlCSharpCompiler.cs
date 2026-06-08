@@ -214,12 +214,12 @@ internal class DeterministicIdentifierGenerator(int seed) : IXamlIdentifierGener
 
     public string GenerateIdentifierPart()
     {
-        Span<byte> buffer = stackalloc byte[16];
+        var buffer = new byte[16];
 #pragma warning disable RS1035
         _random.NextBytes(buffer);
 #pragma warning restore RS1035
 
-        return Guid.Parse(buffer).ToString().Replace("-", "");
+        return new Guid(buffer).ToString().Replace("-", "");
     }
 }
 
