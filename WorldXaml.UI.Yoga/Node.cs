@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Data;
 using WorldXaml.UI.Base;
+using WorldXaml.UI.Yoga.Events;
 using Yoga;
 
 namespace WorldXaml.UI.Yoga;
@@ -2439,6 +2440,13 @@ public partial class Node : PlainNode, IAnimationCallback
 
     #endregion
 
+    #region Focus
+
+    public override Vector2 FocusOrigin => LayoutPaddingPosition;
+    public override Vector2 FocusSize => LayoutPaddingSize;
+
+    #endregion
+
     private float _lastScale = 1f;
 
     /// <summary>
@@ -2553,77 +2561,159 @@ public partial class Node : PlainNode, IAnimationCallback
         Render(new RenderContext(origin ?? Vector2.Zero));
     }
 
-    public sealed override void Update()
+    public sealed override void Update(FocusManager focusManager)
     {
         GameTick();
-        foreach (var child in VisualChildren)
-        {
-            child.Update();
-        }
+        base.Update(focusManager);
     }
 
-}
-
-public abstract class Visual : BindableObject
-{
-    /// <summary>
-    /// <para>
-    /// Gets the Yoga node associated with this visual element representing its contents.
-    /// </para>
-    ///
-    /// <para>
-    /// For a visual element which is itself a node, this is the backing Yoga node.
-    /// </para>
-    /// 
-    /// <para>
-    /// For a visual element which is a collection of nodes, this should be a parent Yoga node that contains all the
-    /// child nodes as its children. This allows the visual element to manage a group of nodes as a single unit for
-    /// layout and rendering purposes. The node's lifetime should last as long as the parent visual element.
-    /// </para>
-    ///
-    /// <para>
-    /// For a visual element which is a template, this should be a Yoga node that contains the template's layout tree
-    /// (its chrome). The node's lifetime should last as long as the parent visual element.
-    /// </para>
-    ///
-    /// <para>
-    /// The node behind this property should not change during the lifetime of a visual element, because changes to it
-    /// will not automatically be reflected in the parent Yoga node. Thus if the visual element needs to change the Yoga
-    /// node it uses for its contents, it is desirable to provide a wrapper Yoga node with <see cref="YgDisplay"/> set
-    /// to <see cref="YgDisplay.Contents"/> instead.
-    /// </para>
-    /// </summary>
-    internal abstract YGNodePtr Contents { get; }
-
-    /// <summary>
-    /// Gets the visual children of this visual element. Visual elements are ones that participate in the layout tree,
-    /// receive hit testing, game tick updates, and draw calls.
-    /// </summary>
-    public abstract IReadOnlyList<Visual> VisualChildren { get; }
+    protected virtual void OnMousePressed(FocusManager focusManager, MouseEvent @event)
+    {
+    }
     
-    internal virtual void NotifyUiScaleChanged()
+    protected virtual void OnMouseReleased(FocusManager focusManager, MouseEvent @event)
     {
-        foreach (var child in VisualChildren)
-        {
-            child.NotifyUiScaleChanged();
-        }
+    }
+    
+    protected virtual void OnMouseDragged(FocusManager focusManager, MouseDragEvent @event)
+    {
     }
 
-    public virtual void Update()
+    protected virtual void OnMouseScrolled(FocusManager focusManager, MouseWheelEvent @event)
     {
-        foreach (var child in VisualChildren)
-        {
-            child.Update();
-        }
     }
 
-    public virtual void Render(RenderContext context)
+    protected virtual void OnMouseMoved(FocusManager focusManager, MouseMoveEvent @event)
     {
-        foreach (var child in VisualChildren)
+    }
+
+    protected virtual void OnKeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
+    {
+    }
+
+    public override void MouseMoved(FocusManager focusManager, BaseMouseMoveEvent @event)
+    {
+        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
         {
-            child.Render(context);
+            var relativeEvent = new MouseMoveEvent(
+                Position: @event.Position,
+                Buttons: @event.Buttons,
+                CtrlKey: @event.CtrlKey,
+                MetaKey: @event.AltKey,
+                ShiftKey: @event.ShiftKey,
+                RelativePosition: @event.Position - LayoutPaddingPosition
+            );
+            OnMouseMoved(focusManager, relativeEvent);
         }
+        base.MouseMoved(focusManager, @event);
+    }
+
+    public sealed override void MousePressed(FocusManager focusManager, BaseMouseEvent @event)
+    {
+        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        {
+            var relativeEvent = new MouseEvent(
+                Position: @event.Position,
+                Button: @event.Button,
+                Buttons: @event.Buttons,
+                CtrlKey: @event.CtrlKey,
+                MetaKey: @event.AltKey,
+                ShiftKey: @event.ShiftKey,
+                RelativePosition: @event.Position - LayoutPaddingPosition
+            );
+            OnMousePressed(focusManager, relativeEvent);
+        }
+        base.MousePressed(focusManager, @event);
+    }
+
+    public sealed override void MouseReleased(FocusManager focusManager, BaseMouseEvent @event)
+    {
+        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        {
+            var relativeEvent = new MouseEvent(
+                Position: @event.Position,
+                Button: @event.Button,
+                Buttons: @event.Buttons,
+                CtrlKey: @event.CtrlKey,
+                MetaKey: @event.AltKey,
+                ShiftKey: @event.ShiftKey,
+                RelativePosition: @event.Position - LayoutPaddingPosition
+            );
+            OnMouseReleased(focusManager, relativeEvent);
+        }
+        base.MouseReleased(focusManager, @event);
+    }
+
+    public sealed override void MouseDragged(FocusManager focusManager, BaseMouseDragEvent @event)
+    {
+        if (@event.DragStart.X > LayoutPaddingPosition.X && @event.DragStart.Y > LayoutPaddingPosition.Y && @event.DragStart.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.DragStart.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        {
+            var relativeEvent = new MouseDragEvent(
+                DragStart: @event.DragStart,
+                RelativeDragStart: @event.DragStart - LayoutPaddingPosition,
+                Position: @event.Position,
+                Button: @event.Button,
+                Buttons: @event.Buttons,
+                CtrlKey: @event.CtrlKey,
+                MetaKey: @event.MetaKey,
+                ShiftKey: @event.ShiftKey,
+                RelativePosition: @event.Position - LayoutPaddingPosition
+            );
+            OnMouseDragged(focusManager, relativeEvent);
+        }
+        base.MouseDragged(focusManager, @event);
+    }
+
+    public sealed override void MouseScrolled(FocusManager focusManager, BaseMouseWheelEvent @event)
+    {
+        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        {
+            var relativeEvent = new MouseWheelEvent(
+                Delta: @event.Delta,
+                Position: @event.Position,
+                Buttons: @event.Buttons,
+                CtrlKey: @event.CtrlKey,
+                MetaKey: @event.MetaKey,
+                ShiftKey: @event.ShiftKey,
+                RelativePosition: @event.Position - LayoutPaddingPosition
+            );
+            OnMouseScrolled(focusManager, relativeEvent);
+        }
+        base.MouseScrolled(focusManager, @event);
+    }
+
+    public virtual void OnKeyPressed(FocusManager focusManager, KeyboardEvent @event)
+    {
+    }
+
+    public virtual void OnKeyReleased(FocusManager focusManager, KeyboardEvent @event)
+    {
+    }
+
+    public sealed override void KeyPressed(FocusManager focusManager, KeyboardEvent @event)
+    {
+        if (IsFocusable && IsFocused)
+        {
+            OnKeyPressed(focusManager, @event);
+        }
+        base.KeyPressed(focusManager, @event);
+    }
+
+    public sealed override void KeyReleased(FocusManager focusManager, KeyboardEvent @event)
+    {
+        if (IsFocusable && IsFocused)
+        {
+            OnKeyReleased(focusManager, @event);
+        }
+        base.KeyReleased(focusManager, @event);
+    }
+
+    public sealed override void KeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
+    {
+        if (IsFocusable && IsFocused)
+        {
+            OnKeyTyped(focusManager, @event);
+        }
+        base.KeyTyped(focusManager, @event);
     }
 }
-
-public readonly record struct RenderContext(Vector2 TopLeft, float InheritedOpacity = 1f);

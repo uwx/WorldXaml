@@ -37,6 +37,9 @@ public class TemplatedControl : Visual
 
     internal override YGNodePtr Contents => _templateContainer.NodeInternal;
     public override IReadOnlyList<Visual> VisualChildren => [_templateContainer];
+    
+    public override Vector2 FocusOrigin => Vector2.Zero;
+    public override Vector2 FocusSize => Vector2.Zero;
 
     /// <summary>
     /// Children supplied by the user of this control (the content written inside the XAML tag).

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.LogicalTree;
@@ -31,6 +32,9 @@ public partial class PlainNode : Visual, INamed, IDisposable, ILogical
     public override IReadOnlyList<Visual> VisualChildren => [];
     
     internal override YGNodePtr Contents => NodeInternal;
+
+    public override Vector2 FocusOrigin => Vector2.Zero;
+    public override Vector2 FocusSize => Vector2.Zero;
 
 #if DEBUG
     [MethodImpl(MethodImplOptions.NoInlining)]
