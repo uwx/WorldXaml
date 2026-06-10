@@ -6,8 +6,10 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Data;
+using CommunityToolkit.Mvvm.Input;
 using WorldXaml.UI.Base;
 using WorldXaml.UI.Yoga.Events;
 using Yoga;
@@ -2441,9 +2443,42 @@ public partial class Node : PlainNode, IAnimationCallback
     #endregion
 
     #region Focus
+    
+    [Property]
+    public partial bool IsHovered { get; set; }
 
     public override Vector2 FocusOrigin => LayoutPaddingPosition;
     public override Vector2 FocusSize => LayoutPaddingSize;
+    
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<MouseEvent>>? MousePressed { get; set; }
+
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<MouseEvent>>? MouseReleased { get; set; }
+    
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<MouseDragEvent>>? MouseDragged { get; set; }
+    
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<MouseWheelEvent>>? MouseScrolled { get; set; }
+    
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<MouseMoveEvent>>? MouseMoved { get; set; }
+    
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<MouseMoveEvent>>? MouseEntered { get; set; }
+    
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<MouseMoveEvent>>? MouseLeft { get; set; }
+    
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<KeyboardTypedEvent>>? KeyTyped { get; set; }
+
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<KeyboardEvent>>? KeyPressed { get; set; }
+
+    [Property]
+    public partial IRelayCommand<NodeEventArgs<KeyboardEvent>>? KeyReleased { get; set; }
 
     #endregion
 
@@ -2587,11 +2622,19 @@ public partial class Node : PlainNode, IAnimationCallback
     {
     }
 
+    protected virtual void OnMouseEntered(FocusManager focusManager, MouseMoveEvent @event)
+    {
+    }
+
+    protected virtual void OnMouseLeft(FocusManager focusManager, MouseMoveEvent @event)
+    {
+    }
+
     protected virtual void OnKeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
     {
     }
 
-    public override void MouseMoved(FocusManager focusManager, BaseMouseMoveEvent @event)
+    public override void DispatchMouseMoved(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
         if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
         {
@@ -2603,12 +2646,60 @@ public partial class Node : PlainNode, IAnimationCallback
                 ShiftKey: @event.ShiftKey,
                 RelativePosition: @event.Position - LayoutPaddingPosition
             );
+            if (MouseMoved?.CanExecute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager)) == true)
+            {
+                MouseMoved.Execute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager));
+            }
             OnMouseMoved(focusManager, relativeEvent);
         }
-        base.MouseMoved(focusManager, @event);
+        base.DispatchMouseMoved(focusManager, @event);
     }
 
-    public sealed override void MousePressed(FocusManager focusManager, BaseMouseEvent @event)
+    public override void DispatchMouseEntered(FocusManager focusManager, BaseMouseMoveEvent @event)
+    {
+        IsHovered = true;
+        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        {
+            var relativeEvent = new MouseMoveEvent(
+                Position: @event.Position,
+                Buttons: @event.Buttons,
+                CtrlKey: @event.CtrlKey,
+                MetaKey: @event.AltKey,
+                ShiftKey: @event.ShiftKey,
+                RelativePosition: @event.Position - LayoutPaddingPosition
+            );
+            if (MouseEntered?.CanExecute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager)) == true)
+            {
+                MouseEntered.Execute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager));
+            }
+            OnMouseEntered(focusManager, relativeEvent);
+        }
+        base.DispatchMouseEntered(focusManager, @event);
+    }
+
+    public override void DispatchMouseLeft(FocusManager focusManager, BaseMouseMoveEvent @event)
+    {
+        IsHovered = false;
+        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        {
+            var relativeEvent = new MouseMoveEvent(
+                Position: @event.Position,
+                Buttons: @event.Buttons,
+                CtrlKey: @event.CtrlKey,
+                MetaKey: @event.AltKey,
+                ShiftKey: @event.ShiftKey,
+                RelativePosition: @event.Position - LayoutPaddingPosition
+            );
+            if (MouseLeft?.CanExecute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager)) == true)
+            {
+                MouseLeft.Execute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager));
+            }
+            OnMouseLeft(focusManager, relativeEvent);
+        }
+        base.DispatchMouseLeft(focusManager, @event);
+    }
+
+    public sealed override void DispatchMousePressed(FocusManager focusManager, BaseMouseEvent @event)
     {
         if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
         {
@@ -2621,12 +2712,16 @@ public partial class Node : PlainNode, IAnimationCallback
                 ShiftKey: @event.ShiftKey,
                 RelativePosition: @event.Position - LayoutPaddingPosition
             );
+            if (MousePressed?.CanExecute(new NodeEventArgs<MouseEvent>(relativeEvent, focusManager)) == true)
+            {
+                MousePressed.Execute(new NodeEventArgs<MouseEvent>(relativeEvent, focusManager));
+            }
             OnMousePressed(focusManager, relativeEvent);
         }
-        base.MousePressed(focusManager, @event);
+        base.DispatchMousePressed(focusManager, @event);
     }
 
-    public sealed override void MouseReleased(FocusManager focusManager, BaseMouseEvent @event)
+    public sealed override void DispatchMouseReleased(FocusManager focusManager, BaseMouseEvent @event)
     {
         if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
         {
@@ -2639,12 +2734,16 @@ public partial class Node : PlainNode, IAnimationCallback
                 ShiftKey: @event.ShiftKey,
                 RelativePosition: @event.Position - LayoutPaddingPosition
             );
+            if (MouseReleased?.CanExecute(new NodeEventArgs<MouseEvent>(relativeEvent, focusManager)) == true)
+            {
+                MouseReleased.Execute(new NodeEventArgs<MouseEvent>(relativeEvent, focusManager));
+            }
             OnMouseReleased(focusManager, relativeEvent);
         }
-        base.MouseReleased(focusManager, @event);
+        base.DispatchMouseReleased(focusManager, @event);
     }
 
-    public sealed override void MouseDragged(FocusManager focusManager, BaseMouseDragEvent @event)
+    public sealed override void DispatchMouseDragged(FocusManager focusManager, BaseMouseDragEvent @event)
     {
         if (@event.DragStart.X > LayoutPaddingPosition.X && @event.DragStart.Y > LayoutPaddingPosition.Y && @event.DragStart.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.DragStart.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
         {
@@ -2659,12 +2758,16 @@ public partial class Node : PlainNode, IAnimationCallback
                 ShiftKey: @event.ShiftKey,
                 RelativePosition: @event.Position - LayoutPaddingPosition
             );
+            if (MouseDragged?.CanExecute(new NodeEventArgs<MouseDragEvent>(relativeEvent, focusManager)) == true)
+            {
+                MouseDragged.Execute(new NodeEventArgs<MouseDragEvent>(relativeEvent, focusManager));
+            }
             OnMouseDragged(focusManager, relativeEvent);
         }
-        base.MouseDragged(focusManager, @event);
+        base.DispatchMouseDragged(focusManager, @event);
     }
 
-    public sealed override void MouseScrolled(FocusManager focusManager, BaseMouseWheelEvent @event)
+    public sealed override void DispatchMouseScrolled(FocusManager focusManager, BaseMouseWheelEvent @event)
     {
         if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
         {
@@ -2677,9 +2780,13 @@ public partial class Node : PlainNode, IAnimationCallback
                 ShiftKey: @event.ShiftKey,
                 RelativePosition: @event.Position - LayoutPaddingPosition
             );
+            if (MouseScrolled?.CanExecute(new NodeEventArgs<MouseWheelEvent>(relativeEvent, focusManager)) == true)
+            {
+                MouseScrolled.Execute(new NodeEventArgs<MouseWheelEvent>(relativeEvent, focusManager));
+            }
             OnMouseScrolled(focusManager, relativeEvent);
         }
-        base.MouseScrolled(focusManager, @event);
+        base.DispatchMouseScrolled(focusManager, @event);
     }
 
     public virtual void OnKeyPressed(FocusManager focusManager, KeyboardEvent @event)
@@ -2690,30 +2797,42 @@ public partial class Node : PlainNode, IAnimationCallback
     {
     }
 
-    public sealed override void KeyPressed(FocusManager focusManager, KeyboardEvent @event)
+    public sealed override void DispatchKeyPressed(FocusManager focusManager, KeyboardEvent @event)
     {
         if (IsFocusable && IsFocused)
         {
+            if (KeyPressed?.CanExecute(new NodeEventArgs<KeyboardEvent>(@event, focusManager)) == true)
+            {
+                KeyPressed.Execute(new NodeEventArgs<KeyboardEvent>(@event, focusManager));
+            }
             OnKeyPressed(focusManager, @event);
         }
-        base.KeyPressed(focusManager, @event);
+        base.DispatchKeyPressed(focusManager, @event);
     }
 
-    public sealed override void KeyReleased(FocusManager focusManager, KeyboardEvent @event)
+    public sealed override void DispatchKeyReleased(FocusManager focusManager, KeyboardEvent @event)
     {
         if (IsFocusable && IsFocused)
         {
+            if (KeyReleased?.CanExecute(new NodeEventArgs<KeyboardEvent>(@event, focusManager)) == true)
+            {
+                KeyReleased.Execute(new NodeEventArgs<KeyboardEvent>(@event, focusManager));
+            }
             OnKeyReleased(focusManager, @event);
         }
-        base.KeyReleased(focusManager, @event);
+        base.DispatchKeyReleased(focusManager, @event);
     }
 
-    public sealed override void KeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
+    public sealed override void DispatchKeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
     {
         if (IsFocusable && IsFocused)
         {
+            if (KeyTyped?.CanExecute(new NodeEventArgs<KeyboardTypedEvent>(@event, focusManager)) == true)
+            {
+                KeyTyped.Execute(new NodeEventArgs<KeyboardTypedEvent>(@event, focusManager));
+            }
             OnKeyTyped(focusManager, @event);
         }
-        base.KeyTyped(focusManager, @event);
+        base.DispatchKeyTyped(focusManager, @event);
     }
 }

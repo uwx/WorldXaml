@@ -78,67 +78,83 @@ public abstract partial class Visual : BindableObject
         }
     }
 
-    public virtual void MouseMoved(FocusManager focusManager, BaseMouseMoveEvent @event)
+    public virtual void DispatchMouseMoved(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.MouseMoved(focusManager, @event);
+            child.DispatchMouseMoved(focusManager, @event);
         }
     }
 
-    public virtual void MousePressed(FocusManager focusManager, BaseMouseEvent @event)
+    public virtual void DispatchMouseEntered(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.MousePressed(focusManager, @event);
+            child.DispatchMouseEntered(focusManager, @event);
         }
     }
 
-    public virtual void MouseReleased(FocusManager focusManager, BaseMouseEvent @event)
+    public virtual void DispatchMouseLeft(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.MouseReleased(focusManager, @event);
+            child.DispatchMouseLeft(focusManager, @event);
         }
     }
 
-    public virtual void MouseDragged(FocusManager focusManager, BaseMouseDragEvent @event)
+    public virtual void DispatchMousePressed(FocusManager focusManager, BaseMouseEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.MouseDragged(focusManager, @event);
+            child.DispatchMousePressed(focusManager, @event);
         }
     }
 
-    public virtual void MouseScrolled(FocusManager focusManager, BaseMouseWheelEvent @event)
+    public virtual void DispatchMouseReleased(FocusManager focusManager, BaseMouseEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.MouseScrolled(focusManager, @event);
+            child.DispatchMouseReleased(focusManager, @event);
         }
     }
 
-    public virtual void KeyPressed(FocusManager focusManager, KeyboardEvent @event)
+    public virtual void DispatchMouseDragged(FocusManager focusManager, BaseMouseDragEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.KeyPressed(focusManager, @event);
+            child.DispatchMouseDragged(focusManager, @event);
         }
     }
 
-    public virtual void KeyReleased(FocusManager focusManager, KeyboardEvent @event)
+    public virtual void DispatchMouseScrolled(FocusManager focusManager, BaseMouseWheelEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.KeyReleased(focusManager, @event);
+            child.DispatchMouseScrolled(focusManager, @event);
         }
     }
 
-    public virtual void KeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
+    public virtual void DispatchKeyPressed(FocusManager focusManager, KeyboardEvent @event)
     {
         foreach (var child in VisualChildren)
         {
-            child.KeyTyped(focusManager, @event);
+            child.DispatchKeyPressed(focusManager, @event);
+        }
+    }
+
+    public virtual void DispatchKeyReleased(FocusManager focusManager, KeyboardEvent @event)
+    {
+        foreach (var child in VisualChildren)
+        {
+            child.DispatchKeyReleased(focusManager, @event);
+        }
+    }
+
+    public virtual void DispatchKeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
+    {
+        foreach (var child in VisualChildren)
+        {
+            child.DispatchKeyTyped(focusManager, @event);
         }
     }
 }

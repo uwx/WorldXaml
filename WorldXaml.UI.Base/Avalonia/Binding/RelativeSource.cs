@@ -1,3 +1,5 @@
+using JetBrains.Annotations;
+
 // ReSharper disable once CheckNamespace
 namespace Avalonia.Data;
 
@@ -47,5 +49,15 @@ public class RelativeSource
     /// <summary>
     /// Markup extension support — returns itself.
     /// </summary>
-    public object ProvideValue(IServiceProvider serviceProvider) => this;
+    [UsedImplicitly]
+    public RelativeSource ProvideValue(IServiceProvider serviceProvider) => this;
+}
+
+/// <summary>
+/// Equivalent to {RelativeSource TemplatedParent} but doesn't cause a red squiggle in Rider XAML preview.
+/// </summary>
+public class RelativeSourceTemplatedParent
+{
+    [UsedImplicitly]
+    public RelativeSource ProvideValue(IServiceProvider serviceProvider) => new RelativeSource(RelativeSourceMode.TemplatedParent);
 }
