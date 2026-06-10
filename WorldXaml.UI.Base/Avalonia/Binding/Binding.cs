@@ -119,8 +119,11 @@ public sealed class Binding : IXamlBinding
             if (e.Property.Id != property.Id) return;
             if (skipFirst) { skipFirst = false; return; }
             var source = GetCurrentSource(target);
-            var converted = TypeCoercer.CoerceBack(e.NewValue, GetLeafType(source, Path)!, Converter, ConverterParameter);
-            WriteLeaf(source, Path, converted);
+            if (GetLeafType(source, Path) is { } leafType)
+            {
+                var converted = TypeCoercer.CoerceBack(e.NewValue, leafType, Converter, ConverterParameter);
+                WriteLeaf(source, Path, converted);
+            }
         };
         target.StyledPropertyChanged += onTargetChanged;
 
@@ -136,8 +139,11 @@ public sealed class Binding : IXamlBinding
         object? currentDc = null;
         void Push()
         {
-            var converted = TypeCoercer.CoerceBack(target.GetValue(property), GetLeafType(currentDc, Path)!, Converter, ConverterParameter);
-            WriteLeaf(currentDc, Path, converted);
+            if (GetLeafType(currentDc, Path) is { } leafType)
+            {
+                var converted = TypeCoercer.CoerceBack(target.GetValue(property), leafType, Converter, ConverterParameter);
+                WriteLeaf(currentDc, Path, converted);
+            }
         }
 
         EventHandler<StyledPropertyChangedEventArgs> onTargetChanged = (_, e) =>
