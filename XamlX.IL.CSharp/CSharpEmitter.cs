@@ -58,6 +58,19 @@ class CSharpEmitter : IXamlILEmitter
     private string PopExpr() => Pop().Expression;
 
     /// <summary>
+    /// Converts integer literal "0"/"1" to "false"/"true" when the target type is bool.
+    /// Returns the original expression unchanged for non-bool targets.
+    /// </summary>
+    private static string CoerceLiteralToBool(string expr, IXamlType targetType, IXamlType knownBoolean)
+    {
+        if (!targetType.Equals(knownBoolean))
+            return expr;
+        if (expr == "0") return "false";
+        if (expr == "1") return "true";
+        return $"({expr}) != 0";
+    }
+
+    /// <summary>
     /// Pops a value expression, casting it to <paramref name="targetType"/> if the stack-tracked
     /// type is not assignable to it (e.g. <c>object</c> → <c>FlexPanel</c>).
     /// </summary>
@@ -84,12 +97,7 @@ class CSharpEmitter : IXamlILEmitter
             {
                 var val = PopExpr();
                 // Convert int literals to bool when return type is bool
-                if (_method.ReturnType.Equals(_knownTypes.SystemBoolean))
-                {
-                    if (val == "0") val = "false";
-                    else if (val == "1") val = "true";
-                    else val = $"({val}) != 0";
-                }
+                val = CoerceLiteralToBool(val, _method.ReturnType, _knownTypes.SystemBoolean);
                 Emit($"return {val};");
             }
             else
@@ -216,6 +224,8 @@ class CSharpEmitter : IXamlILEmitter
             }
             if (field.FieldType.IsEnum)
                 value = $"(({FormatType(field.FieldType)}){value})";
+            else
+                value = CoerceLiteralToBool(value, field.FieldType, _knownTypes.SystemBoolean);
             Emit($"{obj}.{field.Name} = {value};");
         }
         else if (code == SreOpCodes.Stsfld)
@@ -596,6 +606,10 @@ class CSharpEmitter : IXamlILEmitter
             if (method.Parameters[i].IsEnum)
                 args[i] = $"(({FormatType(method.Parameters[i])}){args[i]})";
         }
+
+        // Convert int literals to bool when the parameter expects a bool.
+        for (var i = 0; i < args.Length; i++)
+            args[i] = CoerceLiteralToBool(args[i], method.Parameters[i], _knownTypes.SystemBoolean);
 
         // Special case: Type.GetTypeFromHandle(typeof(X)) → typeof(X)
         if (method is { IsStatic: true, Name: "GetTypeFromHandle" } &&
