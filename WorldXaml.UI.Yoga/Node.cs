@@ -2451,34 +2451,34 @@ public partial class Node : PlainNode, IAnimationCallback
     public override Vector2 FocusSize => LayoutPaddingSize;
     
     [Property]
-    public partial IRelayCommand? MousePressed { get; set; }
+    public partial ICommand? MousePressed { get; set; }
 
     [Property]
-    public partial IRelayCommand? MouseReleased { get; set; }
+    public partial ICommand? MouseReleased { get; set; }
     
     [Property]
-    public partial IRelayCommand? MouseDragged { get; set; }
+    public partial ICommand? MouseDragged { get; set; }
     
     [Property]
-    public partial IRelayCommand? MouseScrolled { get; set; }
+    public partial ICommand? MouseScrolled { get; set; }
     
     [Property]
-    public partial IRelayCommand? MouseMoved { get; set; }
+    public partial ICommand? MouseMoved { get; set; }
     
     [Property]
-    public partial IRelayCommand? MouseEntered { get; set; }
+    public partial ICommand? MouseEntered { get; set; }
     
     [Property]
-    public partial IRelayCommand? MouseLeft { get; set; }
+    public partial ICommand? MouseLeft { get; set; }
     
     [Property]
-    public partial IRelayCommand? KeyTyped { get; set; }
+    public partial ICommand? KeyTyped { get; set; }
 
     [Property]
-    public partial IRelayCommand? KeyPressed { get; set; }
+    public partial ICommand? KeyPressed { get; set; }
 
     [Property]
-    public partial IRelayCommand? KeyReleased { get; set; }
+    public partial ICommand? KeyReleased { get; set; }
 
     #endregion
 
