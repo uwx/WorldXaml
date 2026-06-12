@@ -59,7 +59,7 @@ public abstract partial class Visual : BindableObject
     // and repopulated on each use.
     private List<Visual>? _childSnapshot;
 
-    private List<Visual> GetChildSnapshot()
+    private protected List<Visual> GetChildSnapshot()
     {
         var list = _childSnapshot ??= [];
         list.Clear();
