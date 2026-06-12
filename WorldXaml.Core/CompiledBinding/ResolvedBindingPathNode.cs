@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using XamlX.Ast;
 using XamlX.Emit;
 using XamlX.IL;
@@ -20,6 +21,14 @@ class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> ste
 {
     public List<ResolvedPathStep> Steps { get; } = steps;
     public IXamlAstTypeReference Type { get; } = new XamlAstClrTypeReference(lineInfo, leafType, false);
+
+    /// <summary>
+    /// Tracks accessor methods already defined on a declaring type,
+    /// keyed by the underlying System.Type Id. This avoids calling
+    /// TypeBuilder.GetMethods() (which throws NotSupportedException
+    /// before CreateType()) on the SRE hot-reload path.
+    /// </summary>
+    private static readonly ConditionalWeakTable<object, Dictionary<string, IXamlMethod>> s_definedAccessors = new();
 
     public XamlILNodeEmitResult Emit(
         XamlEmitContextWithLocals<IXamlILEmitter, XamlILNodeEmitResult> context,
@@ -103,13 +112,20 @@ class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> ste
         var getter = step.Property.Getter!;
 
         var name = BuildAccessorName("__Get_", step);
-        var existing = context.DeclaringType.Methods.FirstOrDefault(m => m.Name == name);
-        if (existing is not null)
+
+        // Use our own tracking instead of context.DeclaringType.Methods,
+        // because on the SRE hot-reload path DeclaringType wraps a TypeBuilder
+        // that throws NotSupportedException from GetMethods() before CreateType().
+        var typeId = context.DeclaringType.Id;
+        var definedMethods = s_definedAccessors.GetOrCreateValue(typeId);
+        if (definedMethods.TryGetValue(name, out var existing))
             return existing;
 
         var method = context.DeclaringType.DefineMethod(
             objectType, new[] { objectType }, name,
             XamlVisibility.Private, true, false);
+
+        definedMethods[name] = method;
 
         method.Generator
             .Ldarg_0()
@@ -133,14 +149,19 @@ class ResolvedBindingPathNode(IXamlLineInfo lineInfo, List<ResolvedPathStep> ste
         var valueType = setter.Parameters[0];
 
         var name = BuildAccessorName("__Set_", step);
-        var existing = context.DeclaringType.Methods.FirstOrDefault(m => m.Name == name);
-        if (existing is not null)
+
+        // Same tracking as EmitGetterMethod — avoid TypeBuilder.GetMethods().
+        var typeId = context.DeclaringType.Id;
+        var definedMethods = s_definedAccessors.GetOrCreateValue(typeId);
+        if (definedMethods.TryGetValue(name, out var existing))
             return existing;
 
         var method = context.DeclaringType.DefineMethod(
             context.Configuration.WellKnownTypes.Void,
             new[] { objectType, objectType }, name,
             XamlVisibility.Private, true, false);
+
+        definedMethods[name] = method;
 
         method.Generator
             .Ldarg_0()
