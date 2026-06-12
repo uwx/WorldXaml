@@ -83,6 +83,8 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(typeConverterProperties.Collect(), static (context, attrs) =>
         {
             var sb = new IndentedStringBuilder();
+            sb.AppendLine("#nullable enable");
+
             sb.AppendLine("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");;
             sb.AppendLine("internal static class __TypeConverterHook");
             sb.AppendLine("{");
@@ -133,6 +135,8 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(interpolatorMethods.Collect(), static (context, attrs) =>
         {
             var sb = new IndentedStringBuilder();
+            sb.AppendLine("#nullable enable");
+
             sb.AppendLine("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");;
             sb.AppendLine("internal static class __InterpolatorHook");
             sb.AppendLine("{");
@@ -212,6 +216,7 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
                 var declaringTypeNamespace = props.Key.DeclaringNamespace;
                 
                 var sb = new IndentedStringBuilder();
+                sb.AppendLine("#nullable enable");
                 
                 sb.AppendLine($"namespace {declaringTypeNamespace};");
                 sb.AppendLine();
@@ -288,6 +293,8 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(options, static (context, options) =>
         {
             var sb = new IndentedStringBuilder();
+            sb.AppendLine("#nullable enable");
+
             sb.AppendLine("using System.ComponentModel;");
             sb.AppendLine();
             sb.AppendLine("namespace WorldXaml.Generator;");
