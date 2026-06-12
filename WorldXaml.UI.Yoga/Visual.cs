@@ -54,9 +54,22 @@ public abstract partial class Visual : BindableObject
     [Property]
     public partial int TabOrder { get; set; }
 
+    // Reusable snapshot buffer so dispatch methods don't allocate a new list
+    // every time VisualChildren is iterated. Allocated once per Visual, cleared
+    // and repopulated on each use.
+    private List<Visual>? _childSnapshot;
+
+    private List<Visual> GetChildSnapshot()
+    {
+        var list = _childSnapshot ??= [];
+        list.Clear();
+        list.AddRange(VisualChildren);
+        return list;
+    }
+
     internal virtual void NotifyUiScaleChanged()
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.NotifyUiScaleChanged();
         }
@@ -64,7 +77,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void Update(FocusManager focusManager)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.Update(focusManager);
         }
@@ -72,7 +85,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void Render(RenderContext context)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.Render(context);
         }
@@ -80,7 +93,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchMouseMoved(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchMouseMoved(focusManager, @event);
         }
@@ -88,7 +101,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchMouseEntered(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchMouseEntered(focusManager, @event);
         }
@@ -96,7 +109,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchMouseLeft(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchMouseLeft(focusManager, @event);
         }
@@ -104,7 +117,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchMousePressed(FocusManager focusManager, BaseMouseEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchMousePressed(focusManager, @event);
         }
@@ -112,7 +125,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchMouseReleased(FocusManager focusManager, BaseMouseEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchMouseReleased(focusManager, @event);
         }
@@ -120,7 +133,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchMouseDragged(FocusManager focusManager, BaseMouseDragEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchMouseDragged(focusManager, @event);
         }
@@ -128,7 +141,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchMouseScrolled(FocusManager focusManager, BaseMouseWheelEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchMouseScrolled(focusManager, @event);
         }
@@ -136,7 +149,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchKeyPressed(FocusManager focusManager, KeyboardEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchKeyPressed(focusManager, @event);
         }
@@ -144,7 +157,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchKeyReleased(FocusManager focusManager, KeyboardEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchKeyReleased(focusManager, @event);
         }
@@ -152,7 +165,7 @@ public abstract partial class Visual : BindableObject
 
     public virtual void DispatchKeyTyped(FocusManager focusManager, KeyboardTypedEvent @event)
     {
-        foreach (var child in VisualChildren)
+        foreach (var child in GetChildSnapshot())
         {
             child.DispatchKeyTyped(focusManager, @event);
         }
