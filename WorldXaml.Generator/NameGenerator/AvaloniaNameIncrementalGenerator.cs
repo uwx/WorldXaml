@@ -297,16 +297,16 @@ public class AvaloniaNameIncrementalGenerator : IIncrementalGenerator
 
             sb.AppendLine("using System.ComponentModel;");
             sb.AppendLine();
-            sb.AppendLine("namespace WorldXaml.Generator;");
-            sb.AppendLine();
             sb.AppendLine("[EditorBrowsable(EditorBrowsableState.Never)]");
-            sb.AppendLine("internal static class __XamlKnownTypes");
+            sb.AppendLine("internal class __XamlKnownTypes : global::NFMWorld.XamlX.Core.IKnownTypes");
             sb.AppendLine("{");
             sb.IncrementIndent();
             foreach (var knownType in options.KnownTypes)
             {
-                sb.AppendLine($"public const string {knownType.Key} = \"{knownType.Value}\";");
+                sb.AppendLine($"public string {knownType.Key} => \"{knownType.Value}\";");
             }
+            sb.AppendLine("public static global::NFMWorld.XamlX.Core.IKnownTypes Instance { get; } = new __XamlKnownTypes();");
+            
             sb.DecrementIndent();
             sb.AppendLine("}");
             

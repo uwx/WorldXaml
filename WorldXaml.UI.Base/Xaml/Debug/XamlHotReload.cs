@@ -9,6 +9,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using Avalonia.Metadata;
 using Maxine.Extensions;
+using Microsoft.Extensions.Logging;
 using NFMWorld.XamlX.Core;
 using XamlX;
 using XamlX.Emit;
@@ -72,7 +73,7 @@ public class XamlHotReload
     private static ConditionalWeakTable<ILogical, string> _trackedNodes = new();
     
     private static string? _cachedProjectDirectory;
-    private static string? TryGetProjectDirectory(string? currentPath = null)
+    private static string? TryGetSolutionDirectory(string? currentPath = null)
     {
         if (_cachedProjectDirectory != null)
         {
@@ -80,7 +81,7 @@ public class XamlHotReload
         }
         
         var directory = new DirectoryInfo(currentPath ?? Directory.GetCurrentDirectory());
-        while (directory != null && !directory.EnumerateFiles("*.csproj").Any())
+        while (directory != null && !directory.EnumerateFiles("*.sln").Any() && !directory.EnumerateFiles("*.slnx").Any())
         {
             directory = directory.Parent;
         }
@@ -92,7 +93,10 @@ public class XamlHotReload
     [RequiresDynamicCode("Uses Reflection.Emit which may not be compatible with AOT.")]
     public static void Initialize(string? projectRoot = null)
     {
-        _watcher = new FileSystemWatcher(projectRoot ?? TryGetProjectDirectory() ?? ".", "*.xaml");
+        var initDir = projectRoot ?? TryGetSolutionDirectory() ?? ".";
+        Logging.Debug($"[XamlHotReload] Initialize at {initDir}");
+
+        _watcher = new FileSystemWatcher(initDir, "*.xaml");
         _watcher.IncludeSubdirectories = true;
         _watcher.Changed += OnXamlFileChanged;
         _watcher.EnableRaisingEvents = true;
@@ -164,6 +168,10 @@ public class XamlHotReload
             {
                 Logging.Warning($"[XamlHotReload] Failed to reload XAML: {fullPath}. Error: {ex}");
             }
+        }
+        else
+        {
+            Logging.Debug($"[XamlHotReload] XAML file changed but was not tracked: {fullPath}.");
         }
     }
 
