@@ -2451,34 +2451,34 @@ public partial class Node : PlainNode, IAnimationCallback
     public override Vector2 FocusSize => LayoutPaddingSize;
     
     [Property]
-    public partial IRelayCommand<NodeEventArgs<MouseEvent>>? MousePressed { get; set; }
+    public partial IRelayCommand? MousePressed { get; set; }
 
     [Property]
-    public partial IRelayCommand<NodeEventArgs<MouseEvent>>? MouseReleased { get; set; }
+    public partial IRelayCommand? MouseReleased { get; set; }
     
     [Property]
-    public partial IRelayCommand<NodeEventArgs<MouseDragEvent>>? MouseDragged { get; set; }
+    public partial IRelayCommand? MouseDragged { get; set; }
     
     [Property]
-    public partial IRelayCommand<NodeEventArgs<MouseWheelEvent>>? MouseScrolled { get; set; }
+    public partial IRelayCommand? MouseScrolled { get; set; }
     
     [Property]
-    public partial IRelayCommand<NodeEventArgs<MouseMoveEvent>>? MouseMoved { get; set; }
+    public partial IRelayCommand? MouseMoved { get; set; }
     
     [Property]
-    public partial IRelayCommand<NodeEventArgs<MouseMoveEvent>>? MouseEntered { get; set; }
+    public partial IRelayCommand? MouseEntered { get; set; }
     
     [Property]
-    public partial IRelayCommand<NodeEventArgs<MouseMoveEvent>>? MouseLeft { get; set; }
+    public partial IRelayCommand? MouseLeft { get; set; }
     
     [Property]
-    public partial IRelayCommand<NodeEventArgs<KeyboardTypedEvent>>? KeyTyped { get; set; }
+    public partial IRelayCommand? KeyTyped { get; set; }
 
     [Property]
-    public partial IRelayCommand<NodeEventArgs<KeyboardEvent>>? KeyPressed { get; set; }
+    public partial IRelayCommand? KeyPressed { get; set; }
 
     [Property]
-    public partial IRelayCommand<NodeEventArgs<KeyboardEvent>>? KeyReleased { get; set; }
+    public partial IRelayCommand? KeyReleased { get; set; }
 
     #endregion
 
@@ -2538,7 +2538,7 @@ public partial class Node : PlainNode, IAnimationCallback
         if (Rescale())
         {
             OnScaleChanged();
-            foreach (var child in VisualChildren)
+            foreach (var child in GetChildSnapshot())
             {
                 child.NotifyUiScaleChanged();
             }
@@ -2568,7 +2568,7 @@ public partial class Node : PlainNode, IAnimationCallback
             RenderBackground(LayoutPaddingPosition, LayoutPaddingSize);
             RenderBorder(LayoutBorderPosition, LayoutBorderSize);
             RenderContent(LayoutContentPosition, LayoutContentSize);
-            foreach (var child in VisualChildren)
+            foreach (var child in GetChildSnapshot())
             {
                 child.Render(new RenderContext(_root + new Vector2(LayoutX, LayoutY), ownOpacity)); // todo should this be LayoutContentPosition
             }
