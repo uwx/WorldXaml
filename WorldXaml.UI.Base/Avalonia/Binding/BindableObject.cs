@@ -208,7 +208,9 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void SetValue<TValue>(StyledProperty<TValue> property, TValue value)
     {
-        ClearBinding(property); // local value wins, kill any binding
+        // Do NOT clear bindings here — that silently kills OneWayToSource and TwoWay
+        // bindings where local writes are expected to propagate. Call ClearBinding
+        // explicitly if you need to break a binding.
         base.SetValue(property, value);
     }
 
