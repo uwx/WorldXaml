@@ -2657,45 +2657,45 @@ public partial class Node : PlainNode, IAnimationCallback
 
     public override void DispatchMouseEntered(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
+        Logging.Info(
+            $"[Node] DispatchMouseEntered {GetType().Name} Name='{Name}' " +
+            $"Pos=({LayoutPaddingPosition.X:F0},{LayoutPaddingPosition.Y:F0}) " +
+            $"Size=({LayoutPaddingSize.X:F0}x{LayoutPaddingSize.Y:F0}) " +
+            $"Mouse=({@event.Position.X:F0},{@event.Position.Y:F0}) " +
+            $"OldIsHovered={IsHovered}");
         IsHovered = true;
-        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        var relativeEvent = new MouseMoveEvent(
+            Position: @event.Position,
+            Buttons: @event.Buttons,
+            CtrlKey: @event.CtrlKey,
+            MetaKey: @event.AltKey,
+            ShiftKey: @event.ShiftKey,
+            RelativePosition: @event.Position - LayoutPaddingPosition
+        );
+        if (MouseEntered?.CanExecute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager)) == true)
         {
-            var relativeEvent = new MouseMoveEvent(
-                Position: @event.Position,
-                Buttons: @event.Buttons,
-                CtrlKey: @event.CtrlKey,
-                MetaKey: @event.AltKey,
-                ShiftKey: @event.ShiftKey,
-                RelativePosition: @event.Position - LayoutPaddingPosition
-            );
-            if (MouseEntered?.CanExecute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager)) == true)
-            {
-                MouseEntered.Execute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager));
-            }
-            OnMouseEntered(focusManager, relativeEvent);
+            MouseEntered.Execute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager));
         }
+        OnMouseEntered(focusManager, relativeEvent);
         base.DispatchMouseEntered(focusManager, @event);
     }
 
     public override void DispatchMouseLeft(FocusManager focusManager, BaseMouseMoveEvent @event)
     {
         IsHovered = false;
-        if (@event.Position.X > LayoutPaddingPosition.X && @event.Position.Y > LayoutPaddingPosition.Y && @event.Position.X < LayoutPaddingPosition.X + LayoutPaddingSize.X && @event.Position.Y < LayoutPaddingPosition.Y + LayoutPaddingSize.Y)
+        var relativeEvent = new MouseMoveEvent(
+            Position: @event.Position,
+            Buttons: @event.Buttons,
+            CtrlKey: @event.CtrlKey,
+            MetaKey: @event.AltKey,
+            ShiftKey: @event.ShiftKey,
+            RelativePosition: @event.Position - LayoutPaddingPosition
+        );
+        if (MouseLeft?.CanExecute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager)) == true)
         {
-            var relativeEvent = new MouseMoveEvent(
-                Position: @event.Position,
-                Buttons: @event.Buttons,
-                CtrlKey: @event.CtrlKey,
-                MetaKey: @event.AltKey,
-                ShiftKey: @event.ShiftKey,
-                RelativePosition: @event.Position - LayoutPaddingPosition
-            );
-            if (MouseLeft?.CanExecute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager)) == true)
-            {
-                MouseLeft.Execute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager));
-            }
-            OnMouseLeft(focusManager, relativeEvent);
+            MouseLeft.Execute(new NodeEventArgs<MouseMoveEvent>(relativeEvent, focusManager));
         }
+        OnMouseLeft(focusManager, relativeEvent);
         base.DispatchMouseLeft(focusManager, @event);
     }
 
@@ -2714,7 +2714,18 @@ public partial class Node : PlainNode, IAnimationCallback
             );
             if (MousePressed?.CanExecute(new NodeEventArgs<MouseEvent>(relativeEvent, focusManager)) == true)
             {
+                Logging.Info(
+                    $"[Node] DispatchMousePressed EXECUTING {GetType().Name} Name='{Name}' " +
+                    $"Command={MousePressed.GetType().Name}");
                 MousePressed.Execute(new NodeEventArgs<MouseEvent>(relativeEvent, focusManager));
+            }
+            else
+            {
+                Logging.Info(
+                    $"[Node] DispatchMousePressed SKIP {GetType().Name} Name='{Name}' " +
+                    $"MousePressed={(MousePressed is null ? "NULL" : MousePressed.GetType().Name)} " +
+                    $"Pos=({LayoutPaddingPosition.X:F0},{LayoutPaddingPosition.Y:F0}) " +
+                    $"Mouse=({@event.Position.X:F0},{@event.Position.Y:F0})");
             }
             OnMousePressed(focusManager, relativeEvent);
         }

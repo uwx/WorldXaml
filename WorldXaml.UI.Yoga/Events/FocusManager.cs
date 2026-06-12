@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
+using WorldXaml.UI.Base;
 using WorldXaml.UI.Yoga.Events;
 
 namespace WorldXaml.UI.Yoga;
@@ -207,7 +208,13 @@ public class FocusManager
 
         // MouseEntered — fire on new chain from divergence down to leaf
         for (int i = diverge; i < newChain.Count; i++)
+        {
+            Logging.Info(
+                $"[FocusManager] MouseEntered chain[{i}]={newChain[i].GetType().Name} " +
+                $"IsFocusable={newChain[i].IsFocusable} " +
+                $"FocusOrigin={newChain[i].FocusOrigin} FocusSize={newChain[i].FocusSize}");
             newChain[i].DispatchMouseEntered(this, @event);
+        }
 
         var oldLeaf = _hoveredChain.Count > 0 ? _hoveredChain[^1] : null;
         var newLeaf = newChain.Count > 0 ? newChain[^1] : null;
