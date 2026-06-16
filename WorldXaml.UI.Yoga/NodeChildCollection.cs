@@ -1,9 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using Avalonia.LogicalTree;
+using WorldXaml.ObservableCollections;
 
 namespace WorldXaml.UI.Yoga;
 
-public class NodeChildCollection(PlainNode parent) : ObservableCollection<Visual>
+public class NodeChildCollection(PlainNode parent) : NonSynchronizedObservableCollection<Visual>
 {
     protected override void InsertItem(int index, Visual item)
     {
