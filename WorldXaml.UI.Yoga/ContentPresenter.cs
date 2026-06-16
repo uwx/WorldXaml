@@ -1,8 +1,10 @@
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 using Avalonia.LogicalTree;
+using ObservableCollections;
 
 namespace WorldXaml.UI.Yoga;
 
@@ -79,23 +81,23 @@ public class ContentPresenter : ContentsPanel
         Children.Clear();
     }
 
-    private void OnContentChildrenChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void OnContentChildrenChanged(in NotifyCollectionChangedEventArgs<Node> e)
     {
         switch (e.Action)
         {
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                foreach (Node item in e.NewItems!)
+            case NotifyCollectionChangedAction.Add:
+                foreach (var item in e.NewItems)
                     Children.Add(item);
                 break;
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                foreach (Node item in e.OldItems!)
+            case NotifyCollectionChangedAction.Remove:
+                foreach (var item in e.OldItems)
                     Children.Remove(item);
                 break;
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
-                for (var i = 0; i < e.NewItems!.Count; i++)
-                    Children[e.NewStartingIndex + i] = (Node)e.NewItems[i]!;
+            case NotifyCollectionChangedAction.Replace:
+                for (var i = 0; i < e.NewItems.Length; i++)
+                    Children[e.NewStartingIndex + i] = e.NewItems[i];
                 break;
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+            case NotifyCollectionChangedAction.Reset:
                 Children.Clear();
                 if (_templatedParent != null)
                 {
@@ -103,6 +105,11 @@ public class ContentPresenter : ContentsPanel
                         Children.Add(child);
                 }
                 break;
+            case NotifyCollectionChangedAction.Move:
+                // Ignored
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(e.Action), e.Action, null);
         }
     }
 

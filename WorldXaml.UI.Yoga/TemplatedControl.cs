@@ -5,6 +5,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Metadata;
+using WorldXaml.ObservableCollections;
 using WorldXaml.UI.Base;
 
 namespace WorldXaml.UI.Yoga;
@@ -50,7 +51,7 @@ public class TemplatedControl : Visual
     /// ContentPresenter when the template is applied.
     /// </summary>
     [Content]
-    public ObservableCollection<Node> ContentChildren { get; } = new();
+    public NonSynchronizedObservableList<Node> ContentChildren { get; } = new();
 
     public override IReadOnlyList<ILogical> LogicalChildren => ContentChildren;
 

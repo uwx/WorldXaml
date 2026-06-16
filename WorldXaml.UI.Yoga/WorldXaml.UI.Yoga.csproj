@@ -16,6 +16,7 @@
     <Import Project="../WorldXaml.Generator/WorldXaml.Generator.props" />
 
     <ItemGroup>
+      <ProjectReference Include="..\WorldXaml.ObservableCollections\WorldXaml.ObservableCollections.csproj" />
       <ProjectReference Include="..\WorldXaml.UI.Base\WorldXaml.UI.Base.csproj" />
       <ProjectReference Include="..\WorldXaml.Generator\WorldXaml.Generator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>

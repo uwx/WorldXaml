@@ -3,6 +3,8 @@ using System.Collections.Specialized;
 using System.Numerics;
 using Avalonia.LogicalTree;
 using Avalonia.Metadata;
+using ObservableCollections;
+using WorldXaml.ObservableCollections;
 using WorldXaml.UI.Base;
 
 namespace WorldXaml.UI.Yoga;
@@ -27,26 +29,26 @@ public class OverlayPanel : Visual
         ContentChildren.CollectionChanged += ContentChildrenChanged;
     }
 
-    private void ContentChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void ContentChildrenChanged(in NotifyCollectionChangedEventArgs<Node> e)
     {
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
-                foreach (Node item in e.NewItems!)
+                foreach (var item in e.NewItems)
                 {
                     item.Position = YgPositionType.Absolute;
                     _overlayContainer.Children.Add(item);
                 }
                 break;
             case NotifyCollectionChangedAction.Remove:
-                foreach (Node item in e.OldItems!)
+                foreach (var item in e.OldItems)
                     _overlayContainer.Children.Remove(item);
                 break;
             case NotifyCollectionChangedAction.Replace:
-                for (var i = 0; i < e.NewItems!.Count; i++)
+                for (var i = 0; i < e.NewItems.Length; i++)
                 {
-                    var oldItem = (Node)e.OldItems![i]!;
-                    var newItem = (Node)e.NewItems[i]!;
+                    var oldItem = e.OldItems[i];
+                    var newItem = e.NewItems[i];
                     var idx = _overlayContainer.Children.IndexOf(oldItem);
                     if (idx >= 0)
                     {
@@ -87,7 +89,7 @@ public class OverlayPanel : Visual
     /// ContentPresenter when the template is applied.
     /// </summary>
     [Content]
-    public ObservableCollection<Node> ContentChildren { get; } = new();
+    public NonSynchronizedObservableList<Node> ContentChildren { get; } = new();
 
     public override IReadOnlyList<ILogical> LogicalChildren => ContentChildren;
 }
