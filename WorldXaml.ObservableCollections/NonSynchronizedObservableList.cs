@@ -53,7 +53,7 @@ public partial class NonSynchronizedObservableList<T> : IList<T>, IReadOnlyNonSy
         using (var xs = new CloneCollection<T>(items))
         {
             // to avoid iterate twice, require copy before insert.
-            list.AddRange(xs.AsEnumerable());
+            list.AddRange(xs.Span);
             CollectionChanged?.Invoke(NotifyCollectionChangedEventArgs<T>.Add(xs.Span, index));
         }
     }
@@ -65,12 +65,10 @@ public partial class NonSynchronizedObservableList<T> : IList<T>, IReadOnlyNonSy
         CollectionChanged?.Invoke(NotifyCollectionChangedEventArgs<T>.Add(items, index));
     }
 
-    public void AddRange(ReadOnlySpan<T> items)
+    public void AddRange(params ReadOnlySpan<T> items)
     {
         var index = list.Count; // starting index
-
         list.AddRange(items);
-
         CollectionChanged?.Invoke(NotifyCollectionChangedEventArgs<T>.Add(items, index));
     }
 
