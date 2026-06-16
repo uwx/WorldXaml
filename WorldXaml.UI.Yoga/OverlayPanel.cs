@@ -34,27 +34,53 @@ public class OverlayPanel : Visual
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
-                foreach (var item in e.NewItems)
+                if (e.IsSingleItem)
                 {
-                    item.Position = YgPositionType.Absolute;
-                    _overlayContainer.Children.Add(item);
+                    e.NewItem.Position = YgPositionType.Absolute;
+                    _overlayContainer.Children.Add(e.NewItem);
+                }
+                else
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        item.Position = YgPositionType.Absolute;
+                        _overlayContainer.Children.Add(item);
+                    }
                 }
                 break;
             case NotifyCollectionChangedAction.Remove:
-                foreach (var item in e.OldItems)
-                    _overlayContainer.Children.Remove(item);
+                if (e.IsSingleItem)
+                    _overlayContainer.Children.Remove(e.OldItem);
+                else
+                    foreach (var item in e.OldItems)
+                        _overlayContainer.Children.Remove(item);
                 break;
             case NotifyCollectionChangedAction.Replace:
-                for (var i = 0; i < e.NewItems.Length; i++)
+                if (e.IsSingleItem)
                 {
-                    var oldItem = e.OldItems[i];
-                    var newItem = e.NewItems[i];
+                    var oldItem = e.OldItem;
+                    var newItem = e.NewItem;
                     var idx = _overlayContainer.Children.IndexOf(oldItem);
                     if (idx >= 0)
                     {
                         _overlayContainer.Children.RemoveAt(idx);
                         newItem.Position = YgPositionType.Absolute;
                         _overlayContainer.Children.Insert(idx, newItem);
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < e.NewItems.Length; i++)
+                    {
+                        var oldItem = e.OldItems[i];
+                        var newItem = e.NewItems[i];
+                        var idx = _overlayContainer.Children.IndexOf(oldItem);
+                        if (idx >= 0)
+                        {
+                            _overlayContainer.Children.RemoveAt(idx);
+                            newItem.Position = YgPositionType.Absolute;
+                            _overlayContainer.Children.Insert(idx, newItem);
+                        }
                     }
                 }
                 break;

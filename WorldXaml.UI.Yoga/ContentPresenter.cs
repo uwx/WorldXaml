@@ -86,16 +86,25 @@ public class ContentPresenter : ContentsPanel
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
-                foreach (var item in e.NewItems)
-                    Children.Add(item);
+                if (e.IsSingleItem)
+                    Children.Add(e.NewItem);
+                else
+                    foreach (var item in e.NewItems)
+                        Children.Add(item);
                 break;
             case NotifyCollectionChangedAction.Remove:
-                foreach (var item in e.OldItems)
-                    Children.Remove(item);
+                if (e.IsSingleItem)
+                    Children.Remove(e.OldItem);
+                else
+                    foreach (var item in e.OldItems)
+                        Children.Remove(item);
                 break;
             case NotifyCollectionChangedAction.Replace:
-                for (var i = 0; i < e.NewItems.Length; i++)
-                    Children[e.NewStartingIndex + i] = e.NewItems[i];
+                if (e.IsSingleItem)
+                    Children[e.NewStartingIndex] = e.NewItem;
+                else
+                    for (var i = 0; i < e.NewItems.Length; i++)
+                        Children[e.NewStartingIndex + i] = e.NewItems[i];
                 break;
             case NotifyCollectionChangedAction.Reset:
                 Children.Clear();
