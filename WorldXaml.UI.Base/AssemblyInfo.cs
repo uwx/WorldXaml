@@ -5,3 +5,4 @@ using Avalonia.Metadata;
 [assembly: XmlnsDefinition("https://github.com/uwx/worldxaml", "WorldXaml.UI.Base")]
 [assembly: XmlnsDefinition("https://github.com/uwx/worldxaml", "Avalonia.Data")]
 [assembly: XmlnsDefinition("https://github.com/uwx/worldxaml", "Avalonia.Markup.Xaml.Templates")]
+[assembly: XmlnsDefinition("https://github.com/uwx/worldxaml", "Avalonia.Styling")]

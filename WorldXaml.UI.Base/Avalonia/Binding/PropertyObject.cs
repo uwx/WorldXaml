@@ -59,6 +59,22 @@ namespace WorldXaml.UI.Base
             SetValueCore(property, value);
         }
 
+        /// <summary>
+        /// Sets a property value with an untyped (boxed) value.
+        /// Used by Style setters.
+        /// </summary>
+        internal void SetBoxedValue(AvaloniaProperty property, object? value)
+        {
+            var old = _values.TryGetValue(property.Id, out var oldVal) ? oldVal : property.DefaultValue;
+            _values[property.Id] = value;
+            PropertyChanged?.Invoke(this, property.CachedChangedArgs);
+            property.OnChanged?.Invoke(this, value);
+
+            if (!Equals(old, value))
+                StyledPropertyChanged?.Invoke(this,
+                    new StyledPropertyChangedEventArgs(property, old, value));
+        }
+
         private protected void SetValueCore<TValue>(StyledProperty<TValue> property, TValue value)
         {
             var oldValue = GetValue(property);

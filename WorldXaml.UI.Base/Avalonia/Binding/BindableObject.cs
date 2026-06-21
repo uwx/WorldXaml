@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Reactive;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.LogicalTree;
+using Avalonia.Markup.Xaml.Markup;
 
 namespace WorldXaml.UI.Base;
 
@@ -12,7 +14,7 @@ public interface IBindingTarget : IGetSetValue
     IDisposable Bind<TValue>(StyledProperty<TValue> property, IObservable<TValue> source);
 }
 
-public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget, IDataContextProvider
+public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget, IDataContextProvider, IResourceNode
 {
     // Stores active bindings (IDisposable subscriptions)
     private protected readonly Dictionary<int, IDisposable> _bindings = new();
@@ -55,6 +57,43 @@ public abstract class BindableObject : PropertyObject, ILogical, IBindingTarget,
         get => GetValue(DataTypeProperty);
         set => SetValue(DataTypeProperty, value);
     }
+
+    // ── Resources ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Local resource dictionary for this element.
+    /// Resource lookup walks the logical tree through IResourceNode parents.
+    /// </summary>
+    public ResourceDictionary? Resources { get; set; }
+
+    /// <summary>
+    /// Finds a resource by key, walking up the logical tree.
+    /// Returns null if not found.
+    /// </summary>
+    public object? FindResource(object key)
+    {
+        var node = this as IResourceNode;
+        while (node is not null)
+        {
+            if (node.Resources is not null && node.Resources.TryGetValue(key, out var value))
+                return value;
+
+            node = node is ILogical logical && logical.LogicalParent is IResourceNode parent
+                ? parent
+                : null;
+        }
+        return null;
+    }
+
+    // ── Classes (CSS-like class selectors for styles) ──────────────────
+
+    private Classes? _classes;
+
+    /// <summary>
+    /// CSS-like class names applied to this element.
+    /// Styles can match on these via Selector="Type.classname".
+    /// </summary>
+    public Classes Classes => _classes ??= new Classes(this);
 
     #region Parent/child tree
 
